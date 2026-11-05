@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ErgoAI — Auditor Ergonómico Industrial</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Header Minimalista -->
+  <header class="bg-slate-900/90 border-b border-slate-800 py-3 px-6 sticky top-0 z-50 backdrop-blur">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg">
+          <i class="fa-solid fa-person-running"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-bold tracking-tight text-white">ErgoAI</h1>
+            <span class="bg-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded font-medium border border-slate-700">NOM-036 &bull; REBA</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Copiloto de Auditoría Ergonómica &bull; El agente propone, el especialista decide</p>
+        </div>
+      </div>
+
+      <button onclick="generateAllReportsBatch()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5 font-medium">
+        <i class="fa-solid fa-file-export text-emerald-400"></i> Exportar 6 Informes Oficiales
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- COLUMNA IZQUIERDA: ENTRADA (4 de 12) -->
+      <div class="lg:col-span-4 space-y-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-camera text-emerald-400"></i> Fotografías de Estación
+            </h2>
+            <span class="text-[10px] text-slate-400">1 a 3 Vistas</span>
+          </div>
+
+          <div class="space-y-2">
+            <!-- Slot 1: Lateral -->
+            <div id="slotLatBox" onclick="document.getElementById('inputTripleLat').click()" ondragover="onDragOverSlot(event, 'slotLatBox')" ondragleave="onDragLeaveSlot(event, 'slotLatBox')" ondrop="onDropSlot(event, 'lateral')" class="bg-slate-950 border border-dashed border-slate-800 hover:border-emerald-500/70 p-2.5 rounded-lg cursor-pointer transition">
+              <input type="file" id="inputTripleLat" accept="image/*" onchange="onSlotFileChosen(this, 'lateral')" class="hidden">
+              <div class="flex items-center gap-2.5">
+                <img id="prevImgLat" src="" class="hidden w-10 h-10 object-cover rounded border border-slate-700 shrink-0">
+                <div id="iconSlotLat" class="w-9 h-9 rounded bg-slate-900 border border-slate-800 text-emerald-400 flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-person-walking"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-200">1. Vista Lateral</span>
+                    <span id="badgeSlotLat" class="text-[9px] text-slate-500">Sagital</span>
+                  </div>
+                  <p id="labelSlotLat" class="text-[11px] text-slate-500 truncate">Tronco, cuello y piernas</p>
+                </div>
+                <button type="button" id="btnRemoveLat" onclick="event.stopPropagation(); removeSlotFile('lateral')" class="hidden text-slate-500 hover:text-red-400 p-1"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+
+            <!-- Slot 2: Frontal -->
+            <div id="slotFroBox" onclick="document.getElementById('inputTripleFro').click()" ondragover="onDragOverSlot(event, 'slotFroBox')" ondragleave="onDragLeaveSlot(event, 'slotFroBox')" ondrop="onDropSlot(event, 'frontal')" class="bg-slate-950 border border-dashed border-slate-800 hover:border-blue-500/70 p-2.5 rounded-lg cursor-pointer transition">
+              <input type="file" id="inputTripleFro" accept="image/*" onchange="onSlotFileChosen(this, 'frontal')" class="hidden">
+              <div class="flex items-center gap-2.5">
+                <img id="prevImgFro" src="" class="hidden w-10 h-10 object-cover rounded border border-slate-700 shrink-0">
+                <div id="iconSlotFro" class="w-9 h-9 rounded bg-slate-900 border border-slate-800 text-blue-400 flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-user-group"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-200">2. Vista Frontal</span>
+                    <span id="badgeSlotFro" class="text-[9px] text-slate-500">Coronal</span>
+                  </div>
+                  <p id="labelSlotFro" class="text-[11px] text-slate-500 truncate">Abducción y distancia F2</p>
+                </div>
+                <button type="button" id="btnRemoveFro" onclick="event.stopPropagation(); removeSlotFile('frontal')" class="hidden text-slate-500 hover:text-red-400 p-1"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+
+            <!-- Slot 3: Aérea -->
+            <div id="slotAerBox" onclick="document.getElementById('inputTripleAer').click()" ondragover="onDragOverSlot(event, 'slotAerBox')" ondragleave="onDragLeaveSlot(event, 'slotAerBox')" ondrop="onDropSlot(event, 'aerea')" class="bg-slate-950 border border-dashed border-slate-800 hover:border-purple-500/70 p-2.5 rounded-lg cursor-pointer transition">
+              <input type="file" id="inputTripleAer" accept="image/*" onchange="onSlotFileChosen(this, 'aerea')" class="hidden">
+              <div class="flex items-center gap-2.5">
+                <img id="prevImgAer" src="" class="hidden w-10 h-10 object-cover rounded border border-slate-700 shrink-0">
+                <div id="iconSlotAer" class="w-9 h-9 rounded bg-slate-900 border border-slate-800 text-purple-400 flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-bullseye"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-200">3. Vista Aérea</span>
+                    <span id="badgeSlotAer" class="text-[9px] text-slate-500">Cenital</span>
+                  </div>
+                  <p id="labelSlotAer" class="text-[11px] text-slate-500 truncate">Zonas de alcance 1 a 5</p>
+                </div>
+                <button type="button" id="btnRemoveAer" onclick="event.stopPropagation(); removeSlotFile('aerea')" class="hidden text-slate-500 hover:text-red-400 p-1"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parámetros de la Operación -->
+          <div class="pt-3 border-t border-slate-800 space-y-3 text-xs">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Parámetros de Tarea</span>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                <label class="text-slate-400 text-[11px] block mb-1">Carga (kg):</label>
+                <input type="number" id="inputCustomWeight" step="0.5" value="0.0" min="0" max="60" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs font-semibold focus:border-emerald-500 focus:outline-none">
+              </div>
+
+              <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
+                <label class="text-slate-400 text-[11px] block mb-1">Agarre:</label>
+                <select id="inputCouplingScore" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs font-semibold focus:border-emerald-500 focus:outline-none">
+                  <option value="0">Bueno (+0)</option>
+                  <option value="1">Regular (+1)</option>
+                  <option value="2">Pobre (+2)</option>
+                  <option value="3">Inaceptable (+3)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-1.5">
+              <label class="flex items-center gap-2 text-slate-300 text-[11px] cursor-pointer">
+                <input type="checkbox" id="checkIsStatic" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                <span>Postura estática (&gt; 1 min) (+1)</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300 text-[11px] cursor-pointer">
+                <input type="checkbox" id="checkIsRepetitive" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                <span>Repetitiva (&gt; 4/min) (+1)</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300 text-[11px] cursor-pointer">
+                <input type="checkbox" id="checkIsShock" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                <span>Esfuerzo brusco / impacto (+1)</span>
+              </label>
+            </div>
+
+            <div class="flex gap-2 pt-1">
+              <button type="button" onclick="executeTripleFilesAnalysis()" id="btnExecuteAnalysis" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-play"></i> Evaluar Estación
+              </button>
+              <button type="button" onclick="resetAllUploadedFiles()" title="Limpiar" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2.5 rounded-lg border border-slate-700 transition cursor-pointer">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA: RESULTADOS (8 de 12) -->
+      <div class="lg:col-span-8 space-y-4">
+
+        <!-- Indicador de Procesamiento -->
+        <div id="loadingIndicator" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-3 text-center text-xs text-emerald-400 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          <span id="loadingText">Procesando evaluación postural...</span>
+        </div>
+
+        <!-- 1. Visor Principal y Resumen de Escena -->
+        <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm font-bold text-white" id="taskTitleDisplay">
+                <span class="text-slate-500">Sin evaluación activa</span>
+              </h2>
+              <span id="viewBadgeDisplay" class="bg-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded border border-slate-700">--</span>
+              <span id="loadBadgeDisplay" class="bg-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded border border-slate-700">-- kg</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="hidden flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800" id="viewTabsContainer">
+                <button type="button" onclick="switchActiveView('lateral')" id="tabViewLateral" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white">Lateral</button>
+                <button type="button" onclick="switchActiveView('frontal')" id="tabViewFrontal" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white">Frontal</button>
+                <button type="button" onclick="switchActiveView('aerea')" id="tabViewAerea" class="px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white">Aérea</button>
+              </div>
+              <span id="resAiInferenceTime" class="text-[11px] text-slate-500">-- ms</span>
+            </div>
+          </div>
+
+          <!-- Lienzo de Imagen -->
+          <div class="relative w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center min-h-[340px]">
+            <div id="noImagePlaceholder" class="flex flex-col items-center justify-center p-8 text-center text-slate-500">
+              <i class="fa-solid fa-image text-2xl mb-2 text-slate-700"></i>
+              <p class="text-xs font-medium text-slate-400">Sube de 1 a 3 fotografías y presiona &ldquo;Evaluar Estación&rdquo;</p>
+            </div>
+            <img id="mainDisplayImage" src="" alt="Esqueleto Anotado" class="hidden max-h-[420px] w-auto object-contain">
+          </div>
+
+          <!-- Barra de Operadores, Regla F2 y Factores Detectados -->
+          <div class="space-y-2 pt-1">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 flex-wrap" id="operatorTabsContainer">
+                <span class="text-xs text-slate-500">Sin operador</span>
+              </div>
+              <div id="ruleF2Display" class="text-xs font-medium text-slate-400"></div>
+            </div>
+
+            <p class="text-xs text-slate-400" id="sceneDescriptionText">
+              El sistema identificará automáticamente la postura, ángulos articulares y riesgos ergonómicos.
+            </p>
+            <div class="flex flex-wrap gap-1.5" id="anomaliesChipContainer"></div>
+          </div>
+        </section>
+
+        <!-- 2. Panel Unificado: Dictamen REBA y Plan de Acción NOM-036 -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Tarjeta A: Dictamen REBA y Ángulos Articulares -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Dictamen REBA Oficial</span>
+                <span id="rebaBadgeColor" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">--</span>
+              </div>
+
+              <div class="flex items-baseline justify-between">
+                <div class="flex items-baseline gap-1.5">
+                  <span id="rebaScoreValue" class="text-4xl font-black text-white">--</span>
+                  <span class="text-xs text-slate-400">/ 15</span>
+                </div>
+                <span id="resAiRebaDesglose" class="text-xs font-semibold text-slate-400">A: -- | B: -- | C: --</span>
+              </div>
+
+              <div id="rebaRiskLevelText" class="text-xs font-bold text-slate-200 mt-1">Riesgo: Pendiente</div>
+              <p id="rebaUrgencyText" class="text-[11px] text-slate-400 mt-0.5">Esperando evaluación.</p>
+
+              <div class="grid grid-cols-3 gap-2 text-[11px] mt-3 pt-2.5 border-t border-slate-800">
+                <div>
+                  <span class="text-slate-500 block">Lado Activo</span>
+                  <span id="resAiSide" class="font-semibold text-slate-200">--</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Zona Jabil</span>
+                  <span id="resAiReachZone" class="font-semibold text-slate-200">--</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Privacidad</span>
+                  <span id="resAiFace" class="font-semibold text-slate-200">--</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grid Único de 6 Ángulos Articulares -->
+            <div class="pt-3 border-t border-slate-800">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block mb-2">Ángulos Articulares Medidos</span>
+              <div class="grid grid-cols-3 gap-1.5 text-center text-xs">
+                <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">Tronco</span>
+                  <span id="angTronco" class="font-bold text-white">--°</span>
+                </div>
+                <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">Cuello</span>
+                  <span id="angCuello" class="font-bold text-white">--°</span>
+                </div>
+                <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">Brazo</span>
+                  <span id="angBrazo" class="font-bold text-white">--°</span>
+                </div>
+                <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">Codo</span>
+                  <span id="angCodo" class="font-bold text-white">--°</span>
+                </div>
+                <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">Muñeca</span>
+                  <span id="angMuneca" class="font-bold text-white">--°</span>
+                </div>
+                <div class="bg-slate-950 p-1.5 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">Rodillas</span>
+                  <span id="angRodilla" class="font-bold text-white">--°</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta B: Controles de Ingeniería y Riesgo Residual -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">
+                Controles NOM-036 &amp; Riesgo Residual
+              </span>
+
+              <div id="suggestedControlText" class="text-xs text-slate-300 space-y-1.5">
+                Esperando evaluación para proyectar controles de ingeniería...
+              </div>
+
+              <div class="bg-slate-950 border border-slate-800 p-3 rounded-lg text-xs">
+                <span class="text-slate-400 block text-[10px]">Proyección Post-Intervención:</span>
+                <div class="flex items-center justify-between mt-1">
+                  <span class="font-semibold text-slate-200">REBA Residual: <strong class="text-white text-sm" id="residualScoreText">--</strong></span>
+                  <span class="bg-emerald-950 text-emerald-300 border border-emerald-500/30 text-[11px] px-2 py-0.5 rounded font-bold" id="residualDeltaText">--</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-3 border-t border-slate-800">
+              <a id="btnOfficialReportLink" href="#" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-file-pdf"></i> Ver Informe Técnico (HTML / PDF)
+              </a>
+
+              <button type="button" onclick="approveCurrentAction()" id="btnApproveAction" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-semibold text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-signature"></i> Aprobar Acción para Piso (Firma HITL)
+              </button>
+              <div id="approveFeedback" class="hidden text-[11px] text-emerald-400 text-center font-medium"></div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let CURRENT_DATA = null;
+    let CURRENT_ACTIVE_VIEW = 'lateral';
+    let CURRENT_PERSON_INDEX = 0;
+
+    const SELECTED_FILES = {
+      lateral: null,
+      frontal: null,
+      aerea: null
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      resetAllUploadedFiles();
+    });
+
+    function onDragOverSlot(e, boxId) {
+      e.preventDefault();
+      document.getElementById(boxId).classList.add('border-emerald-400');
+    }
+
+    function onDragLeaveSlot(e, boxId) {
+      e.preventDefault();
+      document.getElementById(boxId).classList.remove('border-emerald-400');
+    }
+
+    function onDropSlot(e, slotKey) {
+      e.preventDefault();
+      const prefix = capitalize(slotKey.slice(0, 3));
+      document.getElementById(`slot${prefix}Box`).classList.remove('border-emerald-400');
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        setSlotFile(slotKey, e.dataTransfer.files[0]);
+      }
+    }
+
+    function onSlotFileChosen(input, slotKey) {
+      if (input.files && input.files[0]) {
+        setSlotFile(slotKey, input.files[0]);
+      }
+    }
+
+    function setSlotFile(slotKey, file) {
+      SELECTED_FILES[slotKey] = file;
+      const prefix = capitalize(slotKey.slice(0, 3));
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById(`prevImg${prefix}`);
+        const icon = document.getElementById(`iconSlot${prefix}`);
+        const label = document.getElementById(`labelSlot${prefix}`);
+        const badge = document.getElementById(`badgeSlot${prefix}`);
+        const btnRem = document.getElementById(`btnRemove${prefix}`);
+
+        img.src = e.target.result;
+        img.classList.remove('hidden');
+        icon.classList.add('hidden');
+        label.innerText = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        badge.innerText = 'Lista';
+        badge.className = 'text-[9px] text-emerald-400 font-bold';
+        btnRem.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeSlotFile(slotKey) {
+      SELECTED_FILES[slotKey] = null;
+      const prefix = capitalize(slotKey.slice(0, 3));
+      const input = document.getElementById(`inputTriple${prefix}`);
+      if (input) input.value = '';
+      const img = document.getElementById(`prevImg${prefix}`);
+      const icon = document.getElementById(`iconSlot${prefix}`);
+      const label = document.getElementById(`labelSlot${prefix}`);
+      const badge = document.getElementById(`badgeSlot${prefix}`);
+      const btnRem = document.getElementById(`btnRemove${prefix}`);
+
+      img.src = '';
+      img.classList.add('hidden');
+      icon.classList.remove('hidden');
+      btnRem.classList.add('hidden');
+      badge.className = 'text-[9px] text-slate-500';
+
+      if (slotKey === 'lateral') {
+        label.innerText = 'Tronco, cuello y piernas';
+        badge.innerText = 'Sagital';
+      } else if (slotKey === 'frontal') {
+        label.innerText = 'Abducción y distancia F2';
+        badge.innerText = 'Coronal';
+      } else {
+        label.innerText = 'Zonas de alcance 1 a 5';
+        badge.innerText = 'Cenital';
+      }
+    }
+
+    function resetAllUploadedFiles() {
+      ['lateral', 'frontal', 'aerea'].forEach(k => removeSlotFile(k));
+      document.getElementById('inputCustomWeight').value = '0.0';
+      document.getElementById('inputCouplingScore').value = '0';
+      document.getElementById('checkIsStatic').checked = false;
+      document.getElementById('checkIsRepetitive').checked = false;
+      document.getElementById('checkIsShock').checked = false;
+
+      CURRENT_DATA = null;
+      CURRENT_ACTIVE_VIEW = 'lateral';
+      CURRENT_PERSON_INDEX = 0;
+
+      updateMainImageView();
+      renderOperatorDetails();
+
+      document.getElementById('taskTitleDisplay').innerHTML = '<span class="text-slate-500">Sin evaluación activa</span>';
+      document.getElementById('viewBadgeDisplay').innerText = '--';
+      document.getElementById('loadBadgeDisplay').innerText = '-- kg';
+      document.getElementById('anomaliesChipContainer').innerHTML = '';
+      document.getElementById('sceneDescriptionText').innerText = 'El sistema identificará automáticamente la postura, ángulos articulares y riesgos ergonómicos.';
+      document.getElementById('viewTabsContainer').classList.add('hidden');
+      document.getElementById('resAiInferenceTime').innerText = '-- ms';
+      document.getElementById('operatorTabsContainer').innerHTML = '<span class="text-xs text-slate-500">Sin operador</span>';
+      document.getElementById('ruleF2Display').innerHTML = '';
+      document.getElementById('residualScoreText').innerText = '--';
+      document.getElementById('residualDeltaText').innerText = '--';
+      document.getElementById('suggestedControlText').innerText = 'Esperando evaluación para proyectar controles de ingeniería...';
+      document.getElementById('btnOfficialReportLink').href = '#';
+      document.getElementById('approveFeedback').classList.add('hidden');
+    }
+
+    async function executeTripleFilesAnalysis() {
+      const hasAny = SELECTED_FILES.lateral || SELECTED_FILES.frontal || SELECTED_FILES.aerea;
+      if (!hasAny) {
+        alert('Selecciona o arrastra al menos una fotografía para evaluar.');
+        return;
+      }
+
+      showLoading(true, 'Analizando postura con RTMPose WholeBody-133...');
+      try {
+        const formData = new FormData();
+        if (SELECTED_FILES.lateral) formData.append('lateral_file', SELECTED_FILES.lateral);
+        if (SELECTED_FILES.frontal) formData.append('frontal_file', SELECTED_FILES.frontal);
+        if (SELECTED_FILES.aerea) formData.append('aerea_file', SELECTED_FILES.aerea);
+
+        formData.append('load_kg', parseFloat(document.getElementById('inputCustomWeight').value || 0.0));
+        formData.append('coupling_score', parseInt(document.getElementById('inputCouplingScore').value || 0));
+        formData.append('is_static', document.getElementById('checkIsStatic').checked);
+        formData.append('is_repetitive', document.getElementById('checkIsRepetitive').checked);
+        formData.append('is_shock_load', document.getElementById('checkIsShock').checked);
+
+        const res = await fetch('/api/evaluate', { method: 'POST', body: formData });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ detail: 'Error en el servidor' }));
+          throw new Error(errData.detail || 'Error al procesar evaluación');
+        }
+
+        const data = await res.json();
+        renderResults(data, data.matched_case_id || 'evaluacion_personalizada');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function showLoading(show, text = '') {
+      const el = document.getElementById('loadingIndicator');
+      if (show) {
+        document.getElementById('loadingText').innerText = text;
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+
+    function renderResults(data, caseId) {
+      CURRENT_DATA = data;
+      CURRENT_PERSON_INDEX = 0;
+
+      const taskType = data.task_type || 'Evaluación Ergonómica';
+      document.getElementById('taskTitleDisplay').innerText = taskType;
+      document.getElementById('viewBadgeDisplay').innerText = `Vista ${capitalize(data.detected_camera_view || 'Detectada')}`;
+      const loadVal = data.inferred_load_kg !== undefined ? Number(data.inferred_load_kg).toFixed(1) : '0.0';
+      document.getElementById('loadBadgeDisplay').innerText = `${loadVal} kg`;
+      document.getElementById('sceneDescriptionText').innerText = data.scene_description || '';
+
+      const anomContainer = document.getElementById('anomaliesChipContainer');
+      anomContainer.innerHTML = '';
+      if (data.detected_anomalies && data.detected_anomalies.length > 0) {
+        data.detected_anomalies.forEach(anom => {
+          const chip = document.createElement('span');
+          const isPositive = anom.includes('Conforme') || anom.includes('Óptima') || anom.includes('neutra') || anom.includes('confort');
+          chip.className = isPositive
+            ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 text-[11px] px-2 py-0.5 rounded font-medium'
+            : 'bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[11px] px-2 py-0.5 rounded font-medium';
+          chip.innerText = anom;
+          anomContainer.appendChild(chip);
+        });
+      }
+
+      const b64 = data.evaluation?.annotated_images_b64 || {};
+      const availableViews = ['lateral', 'frontal', 'aerea'].filter(v => Boolean(b64[v]));
+      CURRENT_ACTIVE_VIEW = availableViews.includes(data.detected_camera_view) ? data.detected_camera_view : (availableViews[0] || 'lateral');
+      updateMainImageView();
+
+      const tabs = document.getElementById('viewTabsContainer');
+      if (availableViews.length > 1) {
+        tabs.classList.remove('hidden');
+        document.getElementById('tabViewLateral').style.display = b64.lateral ? 'inline-block' : 'none';
+        document.getElementById('tabViewFrontal').style.display = b64.frontal ? 'inline-block' : 'none';
+        document.getElementById('tabViewAerea').style.display = b64.aerea ? 'inline-block' : 'none';
+        updateViewTabStyles();
+      } else {
+        tabs.classList.add('hidden');
+      }
+
+      const persons = data.evaluation?.persons || [];
+      const opContainer = document.getElementById('operatorTabsContainer');
+      opContainer.innerHTML = '';
+
+      if (persons.length > 1) {
+        persons.forEach((p, idx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.onclick = () => selectOperator(idx);
+          btn.className = `px-2 py-0.5 rounded text-xs font-semibold transition ${idx === CURRENT_PERSON_INDEX ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`;
+          btn.innerText = `${p.operator_label} (REBA ${p.reba ? p.reba.final_score : '--'})`;
+          opContainer.appendChild(btn);
+        });
+
+        const f2 = data.evaluation.multi_person_metrics?.inter_operator_distance_f2;
+        if (f2) {
+          document.getElementById('ruleF2Display').innerHTML = `Regla F2: <strong>${Number(f2.distance_cm).toFixed(1)} cm</strong> &bull; <span class="${f2.is_compliant ? 'text-emerald-400' : 'text-red-400'}">${f2.status}</span>`;
+        }
+      } else if (persons.length === 1) {
+        opContainer.innerHTML = '<span class="text-xs text-slate-400">1 Operario Evaluado</span>';
+        document.getElementById('ruleF2Display').innerHTML = '';
+      }
+
+      const ms = data.evaluation?.execution_time_ms || 0;
+      document.getElementById('resAiInferenceTime').innerText = `${ms} ms`;
+
+      renderOperatorDetails();
+
+      const sim = data.residual_risk || {};
+      const resScore = sim.residual_reba_score !== undefined ? sim.residual_reba_score : 1;
+      const initialScore = persons[0]?.reba?.final_score || 1;
+      const delta = Math.max(0, initialScore - resScore);
+
+      document.getElementById('residualScoreText').innerText = `${resScore} (${sim.residual_risk_level || 'NEGLIGIBLE'})`;
+      document.getElementById('residualDeltaText').innerText = delta > 0 ? `-${delta} pts` : '0 pts';
+
+      const proposals = sim.proposals_detail || sim.applied_controls || [];
+      const ctrlEl = document.getElementById('suggestedControlText');
+      if (Array.isArray(proposals) && proposals.length > 0 && typeof proposals[0] === 'object') {
+        ctrlEl.innerHTML = proposals.slice(0, 3).map(p =>
+          `<div class="bg-slate-950 p-2 rounded border border-slate-800"><strong class="text-slate-200 block">${p.title}</strong><span class="text-[11px] text-slate-400">${p.nom036_clause || ''}</span></div>`
+        ).join('');
+      } else {
+        ctrlEl.innerText = initialScore <= 2
+          ? 'Estación Conforme: Mantener supervisión preventiva y pausas activas.'
+          : 'Rediseño de estación conforme a jerarquía de controles NOM-036.';
+      }
+
+      const btnApprove = document.getElementById('btnApproveAction');
+      if (btnApprove) {
+        btnApprove.innerHTML = initialScore <= 2
+          ? '<i class="fa-solid fa-stamp"></i> Certificar Conformidad (Firma HITL)'
+          : '<i class="fa-solid fa-signature"></i> Aprobar Acción para Piso (Firma HITL)';
+      }
+
+      document.getElementById('btnOfficialReportLink').href = data.report_url || `/api/report/${caseId}`;
+      document.getElementById('approveFeedback').classList.add('hidden');
+    }
+
+    function switchActiveView(viewName) {
+      CURRENT_ACTIVE_VIEW = viewName;
+      updateMainImageView();
+      updateViewTabStyles();
+    }
+
+    function updateMainImageView() {
+      const placeholder = document.getElementById('noImagePlaceholder');
+      const mainImg = document.getElementById('mainDisplayImage');
+
+      if (!CURRENT_DATA || !CURRENT_DATA.evaluation) {
+        mainImg.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        return;
+      }
+      const b64 = CURRENT_DATA.evaluation.annotated_images_b64 || {};
+      const imgData = b64[CURRENT_ACTIVE_VIEW] || b64.lateral || b64.frontal || b64.aerea;
+      if (imgData) {
+        mainImg.src = 'data:image/jpeg;base64,' + imgData;
+        mainImg.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      } else {
+        mainImg.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+      }
+    }
+
+    function updateViewTabStyles() {
+      ['lateral', 'frontal', 'aerea'].forEach(v => {
+        const tab = document.getElementById(`tabView${capitalize(v)}`);
+        if (!tab) return;
+        tab.className = v === CURRENT_ACTIVE_VIEW
+          ? 'px-2 py-0.5 rounded text-xs font-bold bg-slate-800 text-white border border-slate-700'
+          : 'px-2 py-0.5 rounded text-xs font-medium text-slate-400 hover:text-white';
+      });
+    }
+
+    function selectOperator(idx) {
+      CURRENT_PERSON_INDEX = idx;
+      renderOperatorDetails();
+      const opContainer = document.getElementById('operatorTabsContainer');
+      Array.from(opContainer.children).forEach((btn, i) => {
+        btn.className = `px-2 py-0.5 rounded text-xs font-semibold transition ${i === idx ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`;
+      });
+    }
+
+    function renderOperatorDetails() {
+      const persons = CURRENT_DATA?.evaluation?.persons || [];
+      const p = persons[CURRENT_PERSON_INDEX];
+
+      if (!p) {
+        document.getElementById('rebaScoreValue').innerText = '--';
+        document.getElementById('rebaRiskLevelText').innerText = 'Riesgo: Pendiente';
+        document.getElementById('rebaUrgencyText').innerText = 'Esperando evaluación.';
+        document.getElementById('rebaBadgeColor').innerText = '--';
+        document.getElementById('rebaBadgeColor').className = 'text-xs font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300';
+        document.getElementById('resAiRebaDesglose').innerText = 'A: -- | B: -- | C: --';
+        document.getElementById('resAiSide').innerText = '--';
+        document.getElementById('resAiReachZone').innerText = '--';
+        document.getElementById('resAiFace').innerText = '--';
+        ['angTronco', 'angCuello', 'angBrazo', 'angCodo', 'angMuneca', 'angRodilla'].forEach(id => {
+          document.getElementById(id).innerText = '--°';
+        });
+        return;
+      }
+
+      const reba = p.reba || {};
+      const ang = p.angles || {};
+
+      document.getElementById('rebaScoreValue').innerText = reba.final_score !== undefined ? reba.final_score : '--';
+      document.getElementById('rebaRiskLevelText').innerText = `Riesgo: ${reba.risk_level || 'N/A'}`;
+      document.getElementById('rebaUrgencyText').innerText = reba.action_urgency || 'NOM-036';
+      const badgeColor = document.getElementById('rebaBadgeColor');
+      badgeColor.innerText = reba.color_code || '--';
+      badgeColor.className = `text-xs font-bold px-2 py-0.5 rounded ${getColorClass(reba.color_code)}`;
+      document.getElementById('resAiRebaDesglose').innerText = `A: ${reba.score_a || '--'} | B: ${reba.score_b || '--'} | C: ${reba.table_c_score || '--'}`;
+
+      document.getElementById('resAiSide').innerText = p.active_side ? capitalize(p.active_side) : 'Derecho';
+      document.getElementById('resAiFace').innerText = p.face_detected ? 'Rostro Visible' : 'Anonimizado';
+      document.getElementById('resAiReachZone').innerText = p.reach_zone
+        ? `Zona ${p.reach_zone.zone_number} (${p.reach_zone.radius_mm} mm)`
+        : 'N/A';
+
+      document.getElementById('angTronco').innerText = ang.trunk_angle !== undefined ? `${ang.trunk_angle}°` : '--°';
+      document.getElementById('angCuello').innerText = ang.neck_angle !== undefined ? `${ang.neck_angle}°` : '--°';
+      document.getElementById('angBrazo').innerText = ang.upper_arm_angle !== undefined ? `${ang.upper_arm_angle}°` : '--°';
+      document.getElementById('angCodo').innerText = ang.lower_arm_angle !== undefined ? `${ang.lower_arm_angle}°` : '--°';
+      document.getElementById('angMuneca').innerText = ang.wrist_angle !== undefined ? `${ang.wrist_angle}°` : '--°';
+      document.getElementById('angRodilla').innerText = ang.leg_knee_angle !== undefined ? `${ang.leg_knee_angle}°` : '--°';
+    }
+
+    function getColorClass(colorCode) {
+      switch (colorCode) {
+        case 'VERDE': return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
+        case 'AMARILLO': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40';
+        case 'NARANJA': return 'bg-orange-500/20 text-orange-400 border border-orange-500/40';
+        case 'ROJO': return 'bg-red-500/20 text-red-400 border border-red-500/40';
+        case 'CRITICO': return 'bg-purple-500/20 text-purple-300 border border-purple-500/40';
+        default: return 'bg-slate-800 text-slate-300';
+      }
+    }
+
+    async function approveCurrentAction() {
+      const caseId = CURRENT_DATA?.matched_case_id || 'evaluacion_piso';
+      try {
+        const res = await fetch('/api/approve_action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            case_id: caseId,
+            action_id: 'HITL_' + Date.now(),
+            action_title: 'Implementación de Controles Ergonómicos NOM-036',
+            specialist_name: 'Ingeniero_EHS_Jabil',
+            specialist_notes: 'Validado conforme a NOM-036-1-STPS-2018.',
+            is_approved: true,
+          }),
+        });
+        if (!res.ok) throw new Error('Error al registrar aprobación');
+        const feedback = document.getElementById('approveFeedback');
+        feedback.classList.remove('hidden');
+        feedback.innerHTML = '¡Acción aprobada y registrada en <code>audit_log.json</code>!';
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function generateAllReportsBatch() {
+      try {
+        const res = await fetch('/api/generate_all_reports', { method: 'POST' });
+        if (!res.ok) throw new Error('Error al generar informes');
+        const data = await res.json();
+        alert(`Se generaron los ${data.total_generated} informes técnicos en:\n${data.output_directory}`);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    function capitalize(s) {
+      if (!s) return '';
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+  </script>
+</body>
+</html>

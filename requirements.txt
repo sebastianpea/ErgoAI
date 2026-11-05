@@ -1,0 +1,46 @@
+# ==============================================================================
+# ErgoAI — Copiloto Auditor de Ergonomía Industrial (Track 4: Jabil / X-RAIC 2026)
+# ==============================================================================
+#
+# INSTRUCCIONES DE INSTALACIÓN Y EJECUCIÓN
+#
+# 1. Crear y activar entorno virtual (Recomendado Python 3.10 o superior):
+#    python3 -m venv .venv
+#    source .venv/bin/activate
+#
+# 2. Instalar dependencias:
+#    pip install --upgrade pip
+#    pip install -r requirements.txt
+#
+#    * Para aceleración por GPU NVIDIA con CUDA 11/12 (Opcional):
+#      pip install onnxruntime-gpu
+#
+# 3. Comandos para iniciar la Web:
+#    python start_web.py
+#    # o usando el script ejecutable:
+#    ./run_web.sh
+#
+#    Acceso a la interfaz web: http://127.0.0.1:8000
+#
+# 4. Comandos para ejecutar las pruebas automáticas:
+#    pytest tests/ -v
+#
+# ==============================================================================
+
+# Visión Artificial y Estimación de Pose (133 Puntos WholeBody + YOLOX)
+rtmlib>=0.0.16
+onnxruntime>=1.15.0
+opencv-python>=4.8.0
+numpy>=1.24.0,<2.0.0
+
+# Validación de Datos y Esquemas Tipados (Sin Hardcode)
+pydantic>=2.0.0
+
+# Servidor Web, API REST y Carga Multipart
+fastapi>=0.100.0
+uvicorn>=0.22.0
+python-multipart>=0.0.6
+
+# Pruebas Unitarias y Suite de Evaluación
+pytest>=8.0.0
+httpx>=0.24.0

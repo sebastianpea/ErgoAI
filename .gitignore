@@ -1,0 +1,24 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+.venv
+.venv/
+venv/
+env/
+
+# Pytest cache & testing artifacts
+.pytest_cache/
+.coverage
+
+# Editor & OS files
+.DS_Store
+.vscode/
+.idea/
+*.swp

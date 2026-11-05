@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ErgoAI Vision Pipeline Configuration",
+  "description": "Configuración validada con Pydantic para el motor RTMPose WholeBody-133 y YOLOX sin hardcode.",
+  "confidence_thresholds": {
+    "yolox_nms_thr": 0.45,
+    "yolox_score_thr": 0.25,
+    "min_keypoint_confidence": 0.25,
+    "min_face_keypoint_confidence": 0.40,
+    "min_face_points_present": 2,
+    "joint_reliable_threshold": 0.25
+  },
+  "joint_mapping": {
+    "left_chain": [5, 7, 9, 96, 11, 13, 15, 17],
+    "right_chain": [6, 8, 10, 117, 12, 14, 16, 18],
+    "face_landmarks": [0, 1, 2, 3, 4],
+    "chin_index": 32,
+    "left_wrist": 9,
+    "right_wrist": 10,
+    "left_mcp": 96,
+    "right_mcp": 117
+  },
+  "visualization_rules": {
+    "skeleton_kpt_thr": 0.30,
+    "skeleton_radius": 3,
+    "skeleton_line_width": 2,
+    "card_opacity": 0.85,
+    "f2_badge_opacity": 0.88,
+    "reba_color_map": {
+      "VERDE": [46, 204, 113],
+      "AMARILLO": [0, 215, 255],
+      "NARANJA": [0, 140, 255],
+      "ROJO": [40, 40, 230],
+      "CRITICO": [142, 36, 170]
+    },
+    "reach_zone_radii_mm": {
+      "zona_1": 300.0,
+      "zona_2": 400.0,
+      "zona_3": 500.0,
+      "zona_4": 750.0
+    }
+  }
+}
+
