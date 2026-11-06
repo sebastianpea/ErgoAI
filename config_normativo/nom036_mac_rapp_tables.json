@@ -1,0 +1,54 @@
+{
+  "normative_id": "NOM-036-1-STPS-2018",
+  "tool_sheet_reference": "16-PE80-6500-00014-H",
+  "version": "1.0",
+  "risk_bands": {
+    "VERDE": {
+      "level": "Bajo",
+      "action": "Riesgo aceptable; mantener condiciones"
+    },
+    "NARANJA": {
+      "level": "Medio",
+      "action": "Se requieren medidas correctivas en el corto plazo"
+    },
+    "ROJO": {
+      "level": "Alto",
+      "action": "Pronta intervención de ingeniería requerida"
+    },
+    "MORADO": {
+      "level": "Muy Alto",
+      "action": "Inaceptable; detener o rediseñar inmediatamente"
+    }
+  },
+  "sheets_mapping": {
+    "levantamiento_1": {
+      "name": "Levantamiento (1)",
+      "max_acceptable_weight_kg": 25.0,
+      "jabil_restrictive_weight_kg": 14.0
+    },
+    "transporte_2": {
+      "name": "Transporte (2)",
+      "factors": ["peso_frecuencia", "distancia_manos_espalda", "asimetria", "distancia_transporte", "obstaculos"]
+    },
+    "equipo_3": {
+      "name": "Equipo (3)",
+      "coordination_required": true
+    },
+    "sin_auxiliar_4": {
+      "name": "sin auxiliar (4)",
+      "modes": ["rodando", "girando", "arrastrando"]
+    },
+    "con_auxiliar_5": {
+      "name": "con auxiliar (5)",
+      "equipment_types": ["1_2_ruedas", "3_mas_ruedas", "grande_rieles"]
+    },
+    "eaws": {
+      "name": "EAWS",
+      "score_ranges": {
+        "bajo": [0, 5],
+        "medio": [6, 10],
+        "alto": [11, 100]
+      }
+    }
+  }
+}

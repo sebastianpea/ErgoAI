@@ -1,0 +1,77 @@
+{
+  "method": "REBA",
+  "full_name": "Rapid Entire Body Assessment",
+  "version": "Jabil CUU Track 4 Edition",
+  "risk_levels": {
+    "1": {
+      "score_range": [1, 1],
+      "risk": "Insignificante / Despreciable",
+      "action_level": 0,
+      "action_description": "No es necesaria ninguna acción"
+    },
+    "2": {
+      "score_range": [2, 3],
+      "risk": "Bajo",
+      "action_level": 1,
+      "action_description": "Puede ser necesario actuar"
+    },
+    "3": {
+      "score_range": [4, 7],
+      "risk": "Medio",
+      "action_level": 2,
+      "action_description": "Es necesaria la intervención"
+    },
+    "4": {
+      "score_range": [8, 10],
+      "risk": "Alto",
+      "action_level": 3,
+      "action_description": "Es necesaria la intervención pronta"
+    },
+    "5": {
+      "score_range": [11, 15],
+      "risk": "Muy Alto",
+      "action_level": 4,
+      "action_description": "Es necesaria la actuación inmediata"
+    }
+  },
+  "angular_thresholds_deg": {
+    "neck_flexion_extension": {
+      "range_0_20": 1,
+      "range_gt_20": 2
+    },
+    "trunk_flexion_extension": {
+      "range_0": 1,
+      "range_0_20": 2,
+      "range_20_60": 3,
+      "range_gt_60": 4
+    },
+    "upper_arm_flexion_extension": {
+      "range_minus20_20": 1,
+      "range_20_45": 2,
+      "range_45_90": 3,
+      "range_gt_90": 4
+    },
+    "lower_arm_flexion": {
+      "range_60_100": 1,
+      "range_other": 2
+    },
+    "wrist_flexion_extension": {
+      "range_0_15": 1,
+      "range_gt_15": 2
+    }
+  },
+  "table_c_matrix": [
+    [1, 1, 1, 2, 3, 3, 4, 5, 6, 7, 7, 7],
+    [1, 2, 2, 3, 4, 4, 5, 6, 6, 7, 7, 8],
+    [2, 3, 3, 3, 4, 5, 6, 7, 7, 8, 8, 8],
+    [3, 4, 4, 4, 5, 6, 7, 8, 8, 9, 9, 9],
+    [4, 4, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9],
+    [6, 6, 6, 7, 8, 8, 9, 9, 10, 10, 10, 10],
+    [7, 7, 7, 8, 9, 9, 9, 10, 10, 11, 11, 11],
+    [8, 8, 8, 9, 10, 10, 10, 10, 10, 11, 11, 11],
+    [9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12],
+    [10, 10, 10, 11, 11, 11, 11, 12, 12, 12, 12, 12],
+    [11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12],
+    [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "standard_id": "16-PE30-6500-00023",
+  "title": "Instrucción de Trabajo: Administración y Control de Layouts - Jabil Chihuahua",
+  "version": "1.0",
+  "load_limits": {
+    "max_single_person_lift_kg": 14.0,
+    "nom036_reference_limit_kg": 25.0,
+    "require_mechanical_assistance_above_kg": 14.0,
+    "team_lift_2_persons_green_max_kg": 19.0,
+    "team_lift_2_persons_orange_max_kg": 28.0,
+    "clear_lift_space_cm": 60.0,
+    "max_rack_reach_height_no_ladder_m": 1.70,
+    "max_pallet_cart_reach_height_m": 1.60
+  },
+  "workstation_geometry": {
+    "recommended_work_height_range_cm": [95.0, 125.0],
+    "min_distance_between_operators_cm": 80.0,
+    "leg_clearance_depth_seated_min_cm": 55.0,
+    "leg_clearance_width_seated_min_cm": 60.0,
+    "foot_clearance_depth_standing_min_cm": 15.0,
+    "footrest_height_range_cm": [21.0, 37.0],
+    "footrest_recess_distance_cm": 15.0,
+    "table_edge_max_thickness_cm": 10.0
+  },
+  "reach_zones_mm": {
+    "zone_1_2_regular_cycle": {
+      "radius_min_mm": 150.0,
+      "radius_max_mm": 400.0,
+      "description": "Herramental y material de ciclo regular (uso obligatorio)"
+    },
+    "zone_3_infrequent": {
+      "radius_min_mm": 400.0,
+      "radius_max_mm": 650.0,
+      "description": "Frecuencia menor a una vez por pieza"
+    },
+    "zone_4_5_out_of_reach": {
+      "radius_min_mm": 650.0,
+      "radius_max_mm": 1500.0,
+      "description": "Fuera del alcance del operador (reubicación obligatoria a zonas 1 y 2)"
+    }
+  },
+  "chair_law_stps": {
+    "max_continuous_standing_hours": 3.0,
+    "mandatory_break_minutes": 5.0,
+    "toilet_break_counts": false,
+    "dining_break_counts": true,
+    "valid_strategies": [
+      "silla_descanso_5_min_con_relevo",
+      "rotacion_puestos_pie_sentado"
+    ]
+  },
+  "aisle_clearances_m": {
+    "backend_material_flow_min_m": 0.90,
+    "pallet_table_separation_min_m": 0.30,
+    "electrical_panel_front_clearance_min_m": 0.90,
+    "conveyor_height_min_m": 0.50,
+    "conveyor_height_max_m": 1.40,
+    "gravity_conveyor_max_length_m": 3.0
+  }
+}
