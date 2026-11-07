@@ -20,6 +20,12 @@
       "action": "Inaceptable; detener o rediseñar inmediatamente"
     }
   },
+  "total_score_bands": [
+    { "color": "verde", "min": 0, "max": 4 },
+    { "color": "amarillo", "min": 5, "max": 12 },
+    { "color": "rojo", "min": 13, "max": 20 },
+    { "color": "morado", "min": 21, "max": 999 }
+  ],
   "sheets_mapping": {
     "levantamiento_1": {
       "name": "Levantamiento (1)",

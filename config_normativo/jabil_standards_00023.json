@@ -2,6 +2,13 @@
   "standard_id": "16-PE30-6500-00023",
   "title": "Instrucción de Trabajo: Administración y Control de Layouts - Jabil Chihuahua",
   "version": "1.0",
+  "references": {
+    "load_limit": "16-PE30-6500-00023 §6.4.1",
+    "work_height": "16-PE30-6500-00023 §6.4.4 y §7.2.3",
+    "reach_zones": "16-PE30-6500-00023 §7.2.2.2",
+    "chair_law": "Ley Silla STPS; NOM-036-1-STPS-2018",
+    "footrest": "16-PE30-6500-00023 geometría de estación (reposapiés)"
+  },
   "load_limits": {
     "max_single_person_lift_kg": 14.0,
     "nom036_reference_limit_kg": 25.0,

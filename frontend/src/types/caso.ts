@@ -1,0 +1,249 @@
+// Contrato principal: debe coincidir con los modelos Pydantic del backend.
+
+export type Vista = "lateral" | "frontal" | "cenital";
+export type TipoTarea =
+  | "postura"
+  | "levantamiento"
+  | "transporte"
+  | "empuje_sin_auxiliar"
+  | "empuje_con_auxiliar";
+export type NivelReba = "inapreciable" | "bajo" | "medio" | "alto" | "muy_alto";
+export type Segmento = "tronco" | "cuello" | "piernas" | "brazo" | "antebrazo" | "muneca";
+export type ColorNom = "verde" | "amarillo" | "naranja" | "rojo" | "morado";
+
+/**
+ * Punto del esqueleto. id 0–16 = COCO-17 (0 nariz, 5 hombro izq, 11 cadera izq...);
+ * 17/18 = nudillo medio izq/der (RTMPose WholeBody-133), para medir la muñeca.
+ */
+export interface Punto {
+  id: number;
+  x: number; // píxeles de la imagen original
+  y: number;
+  confianza: number; // 0 a 1
+  corregido: boolean; // true si el especialista lo movió
+}
+
+export interface Imagen {
+  vista: Vista;
+  url: string;
+  ancho: number;
+  alto: number;
+  puntos: Punto[];
+}
+
+export interface Angulo {
+  segmento: Segmento;
+  lado: "izq" | "der" | null;
+  vista: Vista;
+  angulo_grados: number | null;
+  puntaje_reba: number;
+  modificadores: string[];
+  estado: "ok" | "revisar" | "sin_dato";
+  puntaje_previo?: number | null; // de la evaluación capturada en piso, si existe
+}
+
+export interface ResultadoReba {
+  grupo_a: number;
+  grupo_b: number;
+  tabla_c: number;
+  carga: number;
+  agarre: number;
+  actividad: number;
+  final: number;
+  nivel: NivelReba;
+}
+
+export interface FactorNom {
+  codigo: string;
+  etiqueta: string;
+  color: ColorNom;
+  valor: number;
+}
+
+export interface ResultadoNom036 {
+  metodo: Exclude<TipoTarea, "postura">;
+  total: number;
+  nivel: ColorNom;
+  factores: FactorNom[];
+}
+
+/** El especialista marcó el hallazgo como falso positivo o no aplicable. */
+export interface Descarte {
+  motivo: string;
+  usuario: string;
+  timestamp: string;
+}
+
+export interface Hallazgo {
+  id: string;
+  origen: "vision" | "reglas_jabil" | "auditoria";
+  severidad: "info" | "advertencia" | "critico";
+  mensaje: string;
+  referencia?: string | null;
+  vista?: Vista | null;
+  caja?: [number, number, number, number] | null; // x, y, ancho, alto en píxeles
+  descartado?: Descarte | null;
+}
+
+/** Sin login en el prototipo: el rol se elige en la barra superior. */
+export type Rol = "ergonomia" | "ingenieria";
+export interface Actor {
+  usuario: string;
+  rol: Rol;
+}
+
+export type Agarre = "bueno" | "regular" | "malo" | "inaceptable";
+
+export interface Modificadores {
+  tronco_torsion_o_inclinacion: boolean;
+  cuello_torsion_o_inclinacion: boolean;
+  hombro_elevado: boolean;
+  brazo_abducido_o_rotado: boolean;
+  brazo_apoyado: boolean;
+  muneca_desviada_o_torcida: boolean;
+}
+
+/** Datos de la tarea que no salen de la foto; el especialista los puede corregir. */
+export interface ContextoTarea {
+  carga_kg: number;
+  carga_brusca: boolean;
+  agarre: Agarre;
+  actividad: number; // 0–3
+  apoyo_unilateral: boolean;
+  muneca_grados: number | null;
+  altura_trabajo_cm: number | null;
+  modificadores: Modificadores;
+}
+
+export type ValorCambio = boolean | number | string;
+
+/** Un ajuste concreto que propone una recomendación (p. ej. tronco 47.5° → 32.5°). */
+export interface CambioPropuesto {
+  parametro: string; // "angulo.tronco", "carga_kg", "agarre", "mod.hombro_elevado"…
+  etiqueta: string;
+  tipo: "numero" | "booleano" | "opcion";
+  unidad?: string | null;
+  actual: ValorCambio | null;
+  objetivo: ValorCambio | null;
+  minimo?: number | null;
+  maximo?: number | null;
+  opciones: string[];
+}
+
+export type NivelControl = "ingenieria" | "administrativo";
+/** planta = cambio físico (equipo, layout, alturas): requiere autorización de ingeniería. */
+export type TipoCambio = "planta" | "postura" | "administrativo";
+export type EstadoRecomendacion = "propuesta" | "aprobada" | "editada_aprobada" | "rechazada";
+export type EstadoImplementacion = "pendiente_autorizacion" | "por_implementar" | "implementada" | "denegada";
+
+export interface Recomendacion {
+  id: string;
+  nivel_control: NivelControl;
+  tipo_cambio: TipoCambio;
+  titulo: string;
+  texto: string;
+  referencia: string;
+  origen: "ia" | "especialista";
+  estado: EstadoRecomendacion;
+  implementacion: EstadoImplementacion | null;
+  responsable?: string | null;
+  fecha_compromiso?: string | null; // YYYY-MM-DD
+  aprobado_por?: string | null;
+  autorizado_por?: string | null;
+  nota_autorizacion?: string | null;
+  implementado_por?: string | null;
+  nota_implementacion?: string | null;
+  cambios: CambioPropuesto[];
+  reba_proyectado: number | null;
+  requiere_autorizacion: boolean;
+}
+
+export interface Residual {
+  antes_final: number;
+  antes_nivel: NivelReba;
+  despues_final: number;
+  despues_nivel: NivelReba;
+  segmentos: { segmento: Segmento; antes: number; despues: number }[];
+  recomendaciones_aplicadas: string[];
+}
+
+export interface CasoResumen {
+  id_caso: string;
+  estacion: string;
+  tipo_tarea: TipoTarea;
+  fecha: string;
+  reba_final: number | null;
+  nivel: NivelReba | null;
+  decisiones_pendientes: number;
+  por_autorizar: number;
+}
+
+/** Calculado por el backend: el informe solo se habilita cuando `completa` es true. */
+export interface Validacion {
+  pendientes: number;
+  falta_ingenieria: boolean; // riesgo alto/muy alto sin control de ingeniería aprobado
+  completa: boolean;
+  por_autorizar: number; // cambios en planta esperando a ingeniería
+  por_implementar: number;
+  implementadas: number;
+}
+
+export interface CasoDetalle {
+  id_caso: string;
+  estacion: string;
+  tipo_tarea: TipoTarea;
+  fecha: string;
+  imagenes: Imagen[];
+  contexto: ContextoTarea;
+  angulos: Angulo[];
+  reba: ResultadoReba | null;
+  nom036: ResultadoNom036 | null;
+  hallazgos: Hallazgo[];
+  recomendaciones: Recomendacion[];
+  residual: Residual | null;
+  validacion: Validacion;
+}
+
+export interface Decision extends Actor {
+  id_caso: string;
+  id_recomendacion: string;
+  accion: "aprobar" | "editar" | "rechazar";
+  texto_editado?: string; // al editar: mín. 5 caracteres
+  cambios?: Record<string, ValorCambio>; // al editar: parámetro → nuevo objetivo
+  motivo?: string; // obligatorio al editar o rechazar
+  responsable?: string;
+  fecha_compromiso?: string;
+}
+
+export interface NuevaRecomendacion extends Actor {
+  nivel_control: NivelControl;
+  tipo_cambio: TipoCambio;
+  titulo: string;
+  texto: string;
+  referencia?: string;
+  cambios: Record<string, ValorCambio>;
+  motivo: string;
+  responsable?: string;
+  fecha_compromiso?: string;
+}
+
+export interface EntradaBitacora {
+  secuencia: number;
+  timestamp: string;
+  usuario: string;
+  accion: string;
+  objetivo: string;
+  id_caso: string | null;
+  antes?: string;
+  despues?: string;
+  motivo?: string;
+  hash: string;
+  hash_anterior: string;
+}
+
+export interface ResultadoIntegridad {
+  ok: boolean;
+  total: number;
+  primera_falla: number | null; // secuencia de la primera entrada alterada
+  detalle?: string | null; // p. ej. audit_trail de un caso alterado
+}

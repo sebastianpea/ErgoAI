@@ -178,8 +178,38 @@ class TestSessionStore(unittest.TestCase):
         self.assertEqual(reloaded.reba_initial_score, 11)
         self.assertTrue(reloaded.is_validated_by_human)
 
-    def test_performance_latency_under_5ms(self):
-        """Mide la latencia de guardado de un evento para garantizar que sea ultra rápido (< 5 ms)."""
+    def test_genesis_no_es_campo_serializado(self):
+        """El bloque génesis es constante del esquema; un archivo no puede redefinirlo."""
+        doc = AuditTrailDocument(case_id="x")
+        self.assertNotIn("GENESIS_HASH", doc.model_dump())
+        alterado = AuditTrailDocument.model_validate({"case_id": "x", "GENESIS_HASH": "f" * 64})
+        self.assertEqual(alterado.get_latest_hash(), "0" * 64)
+
+    def test_event_id_duplicado(self):
+        case_id = "caso_dup"
+        self.mgr.init_case_workspace(case_id)
+        rec = RecommendationSnapshot(recommendation_id="R1", hierarchy=ControlHierarchyEnum.INGENIERIA,
+                                     description="Ajuste de mesa")
+        kwargs = dict(case_id=case_id, event_id="EVT-1", specialist_id="ING_X", action=AuditActionEnum.APPROVED,
+                      target_recommendation_id="R1", original_ai_recommendation=rec,
+                      initial_risk_score=8, residual_risk_score=3)
+        self.mgr.append_audit_event(**kwargs)
+        with self.assertRaises(ValueError):
+            self.mgr.append_audit_event(**kwargs)
+
+    def test_case_id_no_permite_salir_del_workspace(self):
+        for malo in ("../fuera", "a/b", "..", "", "c:\\x"):
+            with self.assertRaises(ValueError, msg=malo):
+                self.mgr.get_case_dir(malo)
+
+    def test_escritura_atomica_no_deja_temporales_si_falla(self):
+        destino = self.test_dir / "x.json"
+        with self.assertRaises(TypeError):
+            self.mgr.write_json_atomic(destino, {"no_serializable": object()})
+        self.assertEqual(list(self.test_dir.iterdir()), [])
+
+    def test_performance_latency(self):
+        """Mide la latencia de guardado de un evento (objetivo típico 1–3 ms; límite holgado por fsync)."""
         case_id = "caso_05_perf"
         self.mgr.init_case_workspace(case_id)
 

@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Datos de runtime (casos, bitácora, alertas). Se regeneran desde backend/app/seed.
+casos_jabil_workspace/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Modelos ONNX de visión (~150 MB). Se descargan con: python -m backend.app.vision.modelos
+models/

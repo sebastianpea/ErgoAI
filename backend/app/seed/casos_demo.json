@@ -1,0 +1,154 @@
+{
+  "_nota": "Casos de demostración. Los keypoints simulan la salida del detector de pose (COCO-17: [id, x, y, confianza]). Ángulos, REBA, NOM-036 total, hallazgos de auditoría/Jabil y riesgo residual los calcula el backend.",
+  "imagen_placeholder": "placeholder.svg",
+  "esqueletos": {
+    "lateral": {
+      "ancho": 1280, "alto": 720,
+      "puntos": [
+        [0, 772, 300, 0.62], [1, 765, 288, 0.55], [2, 768, 290, 0.5], [3, 745, 292, 0.81], [4, 742, 295, 0.4],
+        [5, 700, 332, 0.93], [6, 694, 336, 0.71], [7, 724, 452, 0.9], [8, 716, 456, 0.66],
+        [9, 795, 520, 0.88], [10, 788, 526, 0.35], [11, 580, 442, 0.95], [12, 574, 446, 0.8],
+        [13, 612, 560, 0.92], [14, 606, 564, 0.77], [15, 600, 680, 0.9], [16, 594, 684, 0.74]
+      ]
+    },
+    "frontal": {
+      "ancho": 1280, "alto": 720,
+      "puntos": [
+        [0, 640, 232, 0.7], [1, 650, 220, 0.6], [2, 630, 220, 0.6], [3, 665, 230, 0.75], [4, 615, 230, 0.75],
+        [5, 720, 300, 0.95], [6, 560, 300, 0.95], [7, 762, 392, 0.9], [8, 528, 402, 0.9],
+        [9, 742, 472, 0.86], [10, 558, 482, 0.84], [11, 690, 450, 0.93], [12, 590, 450, 0.93],
+        [13, 682, 570, 0.9], [14, 598, 570, 0.9], [15, 680, 690, 0.88], [16, 600, 690, 0.88]
+      ]
+    },
+    "cenital": {
+      "ancho": 1280, "alto": 720,
+      "puntos": [
+        [0, 640, 300, 0.45], [1, 652, 296, 0.4], [2, 628, 296, 0.4], [3, 668, 290, 0.6], [4, 612, 290, 0.6],
+        [5, 715, 330, 0.88], [6, 565, 330, 0.88], [7, 770, 410, 0.8], [8, 520, 405, 0.82],
+        [9, 760, 500, 0.78], [10, 535, 495, 0.8], [11, 680, 360, 0.3], [12, 600, 360, 0.3],
+        [13, 680, 380, 0.15], [14, 600, 380, 0.15], [15, 680, 390, 0.1], [16, 600, 390, 0.1]
+      ]
+    }
+  },
+  "casos": [
+    {
+      "id_caso": "C-001",
+      "estacion": "Linea_2 · Estación 04",
+      "tipo_tarea": "levantamiento",
+      "fecha": "2026-11-06T10:00:00-06:00",
+      "contexto": {
+        "carga_kg": 16, "agarre": "regular", "actividad": 1,
+        "modificadores": { "tronco_torsion_o_inclinacion": true, "cuello_torsion_o_inclinacion": true }
+      },
+      "evaluacion_previa": {
+        "segmentos": { "tronco": 2, "cuello": 1, "piernas": 1, "brazo": 3, "antebrazo": 1 },
+        "reba_final": 7
+      },
+      "nom036": {
+        "metodo": "levantamiento",
+        "factores": [
+          { "codigo": "peso_frecuencia", "etiqueta": "Peso de la carga y frecuencia", "color": "rojo", "valor": 6 },
+          { "codigo": "distancia_horizontal", "etiqueta": "Distancia horizontal manos–espalda", "color": "amarillo", "valor": 3 },
+          { "codigo": "region_vertical", "etiqueta": "Región vertical del levantamiento", "color": "naranja", "valor": 3 },
+          { "codigo": "torsion", "etiqueta": "Torsión e inclinación lateral", "color": "amarillo", "valor": 1 },
+          { "codigo": "postura", "etiqueta": "Restricciones posturales", "color": "verde", "valor": 0 },
+          { "codigo": "agarre", "etiqueta": "Agarre de la carga", "color": "amarillo", "valor": 1 },
+          { "codigo": "piso", "etiqueta": "Superficie del piso", "color": "verde", "valor": 0 },
+          { "codigo": "otros", "etiqueta": "Otros factores ambientales", "color": "verde", "valor": 0 }
+        ]
+      },
+      "hallazgos_vision": [
+        { "id": "V1", "origen": "vision", "severidad": "advertencia", "mensaje": "Botella sobre la mesa en zona de alcance 2", "vista": "cenital", "caja": [930, 420, 70, 150] }
+      ],
+      "recomendaciones": [
+        { "id": "R1", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Asistencia mecánica para la carga",
+          "texto": "Instalar lifter o mesa elevadora para eliminar el levantamiento manual de 16 kg.",
+          "referencia": "16-PE30-6500-00023 §6.4.1; NOM-036-1-STPS-2018",
+          "efecto": { "carga_kg": 0 } },
+        { "id": "R2", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Elevar la superficie de toma",
+          "texto": "Colocar el material a la altura de codos (95–120 cm) para reducir la flexión de tronco.",
+          "referencia": "16-PE30-6500-00023 §6.4.4 y §7.2.3",
+          "efecto": { "angulos": { "tronco": 10, "brazo": 15 }, "modificadores": { "tronco_torsion_o_inclinacion": false } } },
+        { "id": "R3", "nivel_control": "administrativo", "tipo_cambio": "administrativo", "titulo": "Rotación de puesto",
+          "texto": "Rotar entre esta estación y una de bajo riesgo cada 2 horas mientras se implementan los controles de ingeniería.",
+          "referencia": "NOM-036-1-STPS-2018" },
+        { "id": "R4", "nivel_control": "administrativo", "tipo_cambio": "postura", "titulo": "Corregir técnica de levantamiento",
+          "texto": "Capacitar al operador para flexionar rodillas y reducir 15° la flexión de tronco al tomar la pieza.",
+          "referencia": "NOM-036-1-STPS-2018 capacitación",
+          "efecto": { "angulos": { "tronco": 32.5 } } }
+      ]
+    },
+    {
+      "id_caso": "C-002",
+      "estacion": "Linea_5 · Empaque",
+      "tipo_tarea": "empuje_sin_auxiliar",
+      "fecha": "2026-11-06T11:30:00-06:00",
+      "contexto": {
+        "carga_kg": 25, "carga_brusca": true, "agarre": "malo", "actividad": 2, "apoyo_unilateral": true,
+        "altura_trabajo_cm": 85,
+        "modificadores": {
+          "tronco_torsion_o_inclinacion": true, "cuello_torsion_o_inclinacion": true,
+          "brazo_abducido_o_rotado": true, "muneca_desviada_o_torcida": true
+        }
+      },
+      "evaluacion_previa": {
+        "segmentos": { "tronco": 3, "cuello": 2, "piernas": 1, "brazo": 3, "antebrazo": 1, "muneca": 1 },
+        "reba_final": 9
+      },
+      "nom036": {
+        "metodo": "empuje_sin_auxiliar",
+        "factores": [
+          { "codigo": "fuerza_inicial", "etiqueta": "Fuerza inicial", "color": "morado", "valor": 6 },
+          { "codigo": "fuerza_sostenida", "etiqueta": "Fuerza sostenida", "color": "rojo", "valor": 3 },
+          { "codigo": "postura", "etiqueta": "Postura", "color": "rojo", "valor": 3 },
+          { "codigo": "agarre", "etiqueta": "Agarre de manos", "color": "amarillo", "valor": 1 },
+          { "codigo": "patron_trabajo", "etiqueta": "Patrón de trabajo", "color": "amarillo", "valor": 2 },
+          { "codigo": "distancia", "etiqueta": "Distancia recorrida", "color": "rojo", "valor": 3 },
+          { "codigo": "piso", "etiqueta": "Condición del piso", "color": "amarillo", "valor": 1 },
+          { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta", "color": "rojo", "valor": 3 }
+        ]
+      },
+      "hallazgos_vision": [],
+      "recomendaciones": [
+        { "id": "R1", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Carro con ruedas de baja resistencia",
+          "texto": "Sustituir el empuje manual por un carro de 4 ruedas giratorias con frenos y asas a 95–110 cm.",
+          "referencia": "NOM-036-1-STPS-2018; 16-PE80-6500-00014-H con auxiliar (5)",
+          "efecto": { "carga_kg": 8, "carga_brusca": false, "agarre": "bueno", "apoyo_unilateral": false } },
+        { "id": "R2", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Ajustar altura de trabajo",
+          "texto": "Elevar la superficie de empaque de 85 cm al rango 95–125 cm para eliminar la flexión de tronco.",
+          "referencia": "16-PE30-6500-00023 §6.4.4 y §7.2.3",
+          "efecto": { "angulos": { "tronco": 10, "brazo": 15 },
+                      "modificadores": { "tronco_torsion_o_inclinacion": false, "brazo_abducido_o_rotado": false } } },
+        { "id": "R3", "nivel_control": "administrativo", "tipo_cambio": "administrativo", "titulo": "Rotación y pausas",
+          "texto": "Rotar al personal cada hora y aplicar pausas de 5 minutos con relevo (Ley Silla).",
+          "referencia": "NOM-036-1-STPS-2018; Ley Silla STPS",
+          "efecto": { "actividad": 1 } }
+      ]
+    },
+    {
+      "id_caso": "C-003",
+      "estacion": "Linea_1 · Ensamble fino",
+      "tipo_tarea": "postura",
+      "fecha": "2026-11-06T09:10:00-06:00",
+      "contexto": { "carga_kg": 0, "agarre": "bueno", "actividad": 1, "altura_trabajo_cm": 105 },
+      "evaluacion_previa": {
+        "segmentos": { "tronco": 3, "cuello": 1, "piernas": 1, "brazo": 3, "antebrazo": 2, "muneca": 1 },
+        "reba_final": 4
+      },
+      "hallazgos_vision": [
+        { "id": "V1", "origen": "vision", "severidad": "advertencia", "mensaje": "Botella sobre la mesa en zona de alcance 2", "vista": "cenital", "caja": [930, 420, 70, 150] }
+      ],
+      "recomendaciones": [
+        { "id": "R1", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Acercar componentes a zona 1–2",
+          "texto": "Reubicar los componentes de ciclo regular a menos de 400 mm del operador y elevar la base de ensamble para reducir la flexión de tronco y brazo.",
+          "referencia": "16-PE30-6500-00023 zonas de alcance",
+          "efecto": { "angulos": { "tronco": 10, "brazo": 15 } } }
+      ]
+    }
+  ],
+  "alertas": [
+    { "id_alerta": "DEMO-CAIDA-01", "id_operario": "OP-1042", "estacion": "Linea_2", "tipo_evento": "EMERGENCIA_CAIDA",
+      "nivel_urgencia": "ALTO", "detalles": "Simulación fase 2: persona desmayada o golpe con levantamiento rápido",
+      "timestamp": "2026-10-30T15:15:00-06:00", "id_caso": null, "estado": "nueva" }
+  ]
+}
