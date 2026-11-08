@@ -60,8 +60,10 @@ export interface FactorNom {
   valor: number;
 }
 
+export type MetodoNom036 = Exclude<TipoTarea, "postura">;
+
 export interface ResultadoNom036 {
-  metodo: Exclude<TipoTarea, "postura">;
+  metodo: MetodoNom036;
   total: number;
   nivel: ColorNom;
   factores: FactorNom[];
@@ -188,6 +190,30 @@ export interface Validacion {
   implementadas: number;
 }
 
+/** Estudio de referencia de Jabil (puntajes REBA capturados en piso). */
+export interface EvaluacionPrevia {
+  segmentos: Partial<Record<Segmento, number>>;
+  reba_final: number | null;
+}
+
+/** Tiempos del estudio (criterio 8: impacto en tiempos de respuesta). */
+export interface Metricas {
+  creado_en: string | null;
+  analisis_ms: number | null;
+  primera_decision_en: string | null;
+  validado_en: string | null;
+}
+
+export interface Impacto {
+  minutos_evaluacion_manual: number;
+  fuente_referencia_manual: string;
+  casos: { id_caso: string; estacion: string; analisis_s: number | null; validacion_min: number | null }[];
+  analisis_promedio_s: number | null;
+  validacion_promedio_min: number | null;
+  ahorro_promedio_min: number | null;
+  ahorro_porcentaje: number | null;
+}
+
 export interface CasoDetalle {
   id_caso: string;
   estacion: string;
@@ -195,6 +221,7 @@ export interface CasoDetalle {
   fecha: string;
   imagenes: Imagen[];
   contexto: ContextoTarea;
+  evaluacion_previa: EvaluacionPrevia;
   angulos: Angulo[];
   reba: ResultadoReba | null;
   nom036: ResultadoNom036 | null;
@@ -202,6 +229,7 @@ export interface CasoDetalle {
   recomendaciones: Recomendacion[];
   residual: Residual | null;
   validacion: Validacion;
+  metricas: Metricas;
 }
 
 export interface Decision extends Actor {

@@ -157,6 +157,50 @@ class TestFlujoEspecialista(unittest.TestCase):
         self.assertIn("carga_kg: 16 kg", entrada["antes"])
         self.assertEqual(entrada["motivo"], "Se pesó la pieza: 8 kg")
 
+    def test_capturar_referencia_de_jabil(self):
+        url = "/casos/C-003/referencia"
+        # C-003 se capturó con tronco 3; la foto da 3 → sin discrepancia en tronco
+        ref = {"segmentos": {"tronco": 2, "cuello": 1}, "reba_final": 3}
+        self.assertEqual(self.c.put(url, json={**ERGO, "evaluacion_previa": ref}).status_code, 422)  # sin motivo
+        self.assertEqual(self.c.put(url, json={**IE, "evaluacion_previa": ref, "motivo": "xxx"}).status_code, 403)
+        malo = {"segmentos": {"tronco": 9}}
+        self.assertEqual(self.c.put(url, json={**ERGO, "evaluacion_previa": malo, "motivo": "xxx"}).status_code, 422)
+        r = self.c.put(url, json={**ERGO, "evaluacion_previa": ref, "motivo": "Estudio Jabil de la sesión 28/10"})
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        self.assertEqual(d["evaluacion_previa"]["reba_final"], 3)
+        self.assertTrue(any(h["id"] == "AUD-tronco" for h in d["hallazgos"]))
+        entrada = next(e for e in self.c.get("/bitacora?id_caso=C-003").json() if e["accion"] == "referencia_corregida")
+        self.assertIn("tronco: 2", entrada["despues"])
+
+    def test_capturar_nom036(self):
+        catalogo = self.c.get("/catalogo/nom036").json()
+        lev = catalogo["levantamiento"]["factores"]
+        factores = [{"codigo": f["codigo"], "etiqueta": f["etiqueta"], "color": "amarillo",
+                     "valor": f["opciones"]["amarillo"]} for f in lev]
+        url = "/casos/C-003/nom036"
+        cuerpo = {**ERGO, "motivo": "Hoja 16-PE80 llenada en piso", "nom036": {"metodo": "levantamiento", "factores": factores}}
+        r = self.c.put(url, json=cuerpo)
+        self.assertEqual(r.status_code, 200, r.text)
+        nom = r.json()["nom036"]
+        self.assertEqual(nom["total"], sum(f["valor"] for f in factores))
+        self.assertEqual(nom["nivel"], "rojo")  # 4+3+1+1+1+1+1+1 = 13
+
+        # El valor lo fija el color de la hoja
+        mal = [dict(f) for f in factores]
+        mal[0]["valor"] = 99
+        self.assertEqual(self.c.put(url, json={**cuerpo, "nom036": {"metodo": "levantamiento", "factores": mal}}).status_code, 422)
+        # Faltan factores
+        self.assertEqual(self.c.put(url, json={**cuerpo, "nom036": {"metodo": "levantamiento", "factores": factores[:3]}}).status_code, 422)
+        # Captura libre en empuje
+        libres = [{"codigo": f["codigo"], "etiqueta": f["etiqueta"], "color": "verde", "valor": 0}
+                  for f in catalogo["empuje_sin_auxiliar"]["factores"]]
+        self.assertEqual(self.c.put(url, json={**cuerpo, "nom036": {"metodo": "empuje_sin_auxiliar", "factores": libres}}).status_code, 200)
+        # Quitarla y permisos
+        self.assertIsNone(self.c.put(url, json={**cuerpo, "nom036": None}).json()["nom036"])
+        self.assertEqual(self.c.put(url, json={**cuerpo, **IE}).status_code, 403)
+        self.assertTrue(any(e["accion"] == "nom036_capturada" for e in self.c.get("/bitacora?id_caso=C-003").json()))
+
     def test_descartar_y_restaurar_hallazgo(self):
         url = "/casos/C-001/hallazgos/V1/revision"
         r = self.c.post(url, json={**ERGO, "accion": "descartar", "motivo": "Es el termo del supervisor, no está en la estación"})

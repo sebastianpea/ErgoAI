@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api";
-import type { CasoDetalle, ContextoTarea, Punto, Vista } from "../types/caso";
+import { api, type Nom036Captura } from "../api";
+import { FormNom036 } from "../components/FormNom036";
+import type { CasoDetalle, ContextoTarea, EvaluacionPrevia, Punto, Vista } from "../types/caso";
+import { FormReferencia } from "../components/FormReferencia";
 import { COLOR_SEMAFORO, ETIQUETA_TAREA, semaforoSegmento } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
 import { SkeletonEditor } from "../components/SkeletonEditor";
@@ -37,6 +39,14 @@ export function Analisis() {
   });
   const contexto = useMutation({
     mutationFn: ({ c, motivo }: { c: ContextoTarea; motivo: string }) => api.corregirContexto(id, c, motivo),
+    onSuccess: aplicar,
+  });
+  const nom036 = useMutation({
+    mutationFn: ({ n, motivo }: { n: Nom036Captura | null; motivo: string }) => api.corregirNom036(id, n, motivo),
+    onSuccess: aplicar,
+  });
+  const referencia = useMutation({
+    mutationFn: ({ v, motivo }: { v: EvaluacionPrevia; motivo: string }) => api.corregirReferencia(id, v, motivo),
     onSuccess: aplicar,
   });
   const hallazgo = useMutation({
@@ -122,13 +132,34 @@ export function Analisis() {
         />
       </div>
 
+      <div className="tarjeta">
+        <h2>Estudio de referencia de Jabil</h2>
+        <p className="sutil">
+          Puntajes del estudio previo de la estación. Cada segmento que no coincide con la foto aparece como
+          hallazgo de auditoría y en la columna "Capturado en piso" de la tabla de ángulos.
+        </p>
+        <FormReferencia
+          key={JSON.stringify(caso.evaluacion_previa)}
+          valor={caso.evaluacion_previa} editable={esErgonomia} ocupado={referencia.isPending}
+          error={referencia.error?.message}
+          onGuardar={(v, motivo) => referencia.mutate({ v, motivo })}
+        />
+      </div>
+
       <div className="rejilla">
         {caso.reba && (
           <div className="tarjeta"><h2>REBA</h2><DesgloseReba reba={caso.reba} /></div>
         )}
-        {caso.nom036 && (
-          <div className="tarjeta"><h2>NOM-036-1-STPS-2018</h2><DesgloseNom036 nom={caso.nom036} /></div>
-        )}
+        <div className="tarjeta">
+          <h2>NOM-036-1-STPS-2018</h2>
+          {caso.nom036 && <DesgloseNom036 nom={caso.nom036} />}
+          <FormNom036
+            key={JSON.stringify(caso.nom036)}
+            tipoTarea={caso.tipo_tarea} actual={caso.nom036} editable={esErgonomia}
+            ocupado={nom036.isPending} error={nom036.error?.message}
+            onGuardar={(n, motivo) => nom036.mutate({ n, motivo })}
+          />
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,8 @@
 // Única puerta al backend. Con VITE_USE_MOCK=true trabaja con datos simulados en memoria.
 import type {
-  CambioPropuesto, CasoDetalle, CasoResumen, ContextoTarea, Decision, EntradaBitacora, NuevaRecomendacion, Punto,
+  CambioPropuesto, CasoDetalle, CasoResumen, ColorNom, ContextoTarea, Decision, EntradaBitacora, EvaluacionPrevia,
+  FactorNom, Impacto, MetodoNom036,
+  NuevaRecomendacion, Punto,
   Recomendacion, ResultadoIntegridad, TipoTarea, Validacion, ValorCambio, Vista,
 } from "./types/caso";
 import type { Alerta } from "./types/alerta";
@@ -47,10 +49,15 @@ const rutaRec = (idCaso: string, idRec: string) => `/casos/${seg(idCaso)}/recome
 /** Parámetro que una recomendación puede modificar (catálogo del backend). */
 export type ParametroCatalogo = Omit<CambioPropuesto, "actual" | "objetivo">;
 
+export interface FactorCatalogo { codigo: string; etiqueta: string; opciones?: Partial<Record<ColorNom, number>> }
+export type CatalogoNom036 = Record<string, { hoja: string; captura_libre?: boolean; factores: FactorCatalogo[] } | string>;
+export interface Nom036Captura { metodo: MetodoNom036; factores: FactorNom[] }
+
 export interface DatosNuevoCaso {
   estacion: string;
   tipo_tarea: TipoTarea;
   contexto: ContextoTarea;
+  evaluacion_previa: EvaluacionPrevia;
 }
 export type FotosNuevoCaso = Partial<Record<Vista, File>> & { lateral: File };
 
@@ -72,6 +79,12 @@ const real = {
     return res.json() as Promise<{ ok: true; id: string }>;
   },
   catalogoParametros: () => http<ParametroCatalogo[]>("/catalogo/parametros"),
+  impacto: () => http<Impacto>("/metricas/impacto"),
+  catalogoNom036: () => http<CatalogoNom036>("/catalogo/nom036"),
+  corregirNom036: (id: string, nom036: Nom036Captura | null, motivo: string) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/nom036`, enviar("PUT", { nom036, motivo, ...actorActual() })),
+  corregirReferencia: (id: string, evaluacion_previa: EvaluacionPrevia, motivo: string) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/referencia`, enviar("PUT", { evaluacion_previa, motivo, ...actorActual() })),
   listarCasos: () => http<CasoResumen[]>("/casos"),
   obtenerCaso: (id: string) => http<CasoDetalle>(`/casos/${seg(id)}`),
   corregirPuntos: (id: string, vista: Vista, puntos: Punto[]) =>
@@ -170,6 +183,20 @@ const rolEs = (rol: string) => actorActual().rol === rol;
 const mock: typeof real = {
   estadoVision: () => copia({ disponible: false, detalle: "Modo simulado: la visión artificial requiere el backend real." }),
   crearCaso: () => falla("Crear casos desde fotos requiere el backend real (npm run dev, sin modo simulado)."),
+  impacto: () => copia<Impacto>({
+    minutos_evaluacion_manual: 45, fuente_referencia_manual: "Modo simulado", casos: [],
+    analisis_promedio_s: null, validacion_promedio_min: null, ahorro_promedio_min: null, ahorro_porcentaje: null,
+  }),
+  catalogoNom036: () => falla("El catálogo NOM-036 requiere el backend real."),
+  corregirNom036: () => falla("Capturar NOM-036 requiere el backend real."),
+  corregirReferencia: (id, evaluacion_previa, motivo) => {
+    const c = buscarCaso(id);
+    if (!c) return falla(`Caso ${id} no encontrado`);
+    if (!rolEs("ergonomia")) return falla("Solo Ergonomía puede capturar la evaluación de referencia");
+    c.evaluacion_previa = evaluacion_previa;
+    registrar({ usuario: actorActual().usuario, accion: "referencia_corregida", objetivo: `${id} / evaluación de referencia`, id_caso: id, motivo });
+    return copia(detalle(c));
+  },
   catalogoParametros: () => copia<ParametroCatalogo[]>([
     { parametro: "angulo.tronco", etiqueta: "Ángulo de tronco", tipo: "numero", unidad: "°", minimo: -90, maximo: 180, opciones: [] },
     { parametro: "angulo.cuello", etiqueta: "Ángulo de cuello", tipo: "numero", unidad: "°", minimo: -90, maximo: 180, opciones: [] },

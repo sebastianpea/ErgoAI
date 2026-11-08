@@ -26,6 +26,66 @@
     { "color": "rojo", "min": 13, "max": 20 },
     { "color": "morado", "min": 21, "max": 999 }
   ],
+  "metodos": {
+    "_fuente": "Factores del Apéndice de la NOM-036-1-STPS-2018 (adaptación del método MAC de la HSE). VERIFICAR los valores contra la hoja oficial 16-PE80-6500-00014-H antes de la entrega. En empuje/arrastre el valor se captura directamente de la hoja.",
+    "levantamiento": {
+      "hoja": "Levantamiento (1)",
+      "factores": [
+        { "codigo": "peso_frecuencia", "etiqueta": "Peso de la carga y frecuencia", "opciones": { "verde": 0, "amarillo": 4, "rojo": 6, "morado": 10 } },
+        { "codigo": "distancia_horizontal", "etiqueta": "Distancia horizontal manos–espalda", "opciones": { "verde": 0, "amarillo": 3, "rojo": 6 } },
+        { "codigo": "region_vertical", "etiqueta": "Región vertical del levantamiento", "opciones": { "verde": 0, "amarillo": 1, "rojo": 3 } },
+        { "codigo": "torsion", "etiqueta": "Torsión e inclinación lateral del tronco", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "postura", "etiqueta": "Restricciones posturales", "opciones": { "verde": 0, "amarillo": 1, "rojo": 3 } },
+        { "codigo": "agarre", "etiqueta": "Agarre de la carga", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "piso", "etiqueta": "Superficie del piso", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "otros", "etiqueta": "Otros factores ambientales", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } }
+      ]
+    },
+    "transporte": {
+      "hoja": "Transporte (2)",
+      "factores": [
+        { "codigo": "peso_frecuencia", "etiqueta": "Peso de la carga y frecuencia", "opciones": { "verde": 0, "amarillo": 4, "rojo": 6, "morado": 10 } },
+        { "codigo": "distancia_manos_espalda", "etiqueta": "Distancia horizontal manos–espalda", "opciones": { "verde": 0, "amarillo": 3, "rojo": 6 } },
+        { "codigo": "asimetria", "etiqueta": "Asimetría del tronco y la carga", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "postura", "etiqueta": "Restricciones posturales", "opciones": { "verde": 0, "amarillo": 1, "rojo": 3 } },
+        { "codigo": "agarre", "etiqueta": "Agarre de la carga", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "piso", "etiqueta": "Superficie del piso", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "otros", "etiqueta": "Otros factores ambientales", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "distancia_transporte", "etiqueta": "Distancia de transporte", "opciones": { "verde": 0, "amarillo": 1, "rojo": 3 } },
+        { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta", "opciones": { "verde": 0, "amarillo": 2, "rojo": 3 } }
+      ]
+    },
+    "empuje_sin_auxiliar": {
+      "hoja": "sin auxiliar (4)",
+      "captura_libre": true,
+      "factores": [
+        { "codigo": "fuerza_inicial", "etiqueta": "Fuerza inicial" },
+        { "codigo": "fuerza_sostenida", "etiqueta": "Fuerza sostenida" },
+        { "codigo": "postura", "etiqueta": "Postura" },
+        { "codigo": "agarre", "etiqueta": "Agarre de manos" },
+        { "codigo": "patron_trabajo", "etiqueta": "Patrón de trabajo" },
+        { "codigo": "distancia", "etiqueta": "Distancia recorrida" },
+        { "codigo": "piso", "etiqueta": "Condición del piso" },
+        { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta" },
+        { "codigo": "otros", "etiqueta": "Otros factores" }
+      ]
+    },
+    "empuje_con_auxiliar": {
+      "hoja": "con auxiliar (5)",
+      "captura_libre": true,
+      "factores": [
+        { "codigo": "peso_carga", "etiqueta": "Peso de la carga en el equipo" },
+        { "codigo": "postura", "etiqueta": "Postura" },
+        { "codigo": "agarre", "etiqueta": "Agarre de manos" },
+        { "codigo": "patron_trabajo", "etiqueta": "Patrón de trabajo" },
+        { "codigo": "distancia", "etiqueta": "Distancia recorrida" },
+        { "codigo": "piso", "etiqueta": "Condición del piso" },
+        { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta" },
+        { "codigo": "estado_equipo", "etiqueta": "Estado del equipo (ruedas, frenos)" },
+        { "codigo": "otros", "etiqueta": "Otros factores" }
+      ]
+    }
+  },
   "sheets_mapping": {
     "levantamiento_1": {
       "name": "Levantamiento (1)",

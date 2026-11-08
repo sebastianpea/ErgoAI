@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type FotosNuevoCaso } from "../api";
-import type { ContextoTarea, TipoTarea, Vista } from "../types/caso";
+import type { ContextoTarea, EvaluacionPrevia, TipoTarea, Vista } from "../types/caso";
+import { CamposReferencia, REFERENCIA_VACIA } from "../components/FormReferencia";
 import { ETIQUETA_TAREA } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
 import { Encabezado } from "../components/Encabezado";
@@ -43,14 +44,17 @@ export function NuevoCaso() {
   const [estacion, setEstacion] = useState("");
   const [tarea, setTarea] = useState<TipoTarea>("levantamiento");
   const [contexto, setContexto] = useState<ContextoTarea>(CONTEXTO_VACIO);
+  const [referencia, setReferencia] = useState<EvaluacionPrevia>(REFERENCIA_VACIA);
   const [fotos, setFotos] = useState<Partial<Record<Vista, File>>>({});
 
   const crear = useMutation({
-    mutationFn: () => api.crearCaso({ estacion: estacion.trim(), tipo_tarea: tarea, contexto }, fotos as FotosNuevoCaso),
+    mutationFn: () => api.crearCaso(
+      { estacion: estacion.trim(), tipo_tarea: tarea, contexto, evaluacion_previa: referencia }, fotos as FotosNuevoCaso),
     onSuccess: ({ id }) => {
       qc.invalidateQueries({ queryKey: ["casos"] });
       qc.invalidateQueries({ queryKey: ["alertas"] });
       qc.invalidateQueries({ queryKey: ["bitacora"] });
+      qc.invalidateQueries({ queryKey: ["impacto"] });
       navegar(`/casos/${id}`);
     },
   });
@@ -98,6 +102,15 @@ export function NuevoCaso() {
           </div>
           <p className="etiqueta-campo">Datos que no salen de la foto</p>
           <CamposContexto valor={contexto} onChange={setContexto} />
+        </div>
+
+        <div className="tarjeta">
+          <h2>Estudio de referencia de Jabil (opcional)</h2>
+          <p className="sutil">
+            Puntajes REBA del estudio previo de la estación. El sistema los compara con lo que mide en la foto y
+            marca cada diferencia como hallazgo de auditoría. Se pueden capturar después.
+          </p>
+          <CamposReferencia valor={referencia} onChange={setReferencia} />
         </div>
 
         {crear.isError && <p className="aviso error">No se creó el caso: {crear.error.message}</p>}

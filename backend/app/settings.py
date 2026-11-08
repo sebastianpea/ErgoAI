@@ -27,6 +27,13 @@ VISION_DEVICE = os.environ.get("ERGOAI_DEVICE", "cpu")
 VISION_CONFIANZA_KEYPOINT = float(os.environ.get("ERGOAI_VISION_CONFIANZA", "0.3"))
 MAX_FOTO_MB = float(os.environ.get("ERGOAI_MAX_FOTO_MB", "15"))
 
+# Línea base para medir el impacto (criterio 8). Reemplazar por el tiempo medido en Jabil cuando se tenga.
+MINUTOS_EVALUACION_MANUAL = float(os.environ.get("ERGOAI_MINUTOS_EVALUACION_MANUAL", "45"))
+FUENTE_EVALUACION_MANUAL = os.environ.get(
+    "ERGOAI_FUENTE_EVALUACION_MANUAL",
+    "Estimación del equipo (Especificaciones_y_Arquitectura_ErgoAI.md): ~45 min por evaluación manual REBA + redacción",
+)
+
 CORS_ORIGINS = [
     o.strip()
     for o in os.environ.get("ERGOAI_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")

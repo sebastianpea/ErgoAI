@@ -16,22 +16,24 @@ import json
 import logging
 import shutil
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from backend.app.api.schemas import (
-    Actor, Alerta, Angulo, Autorizacion, CasoAlmacenado, CasoDetalle, CasoResumen, CorreccionContexto, Decision,
+    Actor, Alerta, Angulo, Autorizacion, CasoAlmacenado, CasoDetalle, CasoImpacto, CasoResumen, CorreccionContexto,
+    CorreccionNom036, CorreccionReferencia, Decision, Impacto, Nom036Captura,
     Descarte, Hallazgo, Imagen, Implementacion, NuevaRecomendacion, NuevoCaso, Punto, Recomendacion, RecomendacionAlmacenada,
     Residual, ResultadoIntegridad, ResultadoNom036, ResultadoReba, RevisionHallazgo, SegmentoResidual, Validacion,
     Vista,
 )
-from backend.app.core_ergonomics.angle_geometry import extraer_angulos_laterales
+from backend.app.core_ergonomics.angle_geometry import extraer_angulos_laterales, medir_vista_frontal
 from backend.app.core_ergonomics.cambios import (
     PARAMETROS, describir_contexto, dict_a_efecto, efecto_a_cambios, efecto_a_dict,
 )
 from backend.app.core_ergonomics.modelos import SEGMENTOS, AnguloMedido, Efecto, Segmento
-from backend.app.core_ergonomics.nom036_calculator import color_total, total_factores
+from backend.app.core_ergonomics.nom036_calculator import color_total, total_factores, validar_captura
 from backend.app.core_ergonomics.reba_calculator import RebaCalculator, ResultadoRebaCalculado
 from backend.app.core_ergonomics.residual_simulator import simular
 from backend.app.session_store import (
@@ -39,7 +41,9 @@ from backend.app.session_store import (
     RecommendationSnapshot, SessionStatusEnum,
 )
 from backend.app.core_ergonomics.generador_recomendaciones import generar
-from backend.app.settings import CONFIANZA_MINIMA, MAX_FOTO_MB, TOLERANCIA_UMBRAL_GRADOS
+from backend.app.settings import (
+    CONFIANZA_MINIMA, FUENTE_EVALUACION_MANUAL, MAX_FOTO_MB, MINUTOS_EVALUACION_MANUAL, TOLERANCIA_UMBRAL_GRADOS,
+)
 from backend.app.vision.estimador import VisionNoDisponible, estimador
 
 log = logging.getLogger("ergoai.casos")
@@ -321,9 +325,9 @@ class ServicioCasos:
         return CasoDetalle(
             id_caso=caso.id_caso, estacion=caso.estacion, tipo_tarea=caso.tipo_tarea, fecha=caso.fecha,
             imagenes=[Imagen(**{**i.model_dump(), "url": f"/media/{caso.id_caso}/{i.url}"}) for i in caso.imagenes],
-            contexto=ctx, angulos=angulos, reba=reba, nom036=nom036, hallazgos=hallazgos,
-            recomendaciones=recomendaciones, residual=residual,
-            validacion=self._validacion(caso, reba),
+            contexto=ctx, evaluacion_previa=caso.evaluacion_previa, angulos=angulos, reba=reba, nom036=nom036,
+            hallazgos=hallazgos, recomendaciones=recomendaciones, residual=residual,
+            validacion=self._validacion(caso, reba), metricas=caso.metricas,
         )
 
     @staticmethod
@@ -346,8 +350,20 @@ class ServicioCasos:
     # ================= Estado de sesión y alertas =================
 
     def _sincronizar(self, caso: CasoAlmacenado, detalle: CasoDetalle, especialista: Optional[str] = None) -> None:
+        self._registrar_hitos(caso, detalle)
         self._sincronizar_estado(caso, detalle, especialista)
         self._sincronizar_alertas(caso, detalle)
+
+    def _registrar_hitos(self, caso: CasoAlmacenado, d: CasoDetalle) -> None:
+        """Primera decisión y validación completa: base de la medición de tiempos de respuesta."""
+        m, cambio = caso.metricas, False
+        if m.primera_decision_en is None and any(r.estado != "propuesta" for r in caso.recomendaciones):
+            m.primera_decision_en, cambio = _ahora(), True
+        if m.validado_en is None and d.validacion.completa:
+            m.validado_en, cambio = _ahora(), True
+        if cambio:
+            self._guardar(caso)
+            d.metricas = m
 
     def _sincronizar_estado(self, caso: CasoAlmacenado, d: CasoDetalle, especialista: Optional[str]) -> None:
         estado = self.mgr.load_session_state(caso.id_caso)
@@ -708,6 +724,8 @@ class ServicioCasos:
         import cv2  # dependencia opcional: solo se necesita con visión instalada
         import numpy as np
 
+        t0 = time.perf_counter()
+
         # La inferencia (lenta) va fuera del candado del servicio.
         resultados = {}
         for vista, contenido in fotos.items():
@@ -762,12 +780,16 @@ class ServicioCasos:
                 fecha=datetime.now().astimezone().isoformat(timespec="seconds"), imagenes=imagenes,
                 contexto=datos.contexto, evaluacion_previa=datos.evaluacion_previa, hallazgos_vision=hallazgos,
             )
+            medidos = self._medir(caso)
+            self._aplicar_vista_frontal(caso, medidos["brazo"].lado or "izq")
             medidos, res = self._calcular_reba(caso)  # type: ignore[misc]  (hay foto lateral)
             propuestas = generar(
                 {s: m.grados for s, m in medidos.items()}, caso.contexto, caso.tipo_tarea, res.final,
                 self.config.get_reba_tables(), self.config.get_jabil_standards())
             caso.recomendaciones = [RecomendacionAlmacenada.model_validate({**r, "texto_ia": r["texto"]})
                                     for r in propuestas]
+            caso.metricas.creado_en = _ahora()
+            caso.metricas.analisis_ms = round((time.perf_counter() - t0) * 1000, 1)
 
             self._guardar(caso)
             detalle = self._evaluar(caso)
@@ -779,6 +801,101 @@ class ServicioCasos:
             self._sincronizar(caso, detalle, datos.usuario)
             log.info("Caso creado desde fotos: %s REBA=%s", id_caso, res.final)
             return id_caso
+
+    def _aplicar_vista_frontal(self, caso: CasoAlmacenado, lado: str) -> None:
+        """Marca los modificadores que se ven en la foto frontal; el especialista puede desmarcarlos."""
+        frontal = next((i for i in caso.imagenes if i.vista == "frontal" and i.puntos), None)
+        if frontal is None:
+            return
+        umbrales = self.config.get_reba_tables()["frontal_view_thresholds_deg"]
+        m = medir_vista_frontal(frontal.puntos, lado, CONFIANZA_MINIMA)
+        mods = caso.contexto.modificadores
+        if m["inclinacion_tronco"] is not None and m["inclinacion_tronco"] > umbrales["trunk_side_bending"]:
+            mods.tronco_torsion_o_inclinacion = True
+            caso.hallazgos_vision.append(Hallazgo(
+                id="V-frontal-tronco", origen="vision", severidad="info", vista="frontal",
+                mensaje=(f"Vista frontal: inclinación lateral de tronco de {m['inclinacion_tronco']:g}° "
+                         f"(> {umbrales['trunk_side_bending']:g}°); se marcó el modificador REBA de tronco.")))
+        if m["abduccion_brazo"] is not None and m["abduccion_brazo"] > umbrales["upper_arm_abduction"]:
+            mods.brazo_abducido_o_rotado = True
+            caso.hallazgos_vision.append(Hallazgo(
+                id="V-frontal-brazo", origen="vision", severidad="info", vista="frontal",
+                mensaje=(f"Vista frontal: abducción del brazo de {m['abduccion_brazo']:g}° "
+                         f"(> {umbrales['upper_arm_abduction']:g}°); se marcó el modificador REBA de brazo.")))
+
+    def corregir_referencia(self, id_caso: str, c: CorreccionReferencia) -> CasoDetalle:
+        """Carga o corrige el estudio de referencia de Jabil contra el que se audita el análisis."""
+        _exigir_rol(c, "ergonomia", "capturar la evaluación de referencia")
+        with self._lock:
+            caso = self._cargar(id_caso)
+            if caso.evaluacion_previa == c.evaluacion_previa:
+                return self._evaluar(caso)
+
+            def txt(e) -> str:
+                partes = [f"{s}: {v}" for s, v in e.segmentos.items()]
+                return "; ".join(partes + [f"REBA {e.reba_final}"] if e.reba_final else partes) or "sin captura"
+
+            antes = txt(caso.evaluacion_previa)
+            caso.evaluacion_previa = c.evaluacion_previa
+            despues = self._cerrar_mutacion(caso)
+            self.ledger.registrar(c.usuario, "referencia_corregida", f"{id_caso} / evaluación de referencia", id_caso,
+                                  antes=antes, despues=txt(c.evaluacion_previa), motivo=c.motivo.strip())
+            self._sincronizar(caso, despues, c.usuario)
+            return despues
+
+    def corregir_nom036(self, id_caso: str, c: CorreccionNom036) -> CasoDetalle:
+        """Captura o corrige la evaluación NOM-036 (factores de la hoja 16-PE80-6500-00014-H)."""
+        _exigir_rol(c, "ergonomia", "capturar la evaluación NOM-036")
+        tablas = self.config.get_nom036_tables()
+        if c.nom036 is not None:
+            try:
+                validar_captura(c.nom036.metodo, c.nom036.factores, tablas)
+            except ValueError as e:
+                raise DatosInvalidos(str(e)) from e
+        with self._lock:
+            caso = self._cargar(id_caso)
+            if caso.nom036 == c.nom036:
+                return self._evaluar(caso)
+
+            def txt(n: Optional[Nom036Captura]) -> str:
+                if n is None:
+                    return "sin evaluación"
+                total = total_factores(f.valor for f in n.factores)
+                return f"{n.metodo}: total {total} ({color_total(total, tablas)})"
+
+            antes = txt(caso.nom036)
+            caso.nom036 = c.nom036
+            despues = self._cerrar_mutacion(caso)
+            self.ledger.registrar(c.usuario, "nom036_capturada", f"{id_caso} / NOM-036", id_caso,
+                                  antes=antes, despues=txt(c.nom036), motivo=c.motivo.strip())
+            self._sincronizar(caso, despues, c.usuario)
+            return despues
+
+    def impacto(self) -> Impacto:
+        """Tiempos medidos en los casos analizados desde fotos frente a la evaluación manual."""
+        with self._lock:
+            casos = []
+            for id_caso in self._ids():
+                c = self._cargar(id_caso)
+                m = c.metricas
+                if m.analisis_ms is None:
+                    continue  # casos de ejemplo: no tienen tiempo real medido
+                validacion = None
+                if m.creado_en and m.validado_en:
+                    validacion = round((datetime.fromisoformat(m.validado_en)
+                                        - datetime.fromisoformat(m.creado_en)).total_seconds() / 60, 1)
+                casos.append(CasoImpacto(id_caso=id_caso, estacion=c.estacion,
+                                         analisis_s=round(m.analisis_ms / 1000, 1), validacion_min=validacion))
+            analisis = [c.analisis_s for c in casos if c.analisis_s is not None]
+            validados = [c.validacion_min for c in casos if c.validacion_min is not None]
+            prom_val = round(sum(validados) / len(validados), 1) if validados else None
+            ahorro = round(MINUTOS_EVALUACION_MANUAL - prom_val, 1) if prom_val is not None else None
+            return Impacto(
+                minutos_evaluacion_manual=MINUTOS_EVALUACION_MANUAL, fuente_referencia_manual=FUENTE_EVALUACION_MANUAL,
+                casos=casos, analisis_promedio_s=round(sum(analisis) / len(analisis), 1) if analisis else None,
+                validacion_promedio_min=prom_val, ahorro_promedio_min=ahorro,
+                ahorro_porcentaje=round(ahorro / MINUTOS_EVALUACION_MANUAL * 100, 1) if ahorro is not None else None,
+            )
 
     def listar_alertas(self) -> List[Alerta]:
         with self._lock:

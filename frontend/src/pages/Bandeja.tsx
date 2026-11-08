@@ -6,6 +6,7 @@ import { ETIQUETA_TAREA, NIVEL_REBA, formatearFecha } from "../lib/niveles";
 import { Semaforo } from "../components/Semaforo";
 import { Encabezado } from "../components/Encabezado";
 import { Contador } from "../components/Contador";
+import { TarjetaImpacto } from "../components/TarjetaImpacto";
 
 export function Bandeja() {
   const { data, isLoading, error } = useQuery({ queryKey: ["casos"], queryFn: api.listarCasos });
@@ -72,6 +73,8 @@ export function Bandeja() {
           );
         })}
       </div>
+
+      <TarjetaImpacto />
     </section>
   );
 }

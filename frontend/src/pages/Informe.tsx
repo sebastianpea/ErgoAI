@@ -11,6 +11,12 @@ import { DesgloseNom036, DesgloseReba } from "../components/DesgloseReba";
 import { GraficaResidual } from "../components/GraficaResidual";
 import logoJabil from "../assets/jabil-logo.webp";
 
+function minutosEntre(desde: string | null, hasta: string | null): string {
+  if (!desde || !hasta) return "—";
+  const min = (new Date(hasta).getTime() - new Date(desde).getTime()) / 60000;
+  return `${min.toFixed(1)} min`;
+}
+
 export function Informe() {
   const { id = "" } = useParams();
   const caso = useQuery({ queryKey: ["caso", id], queryFn: () => api.obtenerCaso(id) });
@@ -114,7 +120,17 @@ export function Informe() {
 
       {c.residual && (<><h2>6. Riesgo residual esperado</h2><GraficaResidual residual={c.residual} /></>)}
 
-      <h2>7. Trazabilidad</h2>
+      {c.metricas.analisis_ms != null && (
+        <>
+          <h2>7. Tiempos del estudio</h2>
+          <dl className="desglose">
+            <div><dt>Análisis automático (visión + REBA + recomendaciones)</dt><dd>{(c.metricas.analisis_ms / 1000).toFixed(1)} s</dd></div>
+            <div><dt>Caso creado → plan validado por el especialista</dt><dd>{minutosEntre(c.metricas.creado_en, c.metricas.validado_en)}</dd></div>
+          </dl>
+        </>
+      )}
+
+      <h2>{c.metricas.analisis_ms != null ? "8" : "7"}. Trazabilidad</h2>
       <div className="tabla-scroll">
         <table>
           <thead><tr><th>#</th><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Motivo</th><th>Hash</th></tr></thead>

@@ -20,7 +20,7 @@ from pydantic import ValidationError
 
 from backend.app.api.schemas import (
     ID_PATRON, Alerta, AtenderAlerta, Autorizacion, CasoDetalle, CasoResumen, CorreccionContexto, CorreccionPuntos,
-    Decision, EstadoVision, Implementacion, NuevaRecomendacion, NuevoCaso, Ok, ResultadoIntegridad, RevisionHallazgo,
+    CorreccionNom036, CorreccionReferencia, Decision, EstadoVision, Impacto, Implementacion, NuevaRecomendacion, NuevoCaso, Ok, ResultadoIntegridad, RevisionHallazgo,
     Vista,
 )
 from backend.app.vision.estimador import VisionNoDisponible, estimador
@@ -138,6 +138,23 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
     @app.put("/casos/{id_caso}/contexto", response_model=CasoDetalle)
     def corregir_contexto(request: Request, cuerpo: CorreccionContexto, id_caso: str = IdCaso):
         return svc(request).corregir_contexto(id_caso, cuerpo)
+
+    @app.get("/catalogo/nom036")
+    def catalogo_nom036(request: Request) -> dict:
+        """Factores por método de la NOM-036 (fuente única para el formulario)."""
+        return svc(request).config.get_nom036_tables()["metodos"]
+
+    @app.put("/casos/{id_caso}/nom036", response_model=CasoDetalle)
+    def corregir_nom036(request: Request, cuerpo: CorreccionNom036, id_caso: str = IdCaso):
+        return svc(request).corregir_nom036(id_caso, cuerpo)
+
+    @app.put("/casos/{id_caso}/referencia", response_model=CasoDetalle)
+    def corregir_referencia(request: Request, cuerpo: CorreccionReferencia, id_caso: str = IdCaso):
+        return svc(request).corregir_referencia(id_caso, cuerpo)
+
+    @app.get("/metricas/impacto", response_model=Impacto)
+    def impacto(request: Request):
+        return svc(request).impacto()
 
     @app.post("/casos/{id_caso}/hallazgos/{id_hallazgo}/revision", response_model=CasoDetalle)
     def revisar_hallazgo(request: Request, cuerpo: RevisionHallazgo, id_caso: str = IdCaso,

@@ -166,6 +166,27 @@ class CasoResumen(BaseModel):
     por_autorizar: int = 0
 
 
+class EvaluacionPrevia(BaseModel):
+    """Estudio de referencia de Jabil (capturado en piso), contra el que se audita el análisis."""
+    segmentos: Dict[Segmento, int] = Field(default_factory=dict)
+    reba_final: Optional[int] = Field(None, ge=1, le=15)
+
+    @model_validator(mode="after")
+    def _rangos(self) -> "EvaluacionPrevia":
+        for seg, v in self.segmentos.items():
+            if not 1 <= v <= 6:
+                raise ValueError(f"Puntaje REBA de {seg} fuera de rango (1–6): {v}")
+        return self
+
+
+class Metricas(BaseModel):
+    """Tiempos del estudio, para medir el impacto (criterio 8 de la rúbrica)."""
+    creado_en: Optional[str] = None
+    analisis_ms: Optional[float] = None          # visión + cálculo REBA + recomendaciones
+    primera_decision_en: Optional[str] = None
+    validado_en: Optional[str] = None            # el plan quedó completo (informe habilitado)
+
+
 class CasoDetalle(BaseModel):
     id_caso: str
     estacion: str
@@ -173,6 +194,7 @@ class CasoDetalle(BaseModel):
     fecha: str
     imagenes: List[Imagen]
     contexto: ContextoTarea
+    evaluacion_previa: EvaluacionPrevia
     angulos: List[Angulo]
     reba: Optional[ResultadoReba]
     nom036: Optional[ResultadoNom036]
@@ -180,6 +202,7 @@ class CasoDetalle(BaseModel):
     recomendaciones: List[Recomendacion]
     residual: Optional[Residual]
     validacion: Validacion
+    metricas: Metricas
 
 
 # ---------- Persistencia del caso (caso.json) ----------
@@ -195,12 +218,6 @@ class Nom036Captura(BaseModel):
     factores: List[FactorNom]
 
 
-class EvaluacionPrevia(BaseModel):
-    """Evaluación capturada manualmente en piso, contra la que se audita."""
-    segmentos: Dict[Segmento, int] = Field(default_factory=dict)
-    reba_final: Optional[int] = Field(None, ge=1, le=15)
-
-
 class CasoAlmacenado(BaseModel):
     id_caso: str = Field(pattern=ID_PATRON)
     estacion: str
@@ -212,6 +229,7 @@ class CasoAlmacenado(BaseModel):
     nom036: Optional[Nom036Captura] = None
     hallazgos_vision: List[Hallazgo] = Field(default_factory=list)
     hallazgos_descartados: Dict[str, Descarte] = Field(default_factory=dict)
+    metricas: Metricas = Field(default_factory=Metricas)
     recomendaciones: List[RecomendacionAlmacenada] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -302,6 +320,33 @@ class NuevaRecomendacion(Actor):
         if self.tipo_cambio == "planta" and self.nivel_control != "ingenieria":
             raise ValueError("Un cambio en planta es un control de ingeniería")
         return self
+
+
+class CorreccionNom036(Actor):
+    nom036: Optional[Nom036Captura]  # None = quitar la evaluación NOM-036 del caso
+    motivo: str = Field(min_length=3, max_length=2000)
+
+
+class CorreccionReferencia(Actor):
+    evaluacion_previa: EvaluacionPrevia
+    motivo: str = Field(min_length=3, max_length=2000)
+
+
+class CasoImpacto(BaseModel):
+    id_caso: str
+    estacion: str
+    analisis_s: Optional[float]
+    validacion_min: Optional[float]  # de creado a validado (incluye el tiempo humano de revisión)
+
+
+class Impacto(BaseModel):
+    minutos_evaluacion_manual: float
+    fuente_referencia_manual: str
+    casos: List[CasoImpacto]
+    analisis_promedio_s: Optional[float]
+    validacion_promedio_min: Optional[float]
+    ahorro_promedio_min: Optional[float]
+    ahorro_porcentaje: Optional[float]
 
 
 class CorreccionContexto(Actor):

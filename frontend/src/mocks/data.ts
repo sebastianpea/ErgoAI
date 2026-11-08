@@ -72,6 +72,8 @@ const casoBase: CasoMock = {
   fecha: "2026-11-06T10:00:00-06:00",
   imagenes: [lateral, frontal, cenital],
   contexto,
+  evaluacion_previa: { segmentos: { tronco: 2, cuello: 1, piernas: 1, brazo: 3, antebrazo: 1 }, reba_final: 7 },
+  metricas: { creado_en: null, analisis_ms: null, primera_decision_en: null, validado_en: null },
   angulos: [
     { segmento: "tronco", lado: null, vista: "lateral", angulo_grados: 34.2, puntaje_reba: 3, modificadores: ["torsión"], estado: "ok", puntaje_previo: 2 },
     { segmento: "cuello", lado: null, vista: "lateral", angulo_grados: 22.5, puntaje_reba: 2, modificadores: [], estado: "revisar", puntaje_previo: 1 },

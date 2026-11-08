@@ -49,7 +49,7 @@
         "factores": [
           { "codigo": "peso_frecuencia", "etiqueta": "Peso de la carga y frecuencia", "color": "rojo", "valor": 6 },
           { "codigo": "distancia_horizontal", "etiqueta": "Distancia horizontal manos–espalda", "color": "amarillo", "valor": 3 },
-          { "codigo": "region_vertical", "etiqueta": "Región vertical del levantamiento", "color": "naranja", "valor": 3 },
+          { "codigo": "region_vertical", "etiqueta": "Región vertical del levantamiento", "color": "rojo", "valor": 3 },
           { "codigo": "torsion", "etiqueta": "Torsión e inclinación lateral", "color": "amarillo", "valor": 1 },
           { "codigo": "postura", "etiqueta": "Restricciones posturales", "color": "verde", "valor": 0 },
           { "codigo": "agarre", "etiqueta": "Agarre de la carga", "color": "amarillo", "valor": 1 },

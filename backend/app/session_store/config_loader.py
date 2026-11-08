@@ -70,7 +70,7 @@ class NormativeConfigLoader:
         """Obtiene las tablas de factores de la NOM-036-1 y mapeo de 16-PE80-6500-00014-H."""
         if self._nom036_tables is None or reload:
             data = self._load_json_file("nom036_mac_rapp_tables.json")
-            for section in ("risk_bands", "sheets_mapping", "total_score_bands"):
+            for section in ("risk_bands", "sheets_mapping", "total_score_bands", "metodos"):
                 if section not in data:
                     raise ConfigLoadError(f"Estructura inválida en nom036_mac_rapp_tables: falta sección '{section}'")
             self._nom036_tables = data
