@@ -1,10 +1,14 @@
-# Visión artificial (YOLOX + RTMPose WholeBody-133 sobre ONNX Runtime, CPU).
-# Opcional: sin esto el backend funciona, pero no puede crear casos a partir de fotos.
+# ============================================================================
+# ErgoAI Visión Artificial - YOLOX + RTMPose WholeBody-133 sobre ONNX Runtime
+# ============================================================================
+# Opcional para modo solo-auditoría; requerido para crear casos desde fotos reales.
 #   pip install -r backend/requirements-vision.txt
-#   python -m backend.app.vision.modelos      (descarga los modelos ONNX a models/, ~150 MB, una vez)
+#   python -m backend.app.vision.modelos   (descarga modelos ONNX a models/, ~150 MB)
 # Para GPU NVIDIA: sustituir onnxruntime por onnxruntime-gpu y definir ERGOAI_DEVICE=cuda.
+
 rtmlib==0.0.13
 onnxruntime==1.20.1
 opencv-python-headless==4.10.0.84
+numpy>=1.26.0
 tqdm==4.67.1
-python-multipart==0.0.20
+python-multipart>=0.0.20

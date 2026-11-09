@@ -1,0 +1,262 @@
+[
+  {
+    "id": "JABIL-RAG-01",
+    "tipo_prueba": [
+      "levantamiento",
+      "levantamiento_1",
+      "Levantamiento (1)",
+      "transporte",
+      "transporte_2",
+      "Transporte (2)"
+    ],
+    "documento": "16-PE30-6500-00023 / NOM-036-1-STPS-2018",
+    "seccion": "Sección 6.4.1 (Pág. 12) y NOM-036 Numeral 8.3 b) Tabla 1",
+    "requiere_alguno_de": [
+      "carga",
+      "peso",
+      ">14kg",
+      "14 kg",
+      "18 kg",
+      "25 kg",
+      "lifter",
+      "polipasto",
+      "asistencia mecanica"
+    ],
+    "tags": [
+      "carga",
+      "peso",
+      ">14kg",
+      "14 kg",
+      "18 kg",
+      "25 kg",
+      "levantamiento",
+      "lifter",
+      "asistencia mecanica",
+      "polipasto"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 6.4.1, Pág. 12 / NOM-036-1-STPS-2018 Numeral 8.3 b) Tabla 1 y Numeral 8.7]: En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036-1-STPS-2018. Todo levantamiento manual que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa, mesa elevadora o manipulador ingrávido) y liberación mediante MOC 16-HS80-8000-00021 en el layer AutoCAD 'Equipos'."
+  },
+  {
+    "id": "JABIL-RAG-02",
+    "tipo_prueba": [
+      "levantamiento",
+      "levantamiento_1",
+      "Levantamiento (1)",
+      "equipo",
+      "equipo_3",
+      "Equipo (3)"
+    ],
+    "documento": "16-PE30-6500-00023 / NOM-036-1-STPS-2018",
+    "seccion": "Sección 6.4.3 y 6.4.4 (Pág. 12) y NOM-036 Apéndice I",
+    "tags": [
+      "rack",
+      "altura",
+      "60 cm",
+      "1.70 m",
+      "1.60 m",
+      "piso",
+      "suelo",
+      "sobre hombros",
+      "postura",
+      "flexion",
+      "tarima",
+      "equipo",
+      "coordinacion"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 6.4.2, 6.4.3 y 6.4.4, Pág. 12 / NOM-036-1-STPS-2018 Apéndice I]: Se debe garantizar un radio mínimo de 60 cm libres sin obstáculos alrededor del operador para maniobras de levantamiento. La altura máxima de alcance sin escalera es de 1.70 m en racks estáticos y de 1.60 m en carros o tarimas rodantes. Queda estrictamente prohibido tomar o depositar carga desde el nivel del piso o por encima de la línea de los hombros/cabeza; se debe mantener la toma entre altura de nudillos y hombros (60 cm a 1.60 m). El levantamiento en equipo (2p <19/28 kg, 3p <23/42 kg) sólo se permite como contención temporal con coordinación explícita y MOC."
+  },
+  {
+    "id": "JABIL-RAG-03",
+    "tipo_prueba": [
+      "postura",
+      "levantamiento",
+      "levantamiento_1",
+      "Levantamiento (1)",
+      "transporte",
+      "transporte_2",
+      "Transporte (2)"
+    ],
+    "documento": "16-PE30-6500-00023 / NOM-036-1-STPS-2018",
+    "seccion": "Sección 7.2.2.2 (Pág. 21)",
+    "tags": [
+      "alcance",
+      "zonas de alcance",
+      "zona 1",
+      "zona 2",
+      "zona 4",
+      "zona 5",
+      "150 mm",
+      "400 mm",
+      "650 mm",
+      "abduccion",
+      "brazo",
+      "hombro",
+      "distancia horizontal"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 7.2.2.2, Pág. 21 / NOM-036-1-STPS-2018 Apéndice I]: Las zonas de alcance en mesa se dividen en Posición 1 y 2 (150 mm a 400 mm, ángulo de 20° a 35° respecto a hombros) reservadas para herramental y materiales de ciclo regular; Posición 3 (400 mm a 650 mm) para uso infrecuente (< 1 vez por pieza); Posiciones 4 y 5 (> 650 mm a 1500 mm) fuera del alcance admisible. Todo material de uso regular en Posiciones 4 y 5 debe reubicarse obligatoriamente a Zonas 1 y 2 (layer AutoCAD 'Mobiliario', formato 16-PE80-6500-00046)."
+  },
+  {
+    "id": "JABIL-RAG-04",
+    "tipo_prueba": [
+      "postura",
+      "levantamiento",
+      "levantamiento_1",
+      "Levantamiento (1)"
+    ],
+    "documento": "16-PE30-6500-00023 / NOM-036-1-STPS-2018",
+    "seccion": "Sección 7.2.3 y 7.3.3 (Pág. 21)",
+    "requiere_alguno_de": [
+      "tronco",
+      "altura de mesa",
+      "superficie de trabajo",
+      "mesa",
+      "95 cm",
+      "125 cm"
+    ],
+    "tags": [
+      "altura de mesa",
+      "mesa",
+      "95 cm",
+      "125 cm",
+      "tronco",
+      "superficie de trabajo"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 7.2.3 y 7.3.3, Pág. 21]: La altura estándar del plano de trabajo en Jabil Chihuahua debe calibrarse entre 95 cm y 125 cm a nivel de los codos según la tarea (Precisión: 105-125 cm, Ligero: 95-105 cm, Pesado: 85-95 cm) para mantener el tronco erguido y eliminar la flexión de tronco (>20°)."
+  },
+  {
+    "id": "JABIL-RAG-05",
+    "tipo_prueba": [
+      "postura",
+      "pie_prolongado"
+    ],
+    "documento": "16-PE30-6500-00023 / Ley Silla STPS / NOM-036-1-STPS-2018",
+    "seccion": "Sección 7.2.1, 7.2.2 y 7.3.3.1 (Pág. 18) y NOM-036 Numeral 8.6",
+    "tags": [
+      "ley silla",
+      "bipedestacion",
+      "de pie",
+      "3 horas",
+      "silla esd",
+      "pie sentado",
+      "descanso 5 min",
+      "pausas",
+      "rotacion",
+      "piernas"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 7.2.1, 7.2.2 y 7.3.3.1, Pág. 18 / Ley Silla STPS / NOM-036-1-STPS-2018 Numeral 8.6]: Si los componentes pesan menos de 3.0 kg y la tarea es de ensamble fino, la estación debe configurarse en modalidad Sentado o Combinado. Está prohibido mantener al operador de pie por más de 3 horas continuas. Se debe proveer Silla Estándar ESD (5 patas, aro reposapiés) y aplicar Estrategia 1 (descanso obligatorio de 5 min con relevo) o Estrategia 2 (rotación periódica pie-sentado), demarcando en piso el cajón 'SILLA' / 'CHAIR' en el layer AutoCAD 'Mobiliario'."
+  },
+  {
+    "id": "JABIL-RAG-06",
+    "tipo_prueba": [
+      "transporte",
+      "transporte_2",
+      "Transporte (2)",
+      "sin_auxiliar",
+      "sin_auxiliar_4",
+      "sin auxiliar (4)",
+      "empuje_sin_auxiliar"
+    ],
+    "documento": "16-PE30-6500-00023",
+    "seccion": "Sección 7.3.3.2 (Pág. 23)",
+    "tags": [
+      "conveyor",
+      "transportador",
+      "0.50 m",
+      "1.40 m",
+      "gravedad 3 m",
+      "inspeccion",
+      "acceso 80 cm",
+      "asimetria",
+      "distancia de transporte"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 7.3.3.2, Pág. 23 / NOM-036-1-STPS-2018 Apéndice I Transporte]: Para eliminar el transporte manual asimétrico o traslados a pie mayores a 10 m, se debe integrar transportador continuo (conveyor) con altura entre 0.50 m y 1.40 m o equipo auxiliar rodante. Los transportadores por gravedad no deben exceder 3.0 m de longitud y el pasillo frontal libre debe ser de al menos 80 cm."
+  },
+  {
+    "id": "JABIL-RAG-07",
+    "tipo_prueba": [
+      "con_auxiliar",
+      "con_auxiliar_5",
+      "con auxiliar (5)",
+      "empuje_con_auxiliar",
+      "sin_auxiliar",
+      "sin_auxiliar_4",
+      "sin auxiliar (4)",
+      "empuje_sin_auxiliar"
+    ],
+    "documento": "16-PE30-6500-00023 / NOM-036-1-STPS-2018",
+    "seccion": "Sección 7.1.1, 7.1.2, 7.1.3 (Pág. 15) y NOM-036 Apéndice II (RAPP)",
+    "tags": [
+      "pasillos",
+      "amr",
+      "90 cm",
+      "1.50 m",
+      "tarima 30 cm",
+      "ruedas",
+      "empuje",
+      "arrastre",
+      "carro",
+      "con auxiliar",
+      "mantenimiento"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 7.1.1-7.1.3, Pág. 15 / NOM-036-1-STPS-2018 Numeral 8.3 c) y Apéndice II RAPP]: Los pasillos principales de flujo de material deben tener un ancho libre mínimo de 90 cm (1.50 m con flujo bidireccional o manejo de tarimas). La separación entre tarimas y mesas de trabajo debe ser de al menos 30 cm. Los equipos auxiliares de empuje/arrastre requieren ruedas de poliuretano con rodamientos sellados bajo programa de mantenimiento preventivo, manerales entre 90 cm y 120 cm, y en áreas con AMR holguras laterales de 0.50 m a 0.60 m."
+  },
+  {
+    "id": "JABIL-RAG-08",
+    "tipo_prueba": [
+      "equipo",
+      "equipo_3",
+      "Equipo (3)",
+      "general"
+    ],
+    "documento": "16-PE30-6500-00023",
+    "seccion": "Sección 6.2.3, 6.3.12, 6.3.19 y Sección 8 (Pág. 4)",
+    "tags": [
+      "moc",
+      "layout",
+      "gobernanza",
+      "facilities",
+      "servicios",
+      "checklist",
+      "ehs",
+      "16-HS80-8000-00021"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 6.2.3, 6.3.12, 6.3.19 y Sección 8, Pág. 4]: Todo cambio físico de estación, reubicación de equipo o modificación ergonómica con acometidas eléctricas o neumáticas debe cumplir el flujo 16-PE00-6500-00014, verificarse con el checklist 16-PE80-6500-00040, validar capacidad de Facilities con 16-FS80-8000-00010 y ser liberado por EHS mediante el MOC 16-HS80-8000-00021."
+  },
+  {
+    "id": "JABIL-RAG-09",
+    "tipo_prueba": [
+      "postura"
+    ],
+    "documento": "16-PE30-6500-00023 / NOM-036-1-STPS-2018",
+    "seccion": "Sección 6.4.4 y 7.2.3 (Pág. 21)",
+    "tags": [
+      "cuello",
+      "linea de vision",
+      "monitor",
+      "cabeza",
+      "inclinacion visual",
+      "plantilla"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 6.4.4 y 7.2.3, Pág. 21]: Para evitar la flexión cervical (>20°), toda pieza de inspección, plantilla, atril o monitor debe elevarse e inclinarse a la línea natural de visión del operador (entre 0° y 15° bajo la horizontal de los ojos, ajuste de plano de precisión entre 105 cm y 125 cm), evitando inclinar la cabeza hacia abajo."
+  },
+  {
+    "id": "JABIL-RAG-10",
+    "tipo_prueba": [
+      "postura",
+      "levantamiento",
+      "levantamiento_1",
+      "Levantamiento (1)"
+    ],
+    "documento": "16-PE30-6500-00023 / NOM-036-1-STPS-2018",
+    "seccion": "Sección 7.2.2.2 y NOM-036 Apéndice I",
+    "tags": [
+      "muneca",
+      "muñeca",
+      "antebrazo",
+      "herramienta",
+      "sujecion",
+      "agarre"
+    ],
+    "texto_normativo": "[Estándar Jabil 16-PE30-6500-00023 Sección 7.2.2.2 / NOM-036-1-STPS-2018]: Se debe utilizar herramental con empuñadura ergonómica en ángulo, balanceador de herramientas o fixture inclinable para mantener la muñeca en postura neutra (0° a 15°) y el antebrazo entre 60° y 100° sin desviación radial, ulnar ni torsión."
+  }
+]

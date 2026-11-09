@@ -1,0 +1,1662 @@
+{
+  "version": "20261108",
+  "fuentes": [
+    "NOM-036-1-STPS-2018 (DOF 23/11/2018, págs. 21-63)",
+    "jabil_standards_00023.json"
+  ],
+  "fragmentos": [
+    {
+      "id": "NOM036-1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§1",
+      "titulo": "Objetivo",
+      "pagina": 21,
+      "texto": "1. Objetivo Establecer los elementos para identificar, analizar, prevenir y controlar los factores de riesgo ergonómico en los centros de trabajo derivados del manejo manual de cargas, a efecto de prevenir alteraciones a la salud de los trabajadores.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§2",
+      "titulo": "Campo de aplicación",
+      "pagina": 21,
+      "texto": "2. Campo de aplicación La presente Norma Oficial Mexicana rige en todo el territorio nacional y aplica en todos los centros de trabajo donde existan trabajadores cuya actividad implique realizar manejo manual de cargas de forma cotidiana (más de una vez al día).",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-2.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§2.1",
+      "titulo": "2.1 Esta Norma no aplica en actividades de manejo manual de cargas menores a 3 kg.",
+      "pagina": 21,
+      "texto": "2.1 Esta Norma no aplica en actividades de manejo manual de cargas menores a 3 kg.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§3",
+      "titulo": "Referencias",
+      "pagina": 21,
+      "texto": "3. Referencias Para la correcta interpretación de la presente Norma se deberán consultar las siguientes normas oficiales mexicanas vigentes, o las que las sustituyan:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-3.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§3.1",
+      "titulo": "3.1 NOM-017-STPS-2008, Equipo de protección personal-Selección, uso y manejo en los centro",
+      "pagina": 21,
+      "texto": "3.1 NOM-017-STPS-2008, Equipo de protección personal-Selección, uso y manejo en los centros de trabajo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-3.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§3.2",
+      "titulo": "3.2 NOM-030-STPS-2009, Servicios preventivos de seguridad y salud en el trabajo - Funcione",
+      "pagina": 21,
+      "texto": "3.2 NOM-030-STPS-2009, Servicios preventivos de seguridad y salud en el trabajo - Funciones y actividades.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4",
+      "titulo": "Definiciones",
+      "pagina": 22,
+      "texto": "4. Definiciones Para efectos de esta Norma, se consideran las definiciones siguientes:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.1",
+      "titulo": "4.1 Autoridad laboral: Las unidades administrativas competentes de la Secretaría del Traba",
+      "pagina": 22,
+      "texto": "4.1 Autoridad laboral: Las unidades administrativas competentes de la Secretaría del Trabajo y Previsión Social que realizan funciones de inspección y vigilancia en materia de seguridad y salud en el trabajo, y las correspondientes de las entidades federativas, que actúen en auxilio de aquéllas.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.2",
+      "titulo": "4.2 Centro de trabajo: El lugar o lugares, tales como edificios, locales, instalaciones y",
+      "pagina": 22,
+      "texto": "4.2 Centro de trabajo: El lugar o lugares, tales como edificios, locales, instalaciones y áreas, donde se realicen actividades de explotación, aprovechamiento, producción, comercialización, transporte y almacenamiento o prestación de servicios, en los que laboren personas que estén sujetas a una relación de trabajo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.3",
+      "titulo": "4.3 Condiciones inseguras: Aquéllas que derivan de la inobservancia o desatención de los p",
+      "pagina": 22,
+      "texto": "4.3 Condiciones inseguras: Aquéllas que derivan de la inobservancia o desatención de los procedimientos o medidas de seguridad, y que pueden conllevar la ocurrencia de incidentes, accidentes y enfermedades de trabajo o daños materiales al centro de trabajo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.4",
+      "titulo": "4.4 Diagnóstico de seguridad y salud en el trabajo: La identificación de las condiciones i",
+      "pagina": 22,
+      "texto": "4.4 Diagnóstico de seguridad y salud en el trabajo: La identificación de las condiciones inseguras o peligrosas; de los agentes físicos, químicos o biológicos o de los factores de riesgo ergonómico o psicosocial capaces de modificar las condiciones del ambiente laboral; de los peligros circundantes al centro de trabajo, así como de los requerimientos normativos en materia de seguridad y salud en el trabajo que resulten aplicables.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.5",
+      "titulo": "4.5 Empujar, jalar o arrastrar (tracción) cargas: Aquellas actividades o tareas en las que",
+      "pagina": 22,
+      "texto": "4.5 Empujar, jalar o arrastrar (tracción) cargas: Aquellas actividades o tareas en las que se empuja o arrastra una carga, en forma manual, con o sin la ayuda de equipos auxiliares, en donde la dirección de la fuerza resultante fundamental es horizontal. Durante la tracción, la fuerza es dirigida hacia el cuerpo y en el empuje, se aleja del cuerpo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.6",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.6",
+      "titulo": "4.6 Equipos auxiliares: Los vehículos de una, dos o más ruedas, sin locomoción propia, que",
+      "pagina": 22,
+      "texto": "4.6 Equipos auxiliares: Los vehículos de una, dos o más ruedas, sin locomoción propia, que se utilizan como apoyo para la carga manual en el transporte de material a granel o empaquetado a distancias relativamente cortas, que son soportados parcialmente y/o impulsados por los trabajadores. Para efectos de esta Norma, quedan incluidos como tales las carretillas, diablos y patines, entre otros.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.7",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.7",
+      "titulo": "4.7 Estibar: La acción de apilar materiales o contenedores uno encima de otro, de forma or",
+      "pagina": 22,
+      "texto": "4.7 Estibar: La acción de apilar materiales o contenedores uno encima de otro, de forma ordenada, a nivel del piso, en tarimas, estructuras o plataformas.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.8",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.8",
+      "titulo": "4.8 Estimación simple del nivel de riesgo; Evaluación rápida: La valoración inicial de las",
+      "pagina": 22,
+      "texto": "4.8 Estimación simple del nivel de riesgo; Evaluación rápida: La valoración inicial de las condiciones en que se realiza el manejo manual de cargas, a fin de identificar en forma cualitativa, el nivel de riesgo al que están expuestos los trabajadores.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.9",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.9",
+      "titulo": "4.9 Evaluación específica del nivel de riesgo: Aquella evaluación de los factores de riesg",
+      "pagina": 22,
+      "texto": "4.9 Evaluación específica del nivel de riesgo: Aquella evaluación de los factores de riesgo ergonómico para determinar la magnitud del riesgo derivado de las actividades o tareas de manejo manual de cargas, haciendo uso de métodos que permiten realizar una valoración del riesgo detallada de las condiciones en las que se desarrollan las actividades, tales como: método de levantamiento simple de cargas; método de levantamiento compuesto de cargas; método de levantamiento variable; método de la ecuación de NIOSH, o método de evaluación de actividades para empujar o jalar cargas de acuerdo con la norma ISO-11228-2:2007, entre otros métodos científicamente validados.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.10",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.10",
+      "titulo": "4.10 Fatiga; Fatiga de trabajo: La manifestación mental o física, local o general no-patol",
+      "pagina": 22,
+      "texto": "4.10 Fatiga; Fatiga de trabajo: La manifestación mental o física, local o general no-patológica de sobre esfuerzo físico o esfuerzo excesivo, completamente reversible con el descanso.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.11",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.11",
+      "titulo": "4.11 Factores de riesgo ergonómico: Aquéllos que pueden conllevar sobre esfuerzo físico, m",
+      "pagina": 22,
+      "texto": "4.11 Factores de riesgo ergonómico: Aquéllos que pueden conllevar sobre esfuerzo físico, movimientos repetitivos o posturas forzadas en el trabajo desarrollado, con la consecuente fatiga, errores, accidentes y enfermedades de trabajo, derivado del diseño de las instalaciones, maquinaria, equipo, herramientas o puesto de trabajo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.12",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.12",
+      "titulo": "4.12 Levantar y bajar cargas: Aquellas actividades o tareas realizadas de forma manual, si",
+      "pagina": 22,
+      "texto": "4.12 Levantar y bajar cargas: Aquellas actividades o tareas realizadas de forma manual, sin ayuda de maquinaria, que producen un momento-fuerza sobre la columna vertebral, y/o extremidades superiores e inferiores, sin importar la dirección. En el levantamiento la fuerza se realiza contra la gravedad y, a favor de ella, al bajar la carga.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.13",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.13",
+      "titulo": "4.13 Trastorno músculo-esquelético laboral: Aquella lesión y enfermedad del sistema osteom",
+      "pagina": 22,
+      "texto": "4.13 Trastorno músculo-esquelético laboral: Aquella lesión y enfermedad del sistema osteomuscular y del tejido conjuntivo causadas por la exposición laboral a factores de riesgo ergonómico.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.14",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.14",
+      "titulo": "4.14 Manejo manual de cargas; Carga manual: La actividad que desarrolla uno o varios traba",
+      "pagina": 22,
+      "texto": "4.14 Manejo manual de cargas; Carga manual: La actividad que desarrolla uno o varios trabajadores para levantar, bajar, empujar, jalar, transportar y/o estibar materiales, empleando su fuerza física utilizando o no equipo auxiliar. Se considera como carga aquélla con una masa mayor o igual a 3 kg.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.15",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.15",
+      "titulo": "4.15 Maquinaria: El conjunto de máquinas, vehículos o equipos que se emplean para levantar",
+      "pagina": 23,
+      "texto": "4.15 Maquinaria: El conjunto de máquinas, vehículos o equipos que se emplean para levantar, bajar, jalar, trasladar, transportar y/o estibar materiales. Para efectos de la presente Norma, quedan incluidos como tales los polipastos, malacates, montacargas, grúas, transportadores, cargadores frontales o una combinación de éstos.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.16",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.16",
+      "titulo": "4.16 Medidas de control: Aquellas medidas de prevención y/o corrección de naturaleza técni",
+      "pagina": 23,
+      "texto": "4.16 Medidas de control: Aquellas medidas de prevención y/o corrección de naturaleza técnica o administrativa que se adoptan para reducir o eliminar el sobre esfuerzo físico por el trabajo desarrollado.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.17",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.17",
+      "titulo": "4.17 Modo seguro; manera segura: La realización de actividades cumpliendo con los procedim",
+      "pagina": 23,
+      "texto": "4.17 Modo seguro; manera segura: La realización de actividades cumpliendo con los procedimientos y medidas de seguridad determinadas por las normas oficiales mexicanas y las dispuestas por el patrón.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.18",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.18",
+      "titulo": "4.18 Nivel de riesgo: La jerarquización de la probabilidad de que ocurra un daño.",
+      "pagina": 23,
+      "texto": "4.18 Nivel de riesgo: La jerarquización de la probabilidad de que ocurra un daño.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.19",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.19",
+      "titulo": "4.19 Personal ocupacionalmente expuesto: Aquellos trabajadores que en ejercicio y con moti",
+      "pagina": 23,
+      "texto": "4.19 Personal ocupacionalmente expuesto: Aquellos trabajadores que en ejercicio y con motivo de su ocupación están expuestos a factores de riesgo ergonómico, derivados de la ejecución de actividades que involucren manejo manual de cargas.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.20",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.20",
+      "titulo": "4.20 Período de descanso: El tiempo que se otorga después de realizar una actividad o entr",
+      "pagina": 23,
+      "texto": "4.20 Período de descanso: El tiempo que se otorga después de realizar una actividad o entre un grupo de actividades de manejo manual de cargas (el tiempo se calcula en minutos).",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.21",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.21",
+      "titulo": "4.21 Período de recuperación: El tiempo que permite la restauración de la función músculo",
+      "pagina": 23,
+      "texto": "4.21 Período de recuperación: El tiempo que permite la restauración de la función músculo esquelética del trabajador, y que se otorga cuando existen evidencias que denotan una afectación de la salud del trabajador debido al manejo manual de cargas o cuando se presenta un trastorno músculo-esquelético laboral.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.22",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.22",
+      "titulo": "4.22 Riesgo: La correlación de la peligrosidad de uno o varios factores y la exposición de",
+      "pagina": 23,
+      "texto": "4.22 Riesgo: La correlación de la peligrosidad de uno o varios factores y la exposición de los trabajadores con la posibilidad de causar efectos adversos para su vida, integridad física o salud, o dañar al centro de trabajo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.23",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.23",
+      "titulo": "4.23 Servicios Preventivos de Seguridad y Salud en el Trabajo: Aquéllos prestados por pers",
+      "pagina": 23,
+      "texto": "4.23 Servicios Preventivos de Seguridad y Salud en el Trabajo: Aquéllos prestados por personal capacitado, ya sea interno, externo o mixto, cuyo propósito principal es prevenir los accidentes y enfermedades de trabajo, mediante el cumplimiento de la normativa en materia de seguridad y salud en el trabajo. Se entiende por internos, los proporcionados por el patrón o personal del centro de trabajo; externos, los prestados por personal independiente al centro de trabajo, y mixtos, los proporcionados tanto por personal interno como por personal independiente al centro de trabajo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.24",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.24",
+      "titulo": "4.24 Sobre esfuerzo físico: La consecuencia de aplicar una fuerza que supera la capacidad",
+      "pagina": 23,
+      "texto": "4.24 Sobre esfuerzo físico: La consecuencia de aplicar una fuerza que supera la capacidad del trabajador, excediendo los límites de fuerza, frecuencia, duración y/o postura, para realizar carga manual (levantar, bajar, empujar, jalar, transportar y/o estibar materiales) y que puede provocar un trastorno músculoesquelético laboral.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.25",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.25",
+      "titulo": "4.25 Transportar cargas: Aquellas actividades o tareas que consisten en mover una carga ho",
+      "pagina": 23,
+      "texto": "4.25 Transportar cargas: Aquellas actividades o tareas que consisten en mover una carga horizontalmente mientras se sostiene únicamente mediante la fuerza humana (de forma manual).",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-4.26",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§4.26",
+      "titulo": "4.26 Vigilancia a la salud de los trabajadores: La actividad sistemática realizada por el",
+      "pagina": 23,
+      "texto": "4.26 Vigilancia a la salud de los trabajadores: La actividad sistemática realizada por el médico, cuya finalidad es verificar las condiciones de salud del personal al inicio de su vida laboral, a fin de determinar si existe algún impedimento para desempeñar el puesto, así como vigilar periódicamente si su salud ha sufrido alteraciones que requieran una nueva valoración para continuar desempeñando sus actividades.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-5.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§5.1",
+      "titulo": "5.1 Contar con el análisis de los factores de riesgo ergonómico debido al manejo manual de",
+      "pagina": 23,
+      "texto": "5.1 Contar con el análisis de los factores de riesgo ergonómico debido al manejo manual de cargas, con base en lo dispuesto por el Capítulo 7 de la presente Norma.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-5.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§5.2",
+      "titulo": "5.2 Adoptar medidas de prevención y/o control para reducir o eliminar los factores de ries",
+      "pagina": 23,
+      "texto": "5.2 Adoptar medidas de prevención y/o control para reducir o eliminar los factores de riesgo ergonómico en el centro de trabajo debido al manejo manual de cargas, de acuerdo con lo establecido por el Capítulo 8 de esta Norma.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-5.3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§5.3",
+      "titulo": "5.3 Efectuar la vigilancia a la salud de los trabajadores ocupacionalmente expuestos confo",
+      "pagina": 23,
+      "texto": "5.3 Efectuar la vigilancia a la salud de los trabajadores ocupacionalmente expuestos conforme a lo dispuesto por el Capítulo 9 de la presente Norma.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-5.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§5.4",
+      "titulo": "5.4 Informar a los trabajadores sobre las posibles alteraciones a la salud por el manejo m",
+      "pagina": 23,
+      "texto": "5.4 Informar a los trabajadores sobre las posibles alteraciones a la salud por el manejo manual de cargas.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-5.5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§5.5",
+      "titulo": "5.5 Proporcionar capacitación y adiestramiento al personal ocupacionalmente expuesto sobre",
+      "pagina": 23,
+      "texto": "5.5 Proporcionar capacitación y adiestramiento al personal ocupacionalmente expuesto sobre los procedimientos de seguridad y las prácticas de trabajo seguro, y en su caso, en las medidas de prevención y/o control, de conformidad con lo señalado por el Capítulo 10 de esta Norma.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-5.6",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§5.6",
+      "titulo": "5.6 Llevar los registros sobre las medidas preventivas adoptadas y los exámenes médicos pr",
+      "pagina": 23,
+      "texto": "5.6 Llevar los registros sobre las medidas preventivas adoptadas y los exámenes médicos practicados.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-6.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§6.1",
+      "titulo": "6.1 Observar las medidas de prevención y/o control, así como los procedimientos de segurid",
+      "pagina": 24,
+      "texto": "6.1 Observar las medidas de prevención y/o control, así como los procedimientos de seguridad y las prácticas de trabajo seguro que dispone esta Norma, y/o que establezca el patrón para la prevención de riesgos.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-6.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§6.2",
+      "titulo": "6.2 Dar aviso de inmediato al patrón y/o a la comisión de seguridad e higiene sobre las co",
+      "pagina": 24,
+      "texto": "6.2 Dar aviso de inmediato al patrón y/o a la comisión de seguridad e higiene sobre las condiciones inseguras que adviertan durante el desarrollo de sus actividades.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-6.3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§6.3",
+      "titulo": "6.3 Mantener ordenados, limpios y libres de obstáculos sus lugares de trabajo y áreas comu",
+      "pagina": 24,
+      "texto": "6.3 Mantener ordenados, limpios y libres de obstáculos sus lugares de trabajo y áreas comunes.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-6.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§6.4",
+      "titulo": "6.4 Desempeñar su trabajo de manera segura para evitar riesgos.",
+      "pagina": 24,
+      "texto": "6.4 Desempeñar su trabajo de manera segura para evitar riesgos.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-6.5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§6.5",
+      "titulo": "6.5 Participar en la capacitación, adiestramiento y eventos de información que proporcione",
+      "pagina": 24,
+      "texto": "6.5 Participar en la capacitación, adiestramiento y eventos de información que proporcione el patrón.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-6.6",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§6.6",
+      "titulo": "6.6 Informar al patrón sobre las afectaciones a su salud o sus posibles limitaciones para",
+      "pagina": 24,
+      "texto": "6.6 Informar al patrón sobre las afectaciones a su salud o sus posibles limitaciones para la realización de sus actividades.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-6.7",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§6.7",
+      "titulo": "6.7 Cumplir con someterse a los exámenes médicos que determinan la presente Norma y/o el m",
+      "pagina": 24,
+      "texto": "6.7 Cumplir con someterse a los exámenes médicos que determinan la presente Norma y/o el médico de la empresa conforme a lo dispuesto en el Capítulo 9 de la presente Norma.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-7",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§7",
+      "titulo": "Análisis de los factores de riesgo ergonómico debido al manejo manual de cargas",
+      "pagina": 24,
+      "texto": "7. Análisis de los factores de riesgo ergonómico debido al manejo manual de cargas",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-7.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§7.1",
+      "titulo": "7.1 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas que",
+      "pagina": 24,
+      "texto": "7.1 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas que elaboren los centros de trabajo deberá estar integrado por: a) La identificación de las actividades que conlleven factores de riesgo ergonómico debido a manejo manual de cargas, es decir, que implique levantar, bajar, transportar, empujar, jalar y/o estibar materiales, conforme al numeral 7.2 de la presente Norma; b) La estimación simple del nivel de riesgo o evaluación rápida de las actividades identificadas, de acuerdo con lo señalado en el numeral 7.3 de esta Norma, y c) La evaluación específica del nivel de riesgo, cuando el resultado de la evaluación rápida no permita determinar el nivel de riesgo o condiciones aceptables y/o cuando a pesar de la implementación de medidas correctivas siga existiendo algún peligro para el trabajador. Los centros de trabajo podrán aplicar una evaluación específica directamente, en ese caso no será necesario realizar la estimación del nivel de riesgo a que se refiere el inciso anterior. Ver Guía de referencia I.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-7.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§7.2",
+      "titulo": "7.2 La identificación de los factores de riesgo ergonómico debido al manejo manual de carg",
+      "pagina": 24,
+      "texto": "7.2 La identificación de los factores de riesgo ergonómico debido al manejo manual de cargas deberá considerar, al menos, lo siguiente: a) La identificación de la actividad, tarea o puesto de trabajo que conllevan manejo manual de cargas: levantar, bajar, empujar, jalar, transportar y/o estibar materiales; b) La descripción de las actividades; c) Los trabajadores involucrados en la realización de estas actividades (personal ocupacionalmente expuesto); d) La frecuencia con que se realiza la actividad, y e) El tiempo de duración de las actividades.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-7.3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§7.3",
+      "titulo": "7.3 La estimación del nivel de riesgo debido al manejo manual de cargas de las actividades",
+      "pagina": 24,
+      "texto": "7.3 La estimación del nivel de riesgo debido al manejo manual de cargas de las actividades identificadas en el numeral anterior, deberá realizarse: a) Conforme al Apéndice I, para actividades que impliquen levantar, bajar, o transportar cargas, o b) De acuerdo con el Apéndice II, para actividades que impliquen empujar y jalar o arrastrar materiales, con o sin la ayuda de equipo auxiliar. Ver Guía de referencia I.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-7.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§7.4",
+      "titulo": "7.4 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas deb",
+      "pagina": 24,
+      "texto": "7.4 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas deberá constar en un informe que contenga lo siguiente: a) Datos del centro de trabajo: 1) Nombre, denominación o razón social; 2) Domicilio completo, y 3) Actividad principal; b) Las actividades realizadas en el centro de trabajo que conllevan exposición a factores de riesgo ergonómico debido al manejo manual de cargas sujetas al análisis; c) El resultado de la estimación del riesgo a que se refiere el numeral 7.3 y, en su caso, el resultado de la evaluación específica, cuando se determine que no se requiere esta evaluación, señalar porqué se llegó a esa conclusión; d) Las conclusiones derivadas de la identificación y análisis; e) Las recomendaciones y acciones de prevención y/o control, y f) Los datos del responsable de la elaboración: 1) Nombre completo; 2) Número de cédula profesional, y 3) La información de los documentos que avalen su capacitación, en el análisis de factores de riesgo ergonómico debido al manejo manual de cargas cuando se realice una evaluación específica.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-7.5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§7.5",
+      "titulo": "7.5 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas deb",
+      "pagina": 25,
+      "texto": "7.5 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas deberá estar disponible para los trabajadores que participen o realicen actividades de manejo manual de cargas.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-7.6",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§7.6",
+      "titulo": "7.6 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas deb",
+      "pagina": 25,
+      "texto": "7.6 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas deberá revisarse, actualizarse o modificarse cuando: a) Se modifiquen las condiciones en las que se realiza la actividad, y/o b) Se detecte alguna alteración a la salud de los trabajadores ocupacionalmente expuestos o se presente un trastorno músculo-esquelético laboral.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-7.7",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§7.7",
+      "titulo": "7.7 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas deb",
+      "pagina": 25,
+      "texto": "7.7 El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas deberá integrarse al diagnóstico de seguridad y salud en el trabajo, a que se refiere la NOM-030-STPS-2009, o las que la sustituyan.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8",
+      "titulo": "Medidas de prevención y/o control de los factores de riesgo ergonómico por el manejo manual",
+      "pagina": 25,
+      "texto": "8. Medidas de prevención y/o control de los factores de riesgo ergonómico por el manejo manual de cargas",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.1",
+      "titulo": "8.1 Las actividades de manejo manual de cargas deberán ser realizadas por trabajadores que",
+      "pagina": 25,
+      "texto": "8.1 Las actividades de manejo manual de cargas deberán ser realizadas por trabajadores que cuenten con aptitud física avalada por un médico o a través de una institución de seguridad social o privada.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.2",
+      "titulo": "8.2 Para desarrollar actividades que involucren manejo manual de cargas, se deberá contar",
+      "pagina": 25,
+      "texto": "8.2 Para desarrollar actividades que involucren manejo manual de cargas, se deberá contar con un procedimiento de seguridad, que contemple: a) La descripción de la técnica adecuada para realizar las actividades de forma segura, considerando: la fuerza aplicada; distancias: horizontal y vertical; cantidad de movimientos por minuto (frecuencia); el tiempo total de la actividad (duración), y posturas con que deberán efectuarse las actividades; b) Las medidas de seguridad y, en su caso, de control que se deberán aplicar en el desarrollo las actividades; c) Las características de la carga, por ejemplo, dimensiones, agarre, forma, peso, estabilidad; d) Las condiciones del ambiente que puedan incrementar el esfuerzo del trabajador y/o generar una situación de peligro; e) La trayectoria para el transporte de las cargas, en su caso, subiendo o bajando escaleras, rampas inclinadas, plataformas, vehículos, tránsito sobre superficies resbalosas o con obstáculos que puedan generar riesgo de caídas, y f) Las características de materiales que se manejen, en su caso, con énfasis en los peligrosos tales como: tóxicos, irritantes, corrosivos, inflamables, explosivos, reactivos, con riesgo biológico, temperatura elevada o abatida, entre otros.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.3-1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.3 (parte 1/3)",
+      "titulo": "8.3 Para realizar actividades que impliquen manejo manual de cargas se deberán adoptar las",
+      "pagina": 25,
+      "texto": "8.3 Para realizar actividades que impliquen manejo manual de cargas se deberán adoptar las medidas de prevención o de seguridad siguientes: a) Medidas de seguridad generales: 1) Supervisar que se realicen en condiciones seguras, con base en el procedimiento a que alude el numeral 8.2, de esta Norma; 2) Realizar ejercicios o movimientos de calentamiento antes de iniciar las actividades; 3) Mantener las áreas de tránsito y de trabajo libres de obstáculos; 4) Conservar orden y limpieza en el lugar de trabajo; 5) Establecer, en su caso, períodos de descanso; 6) Asegurar que la carga tenga elementos de sujeción, según aplique; 7) Revisar que las actividades aledañas o cercanas no impliquen un riesgo para el trabajador que las realiza; 8) Aplicar las medidas de seguridad que se requieran conforme a los materiales, procesos, equipos, herramienta y maquinaria que se utilicen, y 9) Proporcionar la ropa y el equipo de protección personal, conforme a lo previsto por la NOM-017-STPS-2008, o las que la sustituyan, tal como respiradores y guantes, a los trabajadores que realicen actividades de carga de: I. Materiales o contenedores con aristas cortantes, rebabas, astillas, puntas agudas, clavos u otros salientes peligrosos; II. Materiales con temperaturas extremas, y/o III. Contenedores con sustancias irritantes, corrosivas o tóxicas. b) Medidas de seguridad para el levantamiento y transporte de cargas: 1) Prohibir que las mujeres en estado de gestación, y durante las primeras 10 semanas posteriores al parto, realicen actividades de manejo de materiales de forma manual que impliquen cargas de más de 10 kg, posturas forzadas, o con movimientos repetitivos por períodos prolongados, que impliquen esfuerzo abdominal o de miembros inferiores. La masa máxima real que podrán cargar deberá determinarse considerando su estado de salud avalado por un médico, así como factores tales como frecuencia, distancia, posición de la carga, agarre, masa acumulada, entre otros. 2) Verificar que para levantar y/o bajar cargas no rebasen las masas que señala la Tabla 1 siguiente:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.3-2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.3 (parte 2/3)",
+      "titulo": "Tabla 1 Masa máxima que puede levantar o bajar un trabajador por edad y género Masa Edad m",
+      "pagina": 25,
+      "texto": "Tabla 1 Masa máxima que puede levantar o bajar un trabajador por edad y género Masa Edad máxima Género (en años) kg Femenino 7 Menores de 18 Masculino 15 Femenino Mayores de 45* 20 Femenino Entre 18 y 45 Masculino Mayores de 45* 25 Masculino Entre 18 a 45 La masa máxima real que podrán levantar y/o bajar cargas los trabajadores deberá determinarse a partir de los valores indicados en la Tabla 1, considerando factores tales como frecuencia, distancia, posición de la carga, agarre, masa acumulada, entre otros, pero no deberá rebasar el límite indicado en esta Tabla 1. (*) La masa máxima que podrán levantar y/o bajar los trabajadores mayores de 45 años, deberá determinarse previa evaluación de la aptitud física realizada por un médico. Si su condición física lo permite y el médico lo avala, podrán cargar hasta el límite máximo correspondiente a los trabajadores de entre 18 y 45 años de edad. 3) Efectuar el manejo manual de materiales cuyo peso sea superior a lo que determina la Tabla 1 o su longitud dificulte el transporte, mediante: I. La integración de grupos de carga considerando que la capacidad de carga de un equipo de dos personas será dos terceras partes de la suma de sus capacidades individuales, y para un equipo de tres personas, la capacidad de carga será la mitad de la suma de sus capacidades individuales, y asegurar que exista coordinación y comunicación entre los miembros de éste; II. La utilización de equipos auxiliares manuales (carretillas, diablos, patines, etc.), o bien utilizar maquinaria, o III. La división de las cargas en bultos, envases, sacos o paquetes más pequeños y ligeros. 4) Trasladar los barriles o tambos, a través del uso de maquinaria o equipo auxiliar, cuando se trasporten rodando o cuando se trasladen girando sobre su base y el resultado del análisis así lo indique, y 5) Asegurar que en ningún caso se exceda de 10,000 kg/jornada de 8 horas de masa acumulada total de transporte manual de cargas para distancias menores a 10 m, o de 6,000 kg/jornada de 8 horas de masa acumulada total de transporte manual de cargas en una distancia no mayor a 20 m; c) Medidas de seguridad para empujar o jalar de cargas, con o sin ayuda de equipo auxiliar: 1) Asegurar la estabilidad de la carga durante su traslado; 2) Tener una visión completa sobre y alrededor de la carga;",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.3-3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.3 (parte 3/3)",
+      "titulo": "3) Verificar que la carga no exceda la capacidad nominal del equipo auxiliar que se utilic",
+      "pagina": 25,
+      "texto": "3) Verificar que la carga no exceda la capacidad nominal del equipo auxiliar que se utilice; 4) Revisar que el equipo auxiliar se encuentre en condiciones seguras de operación antes del inicio de las actividades; 5) Comprobar antes de realizar la actividad que la superficie del suelo no se encuentra en malas condiciones o represente un riesgo para la operación de las ruedas del equipo auxiliar que se utilice; 6) Asegurar la compatibilidad entre las características de las ruedas y el tipo de superficie del suelo; 7) Revisar, de forma previa, que el espacio para girar o maniobrar corresponda a las dimensiones de la carga, en especial en pasillos angostos; 8) Asegurar que la ropa o el equipo de protección personal permite realizar con seguridad el movimiento; 9) Evitar paradas y maniobras frecuentes, cuando se esté jalando o empujando un objeto, así como movimientos bruscos y de larga duración; 10) Evitar la aplicación de fuerzas iniciales y sostenidas de forma frecuente y de tiempo prolongado; 11) Evitar trayectorias por pisos ranurados, deteriorados o resbalosos; 12) Evitar rampas, pendientes o superficies desniveladas en la trayectoria, cuando esto no sea posible, jalar el equipo con ruedas, como el diablo, patín o carretilla en el mismo sentido del ascenso al subir una pendiente, y en sentido opuesto al del descenso al bajar, con el objeto de evitar que la carga represente un riesgo, y 13) Eliminar los obstáculos y objetos que pueden representar peligro de tropiezo;",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.4",
+      "titulo": "8.4 Los centros de trabajo deberán adoptar medidas de control sólo en aquellos casos en qu",
+      "pagina": 27,
+      "texto": "8.4 Los centros de trabajo deberán adoptar medidas de control sólo en aquellos casos en que el análisis de los factores de riesgo ergonómico así lo indique. Las medidas de control técnicas y/o administrativas de los factores de riesgo ergonómico deberán aplicarse mediante un Programa de ergonomía para el manejo manual de cargas, que para tal efecto se elabore.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.5",
+      "titulo": "8.5 El programa de ergonomía para el manejo manual de cargas deberá contener: a) Los puest",
+      "pagina": 27,
+      "texto": "8.5 El programa de ergonomía para el manejo manual de cargas deberá contener: a) Los puestos de trabajo sujetos al programa; b) Las medidas de control técnicas y/o administrativas que deberán adoptarse; c) Las fechas programadas para su su ejecución; mismas que no deberán ser mayor a un año; d) El control de los avances de la implementación del programa; e) El responsable de su ejecución, y f) La evaluación posterior a la aplicación de las medidas de control.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.6",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.6",
+      "titulo": "8.6 Las medidas de control administrativas se deberán adoptar con el fin de proteger la sa",
+      "pagina": 28,
+      "texto": "8.6 Las medidas de control administrativas se deberán adoptar con el fin de proteger la salud del personal ocupacionalmente expuesto, y podrán contemplar, entre otras, las siguientes: 1) La limitación de los tiempos y frecuencias en los que se realizan las actividades; 2) La programación de períodos de descanso; 3) La reprogramación y diversificación de actividades, o 4) La rotación de actividades.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-8.7",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§8.7",
+      "titulo": "8.7 Las medidas de control técnicas por adoptar podrán comprender, entre otras, las siguie",
+      "pagina": 28,
+      "texto": "8.7 Las medidas de control técnicas por adoptar podrán comprender, entre otras, las siguientes: a) La modificación de los procedimientos de trabajo; b) La modificación, adecuación o sustitución de las instalaciones, procesos, maquinaria y equipos, y c) El acondicionamiento, redistribución física de las instalaciones, procesos, maquinaria y equipos.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-9",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§9",
+      "titulo": "Vigilancia a la salud de los trabajadores",
+      "pagina": 28,
+      "texto": "9. Vigilancia a la salud de los trabajadores",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-9.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§9.1",
+      "titulo": "9.1 La vigilancia a la salud del personal ocupacionalmente expuesto se deberá realizar por",
+      "pagina": 28,
+      "texto": "9.1 La vigilancia a la salud del personal ocupacionalmente expuesto se deberá realizar por medio de un programa que para tal efecto se elabore.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-9.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§9.2",
+      "titulo": "9.2 El programa para la vigilancia a la salud de los trabajadores ocupacionalmente expuest",
+      "pagina": 28,
+      "texto": "9.2 El programa para la vigilancia a la salud de los trabajadores ocupacionalmente expuestos deberá considerar al menos, lo siguiente: a) La aplicación de exámenes médicos iniciales para integrar la historia clínica laboral; b) La práctica de exámenes médicos de acuerdo con la actividad específica de los trabajadores, sujeta al seguimiento clínico anual o a la evidencia de signos o síntomas que denoten un posible trastorno músculo-esquelético laboral. La detección y análisis de trabajadores que presentan signos o síntomas debido a un posible trastorno músculo-esquelético laboral, se podrá realizar mediante la aplicación del Cuestionario Nórdico de Kuorinka (Nordic questionnaires for the analysis of musculoskeletal symptoms, ver Guía de referencia II). Los exámenes médicos deberán efectuarse de conformidad con lo establecido por las normas oficiales mexicanas que al respecto emitan la Secretaría de Salud y/o la Secretaría del Trabajo y Previsión Social, y a falta de éstas, los que indique la institución de seguridad social o de salud, el médico de la empresa, o la institución privada que le preste el servicio médico al centro de trabajo, y c) La aplicación de las acciones preventivas y correctivas para la protección de la salud de los trabajadores que realizan actividades o tareas del manejo manual de cargas, deberá efectuarse con base en los factores de riesgo ergonómico evaluados y como resultado de los exámenes médicos practicados.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-9.3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§9.3",
+      "titulo": "9.3 La vigilancia a la salud de los trabajadores deberá ser efectuada por un médico, con c",
+      "pagina": 28,
+      "texto": "9.3 La vigilancia a la salud de los trabajadores deberá ser efectuada por un médico, con conocimientos en medicina del trabajo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-9.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§9.4",
+      "titulo": "9.4 Los exámenes médicos practicados y su registro, así como las acciones preventivas y co",
+      "pagina": 28,
+      "texto": "9.4 Los exámenes médicos practicados y su registro, así como las acciones preventivas y correctivas para la vigilancia a la salud de los trabajadores, se integrarán en un expediente clínico que deberá conservarse por un período mínimo de cinco años.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-9.5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§9.5",
+      "titulo": "9.5 El médico deberá determinar la aptitud física de los trabajadores para realizar activi",
+      "pagina": 28,
+      "texto": "9.5 El médico deberá determinar la aptitud física de los trabajadores para realizar actividades que conlleven carga manual, y en su caso, determinar el período de recuperación.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-10.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§10.1",
+      "titulo": "10.1 Al personal ocupacionalmente expuesto a los factores de riesgo ergonómico referido al",
+      "pagina": 28,
+      "texto": "10.1 Al personal ocupacionalmente expuesto a los factores de riesgo ergonómico referido al sobreesfuerzo físico por el manejo manual de cargas, se le deberá proporcionar capacitación, con énfasis en la prevención de riesgos, y con base en las tareas asignadas. La capacitación y adiestramiento proporcionados a los trabajadores deberá consistir en una instrucción teórica, entrenamiento práctico y evaluación de los conocimientos y habilidades adquiridos, y considerar lo siguiente: a) Los efectos a la salud que puede ocasionar la exposición a los factores de riesgo ergonómico debido al manejo manual de cargas; b) La forma de reconocer factores de riesgo ergonómico por el manejo manual de cargas, así como riesgos adicionales presentes en el lugar de trabajo; c) El contenido de la presente Norma, con énfasis en la aplicación de las medidas de seguridad, y en su caso, medidas de control derivadas del análisis de los factores de riesgo ergonómico originados por el manejo manual de cargas, y d) La manera de realizar sus actividades en forma segura, a través de los procedimientos de seguridad y/o prácticas seguras.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-10.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§10.2",
+      "titulo": "10.2 A los trabajadores de nuevo ingreso o que realizarán el manejo manual de cargas por v",
+      "pagina": 29,
+      "texto": "10.2 A los trabajadores de nuevo ingreso o que realizarán el manejo manual de cargas por vez primera, se les deberá proporcionar capacitación y adiestramiento previo al inicio de sus actividades.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-10.3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§10.3",
+      "titulo": "10.3 La capacitación y adiestramiento deberá reforzarse por lo menos cada dos años o antes",
+      "pagina": 29,
+      "texto": "10.3 La capacitación y adiestramiento deberá reforzarse por lo menos cada dos años o antes cuando se presente cualquiera de las circunstancias siguientes: a) Se introduzcan herramientas, equipo nuevo o se modifiquen las condiciones en las que se desarrollan las actividades; b) Se evidencien condiciones inseguras en el desarrollo de las actividades o trabajos, y que pudieran derivar en la presencia de factores de riesgo ergonómico por el manejo manual de cargas, y c) Así lo sugiera la última evaluación aplicada a los trabajadores.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-10.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§10.4",
+      "titulo": "10.4 Los centros de trabajo deberán llevar el registro de la capacitación y adiestramiento",
+      "pagina": 29,
+      "texto": "10.4 Los centros de trabajo deberán llevar el registro de la capacitación y adiestramiento que proporcione al personal ocupacionalmente expuesto, el cual deberá contener, al menos, lo siguiente: a) El nombre y puesto de los trabajadores a los que se les proporcionó; b) La fecha en que se proporcionó la capacitación; c) Los temas impartidos, y d) El nombre del instructor y, en su caso, número de registro como agente capacitador ante la Secretaría del Trabajo y Previsión Social.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-11.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§11.1",
+      "titulo": "11.1 El patrón tendrá la opción de contratar una unidad de verificación acreditada y aprob",
+      "pagina": 29,
+      "texto": "11.1 El patrón tendrá la opción de contratar una unidad de verificación acreditada y aprobada, en los términos de la Ley Federal sobre Metrología y Normalización y su Reglamento, para verificar el grado de cumplimiento con esta Norma.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-11.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§11.2",
+      "titulo": "11.2 Las unidades de verificación que evalúen la conformidad con la presente Norma, deberá",
+      "pagina": 29,
+      "texto": "11.2 Las unidades de verificación que evalúen la conformidad con la presente Norma, deberán aplicar los criterios de cumplimiento que prevé el procedimiento para la evaluación de la conformidad, de acuerdo con lo señalado en el Capítulo 12 de la misma.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-11.3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§11.3",
+      "titulo": "11.3 Las unidades de verificación acreditadas y aprobadas que evalúen el cumplimiento con",
+      "pagina": 29,
+      "texto": "11.3 Las unidades de verificación acreditadas y aprobadas que evalúen el cumplimiento con esta Norma deberán emitir un dictamen, el cual habrá de contener: a) Datos del centro de trabajo verificado: 1) El nombre, denominación o razón social; 2) El Registro Federal de Contribuyentes; 3) El domicilio completo; 4) El teléfono, y 5) Su actividad principal; b) Datos de la unidad de verificación: 1) El nombre, denominación o razón social; 2) El número de acreditación; 3) El número de aprobación otorgado por la Secretaría del Trabajo y Previsión Social, y 4) Su domicilio completo, y c) Datos del dictamen: 1) La clave y nombre de la norma; 2) El nombre del verificador evaluado y aprobado; 3) La fecha de verificación; 4) El número de dictamen; 5) La vigencia del dictamen; 6) El lugar de emisión del dictamen; 7) La fecha de emisión del dictamen, y 8) El número de registro del dictamen emitido por la Secretaría del Trabajo y Previsión Social al rendirse el informe respectivo.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-11.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§11.4",
+      "titulo": "11.4 La vigencia de los dictámenes emitidos por las unidades de verificación será de dos a",
+      "pagina": 29,
+      "texto": "11.4 La vigencia de los dictámenes emitidos por las unidades de verificación será de dos años, siempre y cuando no sean modificadas las condiciones que sirvieron para su emisión.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12",
+      "titulo": "Procedimiento para la evaluación de la conformidad",
+      "pagina": 30,
+      "texto": "12. Procedimiento para la evaluación de la conformidad",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.1",
+      "titulo": "12.1 Este procedimiento para la evaluación de la conformidad aplica tanto a las visitas de",
+      "pagina": 30,
+      "texto": "12.1 Este procedimiento para la evaluación de la conformidad aplica tanto a las visitas de inspección desarrolladas por la autoridad laboral, como a las visitas de verificación que realicen las unidades de verificación.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.2",
+      "titulo": "12.2 El dictamen de verificación vigente deberá estar a disposición de la autoridad labora",
+      "pagina": 30,
+      "texto": "12.2 El dictamen de verificación vigente deberá estar a disposición de la autoridad laboral cuando ésta lo solicite.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.3-1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.3 (parte 1/8)",
+      "titulo": "12.3 Los aspectos a verificar durante la evaluación de la conformidad de la presente Norma",
+      "pagina": 30,
+      "texto": "12.3 Los aspectos a verificar durante la evaluación de la conformidad de la presente Norma se realizará, según aplique, mediante la constatación física, revisión documental, registros o entrevistas, de conformidad con lo siguiente: Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación 5.1, 7.1 a 7.4, Documental El patrón cumple cuando presenta 7.6 y 7.7 evidencia documental de que: Los documentos para  Cuenta con el análisis de los demostrar la capacitación factores de riesgo ergonómico en el análisis de factores de debido al manejo manual de riesgo ergonómico debido al cargas, el cual está integrado por: manejo manual de cargas cuando se realice una  La identificación de las evaluación específica, actividades que conllevan deberán ser constancias o factores de riesgo ergonómico certificados de cursos sobre debido a manejo manual de métodos de evaluación cargas, es decir, que implican ergonómica emitidas por levantar, bajar, transportar, instituciones de educación empujar y/o jalar cargas; superior, colegios o asociaciones de  La estimación del nivel de profesionistas, también será riesgo de las actividades válido presentar cédulas identificadas, y profesionales relacionadas  La evaluación especifica del con ergonomía. riesgo, cuando el resultado de la estimación del riesgo no permita estimar el riesgo o determinar condiciones aceptables y/o cuando a pesar de la implementación de medidas correctivas siga existiendo algún peligro para el trabajador;  La identificación de los factores de riesgo ergonómico debido al manejo manual de cargas considera, al menos, lo siguiente:  La identificación de la actividad, tarea o puesto de trabajo que conllevan manejo manual de cargas: levantar, bajar, empujar, jalar, transportar y/o estibar materiales;  La descripción de las actividades;  Los trabajadores involucrados en la realización de estas actividades; Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación  La frecuencia con que se realiza la actividad, y  El tiempo de duración de las actividades;  La estimación del nivel de riesgo debido al manejo manual de cargas de las actividades identificadas en el numeral anterior, se realiza:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.3-2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.3 (parte 2/8)",
+      "titulo": " Conforme al Apéndice I, para actividades que implican levantar, bajar, o transportar car",
+      "pagina": 30,
+      "texto": " Conforme al Apéndice I, para actividades que implican levantar, bajar, o transportar cargas, o  De acuerdo con el Apéndice II, para actividades que implican empujar y jalar materiales, con o sin la ayuda de equipo auxiliar;  Cuenta con un informe del análisis de los factores de riesgo ergonómico debido al manejo manual de cargas, el cual contiene:  Datos del centro de trabajo:  Nombre, denominación o razón social;  Domicilio completo, y  Actividad principal;  Las actividades realizadas en el centro de trabajo que conllevan exposición a factores de riesgo ergonómico debido al manejo manual de cargas sujetas al análisis;  El resultado de la estimación del riesgo a que se refiere el numeral 7.3 y, en su caso, el resultado de la evaluación específica, cuando se determine que no se requiere esta evaluación, señala porqué se llegó a esa conclusión;  Las conclusiones derivadas de la identificación y análisis;  Las recomendaciones y acciones de prevención y/o control, y  Los datos del responsable de la elaboración:  Nombre completo;  Número de cédula profesional, y Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación  La información de los documentos que avalen su competencia, en el análisis de factores de riesgo ergonómico debido al manejo manual de cargas cuando se realice una evaluación específica;  El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas se revisa, actualiza o modifica cuando:  Se modifican las condiciones en las que se realiza la actividad, y/o  Se detecta alguna alteración a la salud de los trabajadores ocupacionalmente expuestos o se presenta un trastorno músculo-esquelético laboral, y  El análisis de los factores de riesgo ergonómico debido al manejo manual de cargas está integrado al diagnóstico de seguridad y salud en el trabajo, a que se refiere la NOM-030-STPS-2009, o las que la sustituyan. 5.1 y 7.5 Física o El patrón cumple cuando al realizar un recorrido en el centro de trabajo se Entrevista constata que el análisis de los factores de riesgo ergonómico debido al manejo manual de cargas está disponible para los trabajadores que participan o realizan actividades de manejo manual de cargas. 5.2, 8.1 y 8.2 Documental El patrón cumple cuando presenta evidencia documental de que:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.3-3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.3 (parte 3/8)",
+      "titulo": " Realiza las actividades de manejo manual de cargas con trabajadores que cuentan con apti",
+      "pagina": 30,
+      "texto": " Realiza las actividades de manejo manual de cargas con trabajadores que cuentan con aptitud física avalada por un médico o a través de una institución de seguridad social o privada, y  Cuenta con un procedimiento de seguridad para desarrollar actividades que involucran manejo manual de cargas, que contempla:  La descripción de la técnica adecuada para realizar las actividades de forma segura, considerando: la intensidad, distancias: horizontal y/o vertical, repetición, frecuencia, duración, y posturas con que deben efectuarse las actividades; Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación  Las medidas de seguridad y, en su caso, de control por aplicar en el desarrollo de las actividades,  Las características de la carga, por ejemplo, dimensiones, agarre, forma, peso, estabilidad;  La posición de los materiales o contenedores a manejar, con respecto a la de los trabajadores: levantamiento o descenso de la carga al piso, o a una cierta altura;  Las condiciones del ambiente que puedan incrementar el esfuerzo del trabajador;  La trayectoria para el transporte de las cargas, en su caso, subiendo o bajando escaleras, rampas inclinadas, plataformas, vehículos, tránsito sobre superficies resbalosas o con obstáculos que puedan generar riesgo de caídas, y  Las características de materiales que se manejen, en su caso, con énfasis en los peligrosos tales como: tóxicos, irritantes, corrosivos, inflamables, explosivos, reactivos, con riesgo biológico, temperatura elevada o abatida, entre otros. 5.2, 8.3, 8.4, Física El patrón cumple cuando al realizar un 8.6 y 8.7 recorrido en el centro de trabajo se constata que para reducir o eliminar los factores de riesgo ergonómico debido al manejo de materiales de forma manual adopta las medidas de prevención y/o seguridad siguientes:  Las medidas de seguridad generales siguientes:  Supervisa que se realicen en condiciones seguras, con base en el procedimiento a que alude el numeral 8.2, de esta Norma;  Mantiene las áreas de tránsito y de trabajo libres de obstáculos;  Conserva orden y limpieza en el lugar de trabajo;  Establece, en su caso, períodos de descanso; Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación  Asegura que la carga tenga elementos de sujeción;",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.3-4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.3 (parte 4/8)",
+      "titulo": " Revisa que las actividades aledañas no impliquen un riesgo para el trabajador que las re",
+      "pagina": 30,
+      "texto": " Revisa que las actividades aledañas no impliquen un riesgo para el trabajador que las realiza, y  Aplica las medidas de seguridad que se requieren conforme a los materiales, procesos, equipos, herramienta y maquinaria que se utilizan;  Las medidas de seguridad para el levantamiento y transporte de cargas:  Prohíbe que las mujeres en estado de gestación, y durante las primeras 10 semanas posteriores al parto, realicen actividades de manejo de cargas de forma manual que implican cargas de más de 10 kg, y determina la masa máxima real que podrán cargar considerando su estado de salud, así como factores tales como frecuencia, distancia, posición de la carga, agarre, masa acumulada, entre otros;  Verifica que las cargas no rebasan las masas que señala la Tabla 1 de esta Norma;  Determina la masa máxima La masa máxima que real que cargan lospodrán levantar y/o bajar trabajadores a partir de los los trabajadores mayores valores indicados en la Tabla 1,de 45 años, deberá considerando factores tales determinarse previa como frecuencia, distancia, evaluación de la aptitud posición de la carga, agarre, física realizada por un masa acumulada, entre otros, y médico, si su condición en ningún caso rebasa el límite física lo permite y el médico indicado en la Tabla 1. lo avala, podrán cargar hasta el límite máximo para  Efectúa el manejo manual de trabajadores de entre 18 y cargas cuya masa sea superior 45 años de edad. a lo que determina la Tabla 1 o su longitud dificulta el transporte, mediante:  La integración de grupos de carga (considerando que la capacidad de carga de un equipo de dos personas será dos terceras partes de la suma de sus capacidades individuales, y para un equipo de tres personas, la capacidad de carga será la mitad de la Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación suma de sus capacidades individuales, por ejemplo, para dos personas la capacidad de carga no sería de 50 kg, serian aproximadamente 34 kg) y asegurar que exista coordinación y comunicación entre los miembros de éste;  La utilización de equipos auxiliares manuales (carretillas, diablos, patines, etc.), o bien utilizar maquinaria, o  La división de las cargas en bultos, envases, sacos o paquetes más pequeños y ligeros.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.3-5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.3 (parte 5/8)",
+      "titulo": " Traslada los barriles o tambos, a través del uso de maquinaria o equipo auxiliar, cuando",
+      "pagina": 30,
+      "texto": " Traslada los barriles o tambos, a través del uso de maquinaria o equipo auxiliar, cuando se trasportan rodando y superan una masa de 400 kg o cuando se trasladan girando sobre su base y su masa es mayor a 80 kg;  Proporciona la ropa y el equipo de protección personal, conforme a lo previsto por la NOM-017-STPS-2008, o las que la sustituyan, a los trabajadores que realizan actividades de carga de:  Materiales o contenedores con aristas cortantes, rebabas, astillas, puntas agudas, clavos u otros salientes peligrosos;  Materiales con temperaturas extremas, y/o  Contenedores con sustancias irritantes, corrosivas o tóxicas;  Asegura que en ningún caso se exceda de 10,000 kg/día de masa acumulada total de levantamiento y transporte manual de cargas, cualquiera que sea la duración de la actividad y sin exceder jornadas de trabajo de 8 horas;  Las medidas de seguridad para empujar o jalar de cargas, con o sin ayuda de equipo auxiliar: Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación  Asegura la estabilidad de la carga durante su traslado;  Tiene una visión completa sobre y alrededor de la carga;  Verifica que la carga no exceda la capacidad nominal de las ruedas del equipo auxiliar que se utilice;  Revisa que el equipo auxiliar se encuentra en condiciones seguras de operación antes del inicio de las actividades;  Comprueba antes de realizar la actividad que la superficie del suelo no se encuentra en malas condiciones o represente un problema para la operación de las ruedas del equipo auxiliar que se utiliza;  Revisa, de forma previa, que el espacio para girar o maniobrar es adecuado, en especial en pasillos angostos;  Asegura que la ropa o el equipo de protección personal permita realizar con seguridad el movimiento;  Jala el equipo con ruedas, como el diablo, patín o carretilla en el mismo sentido del ascenso al subir una pendiente, y en sentido opuesto al del descenso al bajar, con el objeto de evitar que la carga represente un riesgo;  Evita paradas y maniobras frecuentes, cuando se esté jalando o empujando un objeto, el esfuerzo aplicado es continuo evitando movimientos bruscos y de larga duración;  Evita la aplicación de fuerzas iniciales y sostenidas de forma frecuente y de tiempo prolongado, con el fin de disminuir o evitar la fatiga;  Evita trayectorias por pisos ranurados, deteriorados o resbalosos;",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.3-6",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.3 (parte 6/8)",
+      "titulo": " Evita rampas, pendientes o superficies desniveladas en la trayectoria, y Tipo de Disposi",
+      "pagina": 30,
+      "texto": " Evita rampas, pendientes o superficies desniveladas en la trayectoria, y Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación  Elimina los obstáculos y objetos que pueden Se da cumplimiento con representar peligro de tropiezo; esta disposición cuando, en  Las medidas de control sólo en congruencia con el aquellos casos en que el análisis resultado del análisis de los de los factores de riesgo factores de riesgo ergonómico así lo indique. Las ergonómico, el patrón medidas de control técnicas y/o adopta una o varias administrativas de los factores de medidas de las siguientes: riesgo ergonómico las aplica  Las medidas de control mediante un Programa de administrativas ergonomía, que para tal efecto contemplan, entre otras, elaboró. las siguientes:  La limitación de los tiempos y frecuencias en los que se realizan las actividades;  La programación de períodos de descanso;  La reprogramación y diversificación de actividades, o  La rotación de actividades.  Las medidas de control técnicas por adoptar podrán comprender, entre otras, las siguientes:  La modificación de los procedimientos de trabajo;  La modificación, adecuación o sustitución de las instalaciones, procesos, maquinaria y equipos, y  El acondicionamiento, redistribución física de las instalaciones, procesos, maquinaria y equipos. Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación 5.2 y 8.5 Documental El patrón cumple cuando presenta evidencia documental de que el programa de ergonomía contiene:  Los puestos de trabajo sujetos al programa;  Las medidas de control técnicas y/o administrativas por adoptarse;  Las fechas programadas para su realización;  El control de los avances de la implementación del programa;  El responsable de su ejecución, y  La evaluación posterior a la aplicación de las medidas de control. 5.3 y 9 Documental El patrón cumple cuando presenta evidencia documental de que:  Cuenta con un programa para realizar la vigilancia a la salud de los trabajadores ocupacionalmente expuestos;  El programa para la vigilancia a la salud de los trabajadores ocupacionalmente expuestos considera al menos, lo siguiente:  La aplicación de exámenes médicos iniciales para integrar la historia clínica laboral;",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.3-7",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.3 (parte 7/8)",
+      "titulo": " La práctica de exámenes médicos de acuerdo con la actividad específica de los trabajador",
+      "pagina": 30,
+      "texto": " La práctica de exámenes médicos de acuerdo con la actividad específica de los trabajadores, sujeta al seguimiento clínico anual o a la evidencia de signos o síntomas que denoten un posible trastorno músculo-esquelético laboral;  Los exámenes médicos se efectúan de conformidad con lo establecido por las normas oficiales mexicanas que al respecto emitan la Secretaría de Salud y/o la Secretaría del Trabajo y Previsión Social, y a falta de éstas, los que indique la institución de seguridad social o de salud, el médico de la empresa, o la institución privada que le preste el servicio médico al centro de trabajo, y  La aplicación de las acciones preventivas y correctivas para la protección de la salud de los trabajadores, con base en los factores de riesgo ergonómico detectados y como resultado de los exámenes médicos practicados; Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación  La vigilancia a la salud de los trabajadores es efectuada por un médico, con conocimientos en Los documentos para medicina del trabajo; demostrar que el médico cuenta con conocimientos  Los exámenes médicos en medicina del trabajo, practicados y su registro, así como deberán ser constancias o las acciones preventivas y certificados de cursos correctivas para la vigilancia a la emitidas por instituciones salud de los trabajadores, se de educación superior. integran en un expediente clínico que conserva por un período mínimo de cinco años, y  Un médico determina la aptitud física de los trabajadores para realizar actividades que conllevan carga manual, y en su caso, determina el período de recuperación. 5.4 Documental El patrón cumple cuando presenta La información puede evidencia de que informa a los proporcionarse en folletos, Física trabajadores sobre las posibles trípticos o carteles, o bien a alteraciones a la salud por el manejo través de pláticas manual de cargas. informativas. 5.5 y 10 Documental El patrón cumple cuando presenta La capacitación deberá evidencia documental de que: evidenciarse a través de la Entrevista constancia de habilidades  Proporciona capacitación y adiestramiento al personal ocupacionalmente expuesto sobre los procedimientos de seguridad y las prácticas de trabajo seguro, y en su caso, en las medidas de prevención y/o control;  La capacitación tiene énfasis en la prevención de riesgos, y con base en las tareas asignadas;",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.3-8",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.3 (parte 8/8)",
+      "titulo": " La capacitación y adiestramiento consiste en una instrucción teórica, entrenamiento prác",
+      "pagina": 30,
+      "texto": " La capacitación y adiestramiento consiste en una instrucción teórica, entrenamiento práctico y evaluación de los conocimientos y habilidades adquiridos, y considera lo siguiente:  Los efectos a la salud que puede ocasionar la exposición a los factores de riesgo ergonómico debido al manejo manual de materiales;  La forma de reconocer factores de riesgo ergonómico por el manejo manual de cargas, así como riesgos adicionales presentes en el lugar de trabajo; Tipo de Disposición Criterio de aceptación Observaciones Riesgo comprobación  El contenido de la presente Norma, con énfasis en la aplicación de las medidas de seguridad, y en su caso, medidas de control derivadas del análisis de los factores de riesgo ergonómico, y  La manera de realizar sus actividades en forma segura, a través de los procedimientos de seguridad y/o prácticas seguras.  La capacitación y adiestramiento se refuerza por lo menos cada dos años o antes cuando se presenta cualquiera de las circunstancias siguientes:  Se introducen herramientas, equipo nuevo o se modifican las condiciones en las que se desarrollan las actividades;  Se evidencian condiciones inseguras en el desarrollo de las actividades o trabajos, y que pudieran derivar en la presencia de factores de riesgo ergonómico,  Así lo sugiera la última evaluación aplicada a los trabajadores.  Lleva el registro de la capacitación y adiestramiento que proporciona al personal ocupacionalmente expuesto, el cual contiene, al menos, lo siguiente:  El nombre y puesto de los trabajadores a los que se les proporcionó;  La fecha en que se proporcionó la capacitación;  Los temas impartidos, y  El nombre del instructor y, en su caso, número de registro como agente capacitador ante la Secretaría del Trabajo y Previsión Social. 5.6 Registro El patrón cumple cuando presenta evidencias de que lleva el registro sobre las medidas preventivas adoptadas y los exámenes médicos practicados.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.4",
+      "titulo": "12.4 Para la selección de trabajadores por entrevistar, con el propósito de constatar el c",
+      "pagina": 41,
+      "texto": "12.4 Para la selección de trabajadores por entrevistar, con el propósito de constatar el cumplimiento de las disposiciones que dispone el presente procedimiento para la evaluación de la conformidad, se aplicará el criterio muestral contenido en la Tabla 2 siguiente: Tabla 2 Muestreo por selección aleatoria Número de trabajadores por Número total de trabajadores entrevistar 1-15 1 16-50 2 51-105 3 1 por cada 35 trabajadores hasta un Más de 105 máximo de 15",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-12.5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§12.5",
+      "titulo": "12.5 Las evidencias de tipo documental o los registros a que alude esta Norma podrán exhib",
+      "pagina": 41,
+      "texto": "12.5 Las evidencias de tipo documental o los registros a que alude esta Norma podrán exhibirse de manera impresa o en medios informáticos o digitales, y se deberán conservar al menos durante un año.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-13",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§13",
+      "titulo": "Vigilancia",
+      "pagina": 41,
+      "texto": "13. Vigilancia La vigilancia del cumplimiento de la presente Norma Oficial Mexicana corresponde a la Secretaría del Trabajo y Previsión Social.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.1",
+      "titulo": "14.1 Manual handling assessment charts (the MAC tool). Health and Safety Executive.",
+      "pagina": 41,
+      "texto": "14.1 Manual handling assessment charts (the MAC tool). Health and Safety Executive.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.2",
+      "titulo": "14.2 Norma Internacional ISO 11228-1:2003, Ergonomics-Manual handling-Part 1: Lifting and",
+      "pagina": 41,
+      "texto": "14.2 Norma Internacional ISO 11228-1:2003, Ergonomics-Manual handling-Part 1: Lifting and carrying.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.3",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.3",
+      "titulo": "14.3 Norma Internacional ISO 11228-2:2003, Ergonomics-Manual handling-Part 2 Pushing and p",
+      "pagina": 41,
+      "texto": "14.3 Norma Internacional ISO 11228-2:2003, Ergonomics-Manual handling-Part 2 Pushing and pulling.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.4",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.4",
+      "titulo": "14.4 Norma Internacional ISO 6385-2016, Ergonomic principles in the design of work systems",
+      "pagina": 41,
+      "texto": "14.4 Norma Internacional ISO 6385-2016, Ergonomic principles in the design of work systems.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.5",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.5",
+      "titulo": "14.5 NTP 177: La carga física de trabajo: definición y evaluación. Instituto Nacional de S",
+      "pagina": 41,
+      "texto": "14.5 NTP 177: La carga física de trabajo: definición y evaluación. Instituto Nacional de Seguridad e Higiene en el Trabajo, Ministerio del Trabajo y Asuntos Sociales. España, 1986.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.6",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.6",
+      "titulo": "14.6 NTP 176: Evaluación de las condiciones de trabajo: Método de los perfiles de puestos.",
+      "pagina": 41,
+      "texto": "14.6 NTP 176: Evaluación de las condiciones de trabajo: Método de los perfiles de puestos. Instituto Nacional de Seguridad e Higiene en el Trabajo, Ministerio del Trabajo y Asuntos Sociales. España, 1986.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.7",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.7",
+      "titulo": "14.7 NTP 477: Levantamiento manual de cargas: ecuación del NIOSH. Instituto Nacional de Se",
+      "pagina": 41,
+      "texto": "14.7 NTP 477: Levantamiento manual de cargas: ecuación del NIOSH. Instituto Nacional de Seguridad e Higiene en el Trabajo, Ministerio del Trabajo y Asuntos Sociales. España, 1998.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.8",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.8",
+      "titulo": "14.8 NTP 451: Evaluación de las condiciones de trabajo: métodos generales. Instituto Nacio",
+      "pagina": 41,
+      "texto": "14.8 NTP 451: Evaluación de las condiciones de trabajo: métodos generales. Instituto Nacional de Seguridad e Higiene en el Trabajo, Ministerio del Trabajo y Asuntos Sociales. España, 1997.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.9",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.9",
+      "titulo": "14.9 NTP 387: Evaluación de las condiciones de trabajo: método del análisis ergonómico del",
+      "pagina": 41,
+      "texto": "14.9 NTP 387: Evaluación de las condiciones de trabajo: método del análisis ergonómico del puesto de trabajo. Instituto Nacional de Seguridad e Higiene en el Trabajo, Ministerio del Trabajo y Asuntos Sociales. España, 1995.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.10",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.10",
+      "titulo": "14.10 Organización Internacional del Trabajo, Enciclopedia de Salud y Seguridad en el Trab",
+      "pagina": 41,
+      "texto": "14.10 Organización Internacional del Trabajo, Enciclopedia de Salud y Seguridad en el Trabajo. Ed. Ministerio de Trabajo y Asuntos Sociales. 2012. España.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.11",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.11",
+      "titulo": "14.11 Reglamento Federal de Seguridad y Salud en el Trabajo, Diario Oficial de la Federaci",
+      "pagina": 41,
+      "texto": "14.11 Reglamento Federal de Seguridad y Salud en el Trabajo, Diario Oficial de la Federación de 13 de noviembre de 2014. México.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.12",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.12",
+      "titulo": "14.12 Risk assessment of pushing and pulling (RAPP) tool. Health and Safety Executive.",
+      "pagina": 41,
+      "texto": "14.12 Risk assessment of pushing and pulling (RAPP) tool. Health and Safety Executive.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-14.13",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§14.13",
+      "titulo": "14.13 Standardised Nordic questionnaires for the analysis of musculoskeletal symptoms. Kuo",
+      "pagina": 41,
+      "texto": "14.13 Standardised Nordic questionnaires for the analysis of musculoskeletal symptoms. Kuorinka, I., Jonsson, B., Kilbom, A., Vinterberg, H., Biering-Sorensen, F., Andersson, G., Jorgensen K., 1987.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-15",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "§15",
+      "titulo": "Concordancia con normas internacionales",
+      "pagina": 41,
+      "texto": "15. Concordancia con normas internacionales Esta Norma Oficial Mexicana no es equivalente con ninguna norma internacional. TRANSITORIOS PRIMERO. La presente Norma Oficial Mexicana entrará en vigor a partir del 2 de enero de 2020. SEGUNDO. Los numerales 5.1, 8.3 inciso b) numeral 2, 8.4, 8.5, así como el Capítulo 7, entrarán en vigor a partir del 4 de enero de 2023. Las medidas de control que se hayan emitido en el 2020, a que se refieren los numerales 8.6 y 8.7, deberán ajustarse conforme a lo dispuesto en este artículo. TERCERO. A partir de la fecha de entrada en vigor de esta Norma quedarán sin efectos los numerales 4.7, 4.12, 5.3, 5.4 inciso b), 5.6, 5.9, 6.7, 11.3, así como los Capítulos 8 y 10 de la Norma Oficial Mexicana NOM-006-STPS-2014, Manejo y almacenamiento de materiales - Condiciones de seguridad y salud en el trabajo, publicada en el Diario Oficial de la Federación de 11 de septiembre de 2014. Ciudad de México, a los veintidós días del mes de noviembre de dos mil dieciocho.- El Secretario del Trabajo y Previsión Social, Roberto Rafael Campa Cifrián.- Rúbrica.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p42-1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I (parte 1/2)",
+      "titulo": "ESTIMACIÓN DEL RIESGO POR EL LEVANTAMIENTO Y TRANSPORTE DE CARGAS, Y OPERACIONES DE CARGA",
+      "pagina": 42,
+      "texto": "ESTIMACIÓN DEL RIESGO POR EL LEVANTAMIENTO Y TRANSPORTE DE CARGAS, Y OPERACIONES DE CARGA MANUAL EN GRUPO DE TRABAJO La estimación del riesgo ergonómico por el levantamiento y transporte manual de cargas para evaluar las condiciones en que se realiza esta actividad a que hace referencia el numeral 7.3, inciso a) de la presente Norma, se deberá de realizar de acuerdo con el método siguiente: AI.1 Antes de comenzar a aplicar el método, se deberá de considerar lo siguiente: a) Utilizar el tiempo que sea necesario para observar la actividad. Asegurar que lo observado sea representativo del procedimiento normal de trabajo; b) Involucrar a los trabajadores, supervisores del trabajo o encargados de seguridad y salud en el trabajo durante el proceso de evaluación; c) Identificar el tipo de actividad, si es levantamiento/descenso con un solo trabajador, levantamiento/descenso en equipo, o transporte de cargas. Si el proceso involucra una combinación de estas actividades considerar todas; d) Analizar este Apéndice antes de realizar la estimación del nivel de riesgo; e) Seguir la guía de evaluación para determinar el nivel de riesgo para cada factor de riesgo identificado, y f) Clasificar el nivel de riesgo conforme a la Tabla AI.1 siguiente: Tabla AI.1 Nivel de riesgo Bajo – Aceptable: No se requieren acciones correctivas. El riesgo es nulo o aunque es bajo, se considera aceptable. Medio – Posible: Se requieren acciones correctivas a corto plazo. Aunque no existe una situación de riesgo alto se deben examinar las actividades con mayor detalle. Alto - Significativo: Se requieren acciones correctivas pronto. Se puede exponer a una proporción significativa de trabajadores a correr el riesgo de un trastorno músculoesquelético laboral . Muy alto o inaceptable: Se requieren acciones correctivas inmediatamente. Dichas operaciones pueden representar un riesgo grave de lesiones, deben examinarse minuciosamente y ser mejoradas. a) Considerar que las bandas de color indican cuáles elementos de la actividad son los que requieren mayor atención; b) Evaluar cada actividad por separado y dar prioridad a la actividad de mayor nivel de riesgo cuando el trabajador realice varias actividades;",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p42-2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I (parte 2/2)",
+      "titulo": "c) Aplicar el método de evaluación establecido en los numerales AI.2, AI.3 y AI.4, que cor",
+      "pagina": 42,
+      "texto": "c) Aplicar el método de evaluación establecido en los numerales AI.2, AI.3 y AI.4, que corresponda, según la actividad identificada, y d) Estimar el nivel de riesgo conforme lo señalado en el numeral AI.5. 1 Este método de estimación del riesgo se basa en las tablas de evaluación para el manejo manual de cargas (Manual handling assessment charts - the MAC tool) técnica desarrollada por el Ejecutivo de Seguridad y Salud del Reino Unido (Health and Safety Executive HSE - UK) y publicada el año 2003.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p43",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "AI.2 Estimación del riesgo de actividades que impliquen levantamiento/descenso de cargas a",
+      "pagina": 43,
+      "texto": "AI.2 Estimación del riesgo de actividades que impliquen levantamiento/descenso de cargas a) Peso de la carga y frecuencia: Registrar el peso y la frecuencia de levantamiento de la carga. Utilizar la Gráfica siguiente para determinar el nivel de riesgo asociado a la frecuencia y a la carga manejada (levantar o bajar). Peso de la carga/frecuencia, Gráfica para operaciones de levantamiento Con respecto al gráfico anterior se deberá considerar que los límites de masa máxima que podrá manejar el trabajador serán los establecidos en la Tabla 1 del numeral 8.3, inciso b), subinciso 2). b) Distancia horizontal entre las manos y la parte inferior de la espalda: Observar la tarea y examinar la distancia horizontal que existe entre las manos del trabajador y la parte inferior de su espalda. Siempre considerar el “peor escenario”. Usar la siguiente ilustración para guiar su evaluación:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p44",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "c) Región de levantamiento vertical: Observar la posición de las manos del trabajador al i",
+      "pagina": 44,
+      "texto": "c) Región de levantamiento vertical: Observar la posición de las manos del trabajador al inicio del levantamiento y a medida que la operación progresa. Siempre considerar el “peor de los casos”. Utilizar las siguientes ilustraciones como guía: d) Torsión y flexión lateral del torso: Observar el torso del trabajador a medida que levanta la carga. Si el torso se tuerce en relación con las caderas y los muslos o el trabajador se inclina hacia un lado a medida que levanta la carga, el color de la banda es naranja. Si el torso se tuerce y se dobla hacia un lado a medida que se levanta la carga, el color de la banda es rojo. e) Restricciones posturales: I. Si los movimientos del trabajador no están obstaculizados, la banda será de color verde; II. Si el trabajador adopta posturas incómodas o forzadas durante el levantamiento de una carga debido al espacio disponible (por ejemplo, espacio estrecho entre el pallet y una tolva de descarga) o el diseño de la estación de trabajo (por ejemplo, un transportador de monorriel excesivamente alto para colocar o tomar la carga), el color de la banda será naranja, y III. Si la postura es severamente restringida, el color de la banda será rojo (por ejemplo, trabajo en áreas confinadas como una bodega).",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p45",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "f) Acoplamiento mano-carga (elementos de sujeción): Este factor considera las propiedades",
+      "pagina": 45,
+      "texto": "f) Acoplamiento mano-carga (elementos de sujeción): Este factor considera las propiedades geométricas y de diseño de la carga que se va a manejar, en cuanto a su interacción con las manos del trabajador, según se indica a continuación. Buen agarre Agarre regular Mal agarre Contenedores con elementos de Contenedores con asas o manijas Contenedores de diseño sujeción, como asas o manijas mal diseñadas. El material permite deficiente. Partes holgadas, bien diseñados, aptos para este hacer un agarre con la mano en objetos irregulares, voluminosos o propósito. pinza. difíciles de manejar. Partes holgadas que permiten un Los dedos deben estar sujetos a Sacos no rígidos (como bultos de agarre cómodo. 90 grados bajo el contenedor o la arena o cemento) cargas carga. impredecibles. Nivel: Verde Nivel: Naranja Nivel: Rojo Valor:0 Valor:1 Valor:2 g) Superficie de trabajo: Este factor considera las propiedades de la superficie donde el trabajador camina o permanece de pie, según se indica a continuación. h) Otros factores ambientales I. Observar el ambiente de trabajo y calificar si la operación de levantamiento se lleva a cabo bajo: temperaturas extremas; con fuerte circulación del aire; o en condiciones de iluminación extremas (demasiado oscuro o brillante). Si uno de éstos factores de riesgo está presente el color de la banda será naranja; II. Si dos o más factores de riesgo están presentes el color de la banda será rojo, y III. Si no existe ningún factor presente el color de la banda será verde.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p46",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "AI.3 Estimación del riesgo de operaciones de transporte de cargas a) Peso de la carga y fr",
+      "pagina": 46,
+      "texto": "AI.3 Estimación del riesgo de operaciones de transporte de cargas a) Peso de la carga y frecuencia: Registrar el peso y la frecuencia de la operación de transporte. Conforme al gráfico siguiente: Peso de la carga/frecuencia, gráfica para operaciones de transporte Con respecto al gráfico anterior se deberá considerar que los límites de masa máxima que podrá manejar el trabajador serán los establecidos en la Tabla 1 del numeral 8.3, inciso b), subinciso 2). b) Distancia horizontal entre las manos y la parte inferior de la espalda: Observar la tarea y examine la distancia horizontal entre las manos del trabajador y su espalda inferior, considerar siempre el “peor de los casos”. Usar la ilustración siguiente para guiar su evaluación.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p47",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "c) Carga asimétrica sobre el torso: Las posturas del trabajador y la estabilidad de la car",
+      "pagina": 47,
+      "texto": "c) Carga asimétrica sobre el torso: Las posturas del trabajador y la estabilidad de la carga son factores de riesgo asociados con lesiones músculo-esqueléticas. Las siguientes ilustraciones podrán guiar su evaluación. d) Restricciones posturales: I. Si los movimientos del trabajador no están obstaculizados, el color de la banda será verde. II. Si el trabajador adopta posturas forzadas o incomodas durante el transporte de cargas (por ejemplo, una puerta estrecha que hace que el operador gire o mueva la carga para lograr pasar) el color de la banda será naranja, y III. Si la postura es severamente restringida, el color de la banda será rojo (por ejemplo, transportando cargas en una postura flexionada hacia adelante en áreas con techo bajo como bodegas). e) Acoplamiento mano-carga (elementos de sujeción): Este factor considera las propiedades geométricas y de diseño de la carga que se va a maneja, en cuanto a su interacción con las manos del trabajador, según se indica a continuación: Buen agarre Agarre regular Mal agarre Contenedores con elementos de Contenedores con asas o Contenedores de diseño pobre. sujeción, como asas o manijas manijas mal diseñadas; Partes holgadas, objetos bien diseñados, aptos para este El material permite hacer un irregulares, voluminosos o propósito agarre con la mano en pinza difíciles de manejar Partes holgadas que permiten un Los dedos deben estar sujetos Sacos no rígidos (como bultos agarre cómodo a 90 grados bajo el contenedor de arena o cemento) cargas o la carga impredecibles Nivel: Verde Nivel: Naranja Nivel: Rojo Valor:0 Valor:1 Valor:2",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p48",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "f) Superficie de trabajo: Este factor considera las propiedades de la superficie donde el",
+      "pagina": 48,
+      "texto": "f) Superficie de trabajo: Este factor considera las propiedades de la superficie donde el trabajador camina o permanece de pie, según se indica a continuación. g) Otros factores ambientales: I. Observar el ambiente de trabajo y determinar si la operación de levantamiento se lleva a cabo en: temperaturas extremas; con fuerte circulación del aire; o en condiciones de iluminación extremas (demasiado oscuro o brillante). Si uno de los factores de riesgo está presente el color de la banda será naranja; II. Si dos o más factores de riesgo están presentes el color de la banda será rojo, y III. Si no existe ningún factor presente el color de la banda será verde. h) Distancia de transporte: Observar la actividad y estimar la distancia total que la carga (trayectoria total) es transportada, en metros. i) Obstáculos en la ruta: I. Observe la ruta. Si el trabajador tiene que llevar una carga y se presenta un solo factor de riesgo como: una pendiente pronunciada (con inclinación mayor a 20%), subir escalones, cruzar a través de puertas cerradas o alrededor de materiales que puedan provocar tropiezos, el color de la banda es naranja; II. Si la tarea involucra transportar la carga subiendo escaleras, corresponderá el color rojo banda; III. Si la tarea involucra más de uno de los factores de riesgo (por ejemplo, una pendiente con inclinación mayor a 20% y luego subir escaleras), el color de la banda será rojo, y IV. Si no existe ningún factor el color será verde.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p49",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "AI.4 Evaluación del riesgo de operaciones de manejo manual de cargas en equipo a) Peso de",
+      "pagina": 49,
+      "texto": "AI.4 Evaluación del riesgo de operaciones de manejo manual de cargas en equipo a) Peso de la carga: Registre la masa de la carga (en kg) y el número de operadores que realizan la tarea, conforme a lo siguiente: b) Distancia horizontal entre las manos y la parte inferior de la espalda: Observar la tarea y examinar la distancia horizontal que existe entre las manos de cada trabajador y la parte inferior de su espalda considerar siempre “el peor de los casos”. Usar la siguiente ilustración para guiar su evaluación. c) Región de levantamiento vertical: Observar la posición de las manos del trabajador al inicio del levantamiento y a medida que la operación progresa. Siempre evalúe el “peor de los casos”. Utilice las siguientes ilustraciones como guía:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p50",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "d) Torsión y flexión lateral del torso: I. Observar el torso del trabajador a medida que l",
+      "pagina": 50,
+      "texto": "d) Torsión y flexión lateral del torso: I. Observar el torso del trabajador a medida que levanta la carga. Si el torso se tuerce en relación con las caderas y los muslos o el trabajador se inclina hacia un lado a medida que levanta la carga, el color de la banda es naranja, y II. Si el torso se tuerce y se dobla hacia un lado a medida que se levanta la carga, el color de la banda es rojo. e) Restricciones posturales: I. Si los movimientos del trabajador no están obstaculizados, la banda será de color verde; II. Si el trabajador adopta posturas incómodas o forzadas durante el levantamiento de una carga debido al espacio disponible (por ejemplo, espacio reducido entre los miembros del equipo) o el diseño de la estación de trabajo (por ejemplo, un transportador de monorriel excesivamente alto), el color de la banda será naranja, y III. Si la postura es severamente restringida, el color de la banda será rojo y la puntuación numérica será 3 (por ejemplo, trabajo en áreas confinadas como una bodega). f) Acoplamiento mano-carga (elementos de sujeción): Este factor considera las propiedades geométricas y de diseño de la carga que se va a manejar, en cuanto a su interacción con las manos del trabajador, según se indica a continuación. Buen agarre Agarre regular Mal agarre Contenedores con elementos de Contenedores con asas o manijas Contenedores de diseño sujeción, como asas o manijas bien mal diseñadas; pobre. diseñados, aptos para este propósito; El material permite hacer un agarre Partes holgadas, objetos con la mano en pinza; irregulares, voluminosos o difíciles de manejar Partes holgadas que permiten un Los dedos deben estar sujetos a 90 Sacos no rígidos (como agarre cómodo. grados bajo el contenedor o la carga. bultos de arena o cemento) cargas impredecibles Nivel: Verde Nivel: Naranja Nivel: Rojo Valor:0 Valor:1 Valor:2 g) Superficie de trabajo: Este factor considera las propiedades de la superficie donde el trabajador camina o permanece de pie, según se indica a continuación:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p51",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "h) Otros factores ambientales: I. Observar el ambiente de trabajo y determine si la operac",
+      "pagina": 51,
+      "texto": "h) Otros factores ambientales: I. Observar el ambiente de trabajo y determine si la operación de levantamiento se lleva a cabo bajo: temperaturas extremas; con fuerte circulación del aire; o en condiciones de iluminación extremas (demasiado oscuro o brillante). Si uno de éstos factores de riesgo está presente el color de la banda será naranja; II. Si dos o más factores de riesgo están presentes el color de la banda será rojo, y III. Si no existe factor de riesgo el color de la banda será verde. i) Comunicación, coordinación y control: La comunicación entre los trabajadores es esencial cuando el levantar una carga se realiza en grupo. Un ejemplo de buena comunicación sería poder oír a los trabajadores contar \"uno, dos, tres\" etc. antes de levantar una carga. Observar para comprender si el grupo tiene el control de la carga, que la levanta al parejo y suavemente, y que todos los miembros la levantan juntos. Un levantamiento en equipo no coordinado puede dejar a un miembro del equipo soportando todo el peso. AI.5 Estimación del nivel de riesgo Para estimar el nivel de riesgo se deberá realizar lo siguiente: a) Registrar el color y valor obtenido en cada uno de los factores analizados para cada tipo de actividad: Levantar Transportar Equipo Factores de riesgo Color Valor Color Valor Color Valor Peso y ascenso de la carga/ frecuencia de transporte Distancia horizontal entre las manos desde la parte inferior de la espalda Región de levantamiento vertical Torsión y flexión lateral del torso; Carga asimétrica sobre el torso (transporte) Restricciones posturales (posturas incómodas, forzadas, o restringidas) Acoplamiento mano-carga (elementos de sujeción) Superficie de trabajo Otros factores ambientales Distancia de transporte Obstáculos en la ruta (sólo en transporte) Comunicación, coordinación y control (sólo manejo manual de cargas en equipo) Puntuación Nivel de Riesgo",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-I-p52",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice I",
+      "titulo": "b) Determinar el nivel de riesgo conforme a lo siguiente: PUNTAJE NIVEL DE RIESGO PRIORIDA",
+      "pagina": 52,
+      "texto": "b) Determinar el nivel de riesgo conforme a lo siguiente: PUNTAJE NIVEL DE RIESGO PRIORIDAD TOTAL Bajo – Aceptable No se requieren acciones correctivas 0a4 Medio – Posible Se requieren acciones correctivas a corto plazo 5 a 12 Alto – Significativo Se requieren acciones correctivas pronto 13 a 20 Muy Alto - Inaceptable Se requieren acciones correctivas inmediatamente 21 a 32 c) Definir las acciones, conforme al nivel de riesgo obtenido, de acuerdo con lo siguiente: NIVEL DE RIESGO ACCIONES Bajo – Aceptable Sólo se requiere dar seguimiento a los grupos más vulnerables, como mujeres en periodo de gestación o trabajadores menores de edad. Medio – Posible Se debe examinar las tareas con mayor detalle, mediante la aplicación de una evaluación específica, o bien implantar medidas de control mediante un Programa de ergonomía para el manejo manual de cargas. Alto – Significativo Se requiere una acción rápida, por lo que se deben establecer medidas de control mediante un Programa de ergonomía para el manejo manual de cargas. Muy Alto - Inaceptable Se deben detener las actividades e implementar medidas de control mediante un Programa de ergonomía para el manejo manual de cargas.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p52",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "ESTIMACIÓN DEL RIESGO POR EMPUJE Y ARRASTRE DE CARGAS CON O SIN EQUIPO AUXILIAR La estimac",
+      "pagina": 52,
+      "texto": "ESTIMACIÓN DEL RIESGO POR EMPUJE Y ARRASTRE DE CARGAS CON O SIN EQUIPO AUXILIAR La estimación del riesgo ergonómico por el empuje, arrastre (tracción), jalar, deslizar o rodar cargas de forma manual con o sin equipo auxiliar, para evaluar las condiciones en que se realiza esta actividad a que hace referencia el numeral 7.3, inciso b) de esta Norma, se deberá realizar de acuerdo con el siguiente método. AII.1 Antes de comenzar a aplicar el método, se deberá de considerar lo siguiente: a) Utilizar el tiempo que sea necesario para observar la actividad. Asegurar que lo observado sea representativo del procedimiento normal de trabajo; b) Involucrar a los trabajadores, supervisores o encargados de seguridad y salud en el trabajo durante el proceso de evaluación. Cuando varias personas hagan la misma actividad, considerar las opiniones de los trabajadores sobre las demandas de la operación; c) Seleccionar la evaluación adecuada al tipo de actividad, es decir, empuje y arrastre de objetos sin uso de equipo auxiliar o empujar y jalar objetos con uso de equipo auxiliar; d) Leer esta guía de evaluación antes de llevarla a cabo; e) Seguir la guía de evaluación para determinar el nivel de riesgo para cada factor de riesgo identificado; 2 Este método de estimación del riesgo se basa en la herramienta “Risk assessment of pushing and pulling (RAPP) tool” técnica desarrollada por el Ejecutivo de Seguridad y Salud del Reino Unido (Health and Safety Executive HSE - UK).",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p53-1",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II (parte 1/2)",
+      "titulo": "f) Clasificar el nivel de riesgo de acuerdo con la Tabla AII.1 siguiente: Tabla AII.1 Nive",
+      "pagina": 53,
+      "texto": "f) Clasificar el nivel de riesgo de acuerdo con la Tabla AII.1 siguiente: Tabla AII.1 Nivel de riesgo Bajo – Aceptable: No se requieren acciones correctivas. El riesgo es nulo o aunque es bajo, se considera aceptable. Medio – Posible: Se requieren acciones correctivas a corto plazo. Aunque no existe una situación de riesgo alto se deben examinar las actividades con mayor detalle. Alto - Significativo: Se requieren acciones correctivas pronto. Se puede exponer a una proporción significativa de trabajadores a correr el riesgo de un trastorno músculo-esquelético laboral . Muy alto o inaceptable: Se requieren acciones correctivas inmediatamente. Dichas operaciones pueden representar un riesgo grave de lesiones, deben examinarse minuciosamente y ser mejoradas. g) Considerar que las bandas de color indican cuáles elementos de la actividad son los que requieren mayor atención; h) Evaluar cada actividad por separado y dar prioridad a la actividad de mayor nivel de riesgo cuando el trabajador realice varias actividades; i) Proceder a evaluar como lo señalan los numerales AII.3 y AII.5 según corresponda a la actividad identificada, y j) Estimar el nivel de riesgo de conformidad con los numerales AII.4 y AII.6 según corresponda AII.2 Donde las tareas requieren atención, primero busque soluciones donde sea factible eliminar el peligro, por ejemplo, mediante el rediseño del trabajo o la automatización de procesos. Donde esas medidas no sean factibles, identificar cómo se podrían mejorar las actividades para evitar o reducir los factores que obtienen resultados en rojo. Luego considere cómo reducir las puntuaciones de color naranja. AII.3 Evaluación del riesgo de actividades que impliquen empuje o arrastre de cargas sin uso de equipo auxiliar a) Actividad y peso de la carga (kg) I. Identificar la actividad. Si se realizan dos o más actividades (por ejemplo, rodando y girando sobre su base), realice una evaluación para cada tipo de actividad; II. Averiguar la masa de la carga movida (de alguna etiqueta de la carga, preguntando a los trabajadores o pesando la carga u objeto); III. Evaluar la masa total a mover, si dos o más cargas son movidas a la vez, y IV. Evaluar la actividad con la carga de mayor masa, si se mueven cargas de diferente masa. Las ilustraciones en cada sección son sólo una guía para ayudar a comprender mejor, no son detalladas o exhaustivas. Rodando:",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p53-2",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II (parte 2/2)",
+      "titulo": "Menos de 400 kg Bajo 0 De 400 kg a 600 kg Medio 2 De 600 kg a 1000 kg Alto 4 Más de 1000 k",
+      "pagina": 53,
+      "texto": "Menos de 400 kg Bajo 0 De 400 kg a 600 kg Medio 2 De 600 kg a 1000 kg Alto 4 Más de 1000 kg Muy alto 8",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p54",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "Girando sobre su base (Las cargas se mueven girando/rodando a lo largo de los bordes de su",
+      "pagina": 54,
+      "texto": "Girando sobre su base (Las cargas se mueven girando/rodando a lo largo de los bordes de su base): Menos de 80 kg Bajo 0 De 80 kg a 120 kg Medio 2 De 120 kg a 150 kg Alto 4 Más de 150 kg Muy alto 8 Arrastrar/jalar o deslizar: Menos de 25 kg Bajo 0 De 25 kg a 50 kg Medio 2 De 50 kg a 80 kg Alto 4 Más de 80 kg Muy alto 8 b) Postura I. Observar la posición general de las manos y del cuerpo durante la operación. II. Observe la posición general de las manos y del cuerpo durante la operación. Buena Razonable Pobre o Deficiente El torso se encuentra El cuerpo está inclinado en la El cuerpo está muy inclinado, o verticalmente en su mayor parte, y dirección del esfuerzo, o el trabajador se pone en cuclillas, se arrodilla o necesita empujar con la espalda contra la carga, o El torso no está torcido, y El torso está visiblemente El torso está severamente flexionado o torcido, o flexionado o torcido, o Las manos están entre la cadera y Las manos están por debajo de la Las manos están detrás o en un la altura del hombro altura de la cadera lado del cuerpo o por encima de la altura del hombro 0 3 6",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p55",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "c) Acoplamiento de la mano-carga I. Observar cómo es el agarre con las manos o cómo están",
+      "pagina": 55,
+      "texto": "c) Acoplamiento de la mano-carga I. Observar cómo es el agarre con las manos o cómo están en contacto con la carga durante el empuje o la tracción. Si la operación implica tanto empujar como jalar, evalúe la empuñadura para ambas acciones. Bueno Razonable Pobre o deficiente Hay manijas o azas, que Hay zonas de agarre, pero No hay asas o el permiten un cómodo agarre para sólo permiten un agarre contacto de la mano es aplicar fuerza para jalar o un parcial, por ejemplo, dedos incómodo cómodo agarre completo de la que sujetan a 90°, o contacto mano para empujar parcial de la mano para empujar 0 1 2 d) Patrón de trabajo I. Observar el trabajo, e identificar si la operación es repetitiva (cinco o más traslados por minuto) y si el trabajador establece el ritmo de trabajo. II. Preguntar a los trabajadores sobre su patrón de descansos y sobre otras oportunidades que tienen para descansar o recuperarse del trabajo. Bueno Razonable Pobre o deficiente El trabajo no es repetitivo El trabajo es repetitivo, pero El trabajo es repetitivo, y (menos de cinco traslados por minuto), y El ritmo de trabajo es fijado Hay oportunidades para No hay descansos por el trabajador descansar o de recuperarse formales/informales u a través de descansos oportunidad de rotar los formales e informales o a puestos de trabajo través de la rotación del trabajo 0 1 3",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p56",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "e) Distancia por viaje I. Determinar la distancia desde el principio hasta el final para u",
+      "pagina": 56,
+      "texto": "e) Distancia por viaje I. Determinar la distancia desde el principio hasta el final para un solo viaje; II. Hacer una evaluación para el viaje más largo, si la operación no es repetitiva, y III. Determinar la distancia promedio para al menos cinco viajes, si la operación es repetitiva. Corta Media Pobre o deficiente 2 m o menos Entre 2 m y 10 m Más de 10 m 0 1 3 f) Superficie de trabajo I. Identificar la condición en que se encuentran las superficies de trabajo a lo largo de la ruta y determinar el nivel de riesgo utilizando los siguientes criterios. Bueno Razonable Pobre o deficiente Seco y limpio, y En mayor parte seco y limpio Contaminado (mojado o con (humedad o escombros en escombros en varias áreas), algunas áreas), o o Nivelado y En pendiente (inclinación entre Pendiente pronunciada 3° y 5°), o (inclinación superior a 5°), o Firme, y Razonablemente firme bajo los Suave o inestable bajo los pies (por ejemplo alfombrado), pies (grava, arena, barro), o o Buen estado (no dañado o Mala condición (daños Muy mal estado (daño irregular) menores) severo) 0 1 4 g) Obstáculos a lo largo de la ruta I. Verificar en la ruta si hay obstáculos. Tener en cuenta si el equipo se mueve por encima de cables, a través de bordes elevados, hacia arriba o hacia abajo en rampas empinadas (pendiente de más de 5°), subiendo o bajando escalones, a través de puertas bloqueadas/estrechas, en espacios confinados, alrededor de curvas, esquinas u objetos, y II. Contar cada tipo de obstáculo sólo una vez, sin importar cuántas veces se pase por éste. Bueno Razonable Pobre o deficiente Sin obstáculos Un tipo de obstáculo pero Escalones, rampas empinadas sin escalones o rampas o dos o más tipos de empinadas obstáculos 0 2 3",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p57",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "h) Otros factores Identificar algún otro factor, como, por ejemplo: I. La carga es inestab",
+      "pagina": 57,
+      "texto": "h) Otros factores Identificar algún otro factor, como, por ejemplo: I. La carga es inestable; II. La carga es grande y obstruye la vista del trabajador de donde se está moviendo; III. La carga presenta bordes filosos, está caliente o es potencialmente dañina al tacto; IV. Hay malas condiciones de iluminación; V. Hay temperaturas extremas calientes o frías o alta humedad; VI. Hay ráfagas de viento u otros movimientos fuertes del aire, y VII. El equipo de protección personal o la vestimenta hacen que el arrastre y empuje de la carga sea más complicado. Bueno Razonable Deficiente No hay otros factores Un factor presente Dos o más factores presentes presentes 0 1 2 AII.4 Estimación del nivel de riesgo de actividades que impliquen empuje o arrastre de cargas sin uso de equipo auxiliar a) Registrar el color y valor obtenido en cada uno de los factores analizados para cada tipo de actividad. Girando sobre su Arrastrando/jalando o Rodando Factores de riesgo base deslizando Color Valor Color Valor Color Valor Peso de la carga Postura Agarre de la mano Patrón de trabajo Distancia por viaje Superficie de trabajo Obstáculos a lo largo de la ruta Otros factores Puntuación Nivel de Riesgo b) Determinar el nivel de riesgo conforme a lo siguiente: PUNTAJE NIVEL DE RIESGO PRIORIDAD TOTAL Bajo – Aceptable No se requieren acciones correctivas 0a4 Medio – Posible Se requieren acciones correctivas a corto plazo 5 a 12 Alto – Significativo Se requieren acciones correctivas pronto 13 a 20 Muy Alto - Inaceptable Se requieren acciones correctivas inmediatamente 21 a 32",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p58",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "c) Determinar el nivel de acción, para cada factor de riesgo, conforme al nivel de riesgo",
+      "pagina": 58,
+      "texto": "c) Determinar el nivel de acción, para cada factor de riesgo, conforme al nivel de riesgo obtenido, de acuerdo con lo siguiente: NIVEL DE RIESGO ACCIONES Sólo se requiere dar seguimiento a los grupos más Bajo – Aceptable vulnerables, como mujeres en periodo de gestación o trabajadores menores de edad. Se debe examinar las tareas con mayor detalle, mediante la aplicación de una evaluación específica, o bien implantar medidas Medio – Posible de control mediante un Programa de ergonomía para el manejo manual de cargas. Se requiere una acción rápida, por lo que se deben establecer Alto – Significativo medidas de control mediante un Programa de ergonomía para el manejo manual de cargas. Se deben detener las actividades e implementar medidas de Muy Alto - Inaceptable control mediante un Programa de ergonomía para el manejo manual de cargas. AII.5 Evaluación del riesgo de actividades que impliquen empujar o jalar cargas con el uso de equipo auxiliar a) Tipo de equipo auxiliar y peso de la carga (kg) I. Evaluar la masa total movida, si se mueve más de un equipo de carga (por ejemplo, dos carretillas); II. Conocer y determinar la carga total movida (masa del equipo auxiliar y masa de las cargas transportadas) con base al etiquetado, preguntando a los trabajadores o pesando la carga, y III. Evaluar el equipo con la carga de mayor masa que es probable que se mueva, si se utiliza el mismo equipo para mover diferentes cargas. Las ilustraciones en cada sección son sólo una guía para ayudar a comprender mejor, no son detalladas o exhaustivas. Pequeño con una o dos ruedas: por ejemplo, carretillas, contenedores con ruedas o diablos de carga. Con este equipo el trabajador soporta parte de la carga. Menos de 50 kg Bajo 0 De 50 kg a 100 kg Medio 2 De 100 kg a 200 kg Alto 4 Más de 200 kg Muy alto 8 La carga excede la capacidad Inaceptable nominal del equipo (peso máximo recomendado por el fabricante)",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p59",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "Mediano, con tres o más ruedas fijas y/o ruedas móviles (rodajas): por ejemplo, jaulas con",
+      "pagina": 59,
+      "texto": "Mediano, con tres o más ruedas fijas y/o ruedas móviles (rodajas): por ejemplo, jaulas con ruedas, contenedores con ruedas. Menos de 250 kg Bajo 0 De 250 kg a 500 kg Medio 2 De 500 kg a 750 kg Alto 4 Más de 750 kg Muy alto 8 La carga excede la capacidad Inaceptable nominal del equipo (peso máximo recomendado por el fabricante) Grande, dirigible o sobre rieles: por ejemplo, patines o sistema de rieles superiores. Menos de 600 kg Bajo 0 De 600 kg a 1000 kg Medio 2 De 1000 kg a 1500 kg Alto 4 Más de 1500 kg Muy alto 8 La carga excede la capacidad Inaceptable nominal del equipo (peso máximo recomendado por el fabricante) IV. Clasificar como Inaceptable la actividad, si la carga excede la capacidad nominal del equipo. En este caso, se deberá reducir el peso o se debe de proporcionar el equipo adecuado. No se deberà realizar la actividad hasta que esta condición se haya modificado, en la hoja de evaluación. b) Postura I. Observar la posición general de las manos y del cuerpo durante la operación. Buena Razonable Pobre o deficiente El torso se encuentra El cuerpo está inclinado El cuerpo está muy verticalmente en su mayor en la dirección del inclinado, o el trabajador se parte, y esfuerzo, o pone en cuclillas, se arrodilla o necesita empujar con la espalda contra la carga, o El torso no está torcido, y El torso está visiblemente El torso está severamente flexionado o torcido, o flexionado o torcido, o Las manos están entre la Las manos están por Las manos están detrás o en cadera y la altura del hombro debajo de la altura de la un lado del cuerpo o por cadera encima de la altura del hombro 0 3 6",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p60",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "c) Acoplamiento de la mano-carga I. Observar cómo es el agarre con las manos o cómo están",
+      "pagina": 60,
+      "texto": "c) Acoplamiento de la mano-carga I. Observar cómo es el agarre con las manos o cómo están en contacto con la carga durante el empuje o la el arrastre (tracción). Si la operación implica tanto empuje como arrastre, evalúe la empuñadura para ambas acciones. Bueno Razonable Pobre o deficiente Hay manijas o azas, que Hay zonas de agarre, No hay asas o el contacto de permiten un cómodo agarre pero sólo permiten un la mano es incómodo para aplicar fuerza para jalar o agarre parcial, por un cómodo agarre completo de ejemplo, dedos que la mano para empujar sujetan a 90°, o contacto parcial de la mano para empujar 0 1 2",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p61",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "d) Patrón de trabajo I. Observar el trabajo, identificar si la operación es repetitiva (ci",
+      "pagina": 61,
+      "texto": "d) Patrón de trabajo I. Observar el trabajo, identificar si la operación es repetitiva (cinco o más traslados por minuto) y si el trabajador establece el ritmo de trabajo. II. Preguntar a los trabajadores sobre su patrón de descansos y sobre otras oportunidades que tienen para descansar o recuperarse del trabajo. Bueno Razonable Pobre o deficiente El trabajo no es repetitivo El trabajo es repetitivo, El trabajo es repetitivo, y (menos de cinco traslados por pero minuto), y El ritmo de trabajo es fijado por Hay oportunidades para No hay descansos el trabajador descansar o de formales/informales u recuperarse a través de oportunidad de rotar los descansos formales e puestos de trabajo informales o a través de la rotación del trabajo 0 1 3 e) Distancia por viaje I. Determinar la distancia desde el principio hasta el final para un solo viaje; II. Hacer una evaluación para el viaje más largo, si la operación no es repetitiva, y III. Determinar la distancia promedio para al menos cinco viajes, si la operación es repetitiva. Corta Media Larga 10 m o menos Entre 10 m y 30 m Más de 30 m 0 1 3 f) Condición del equipo auxiliar I. Consultar el programa o manuales de mantenimiento y observar el estado general de conservación del equipo (condición de las ruedas, cojinetes y frenos). Bueno Razonable Pobre El mantenimiento está El mantenimiento ocurre El mantenimiento no está planificado y es preventivo, y sólo cuando surgen planificado (no hay un problemas, o sistema claro en su lugar), o El equipo está en buen estado El equipo está en un El equipo está en mal estado de conservación estado razonable de de conservación conservación 0 2 4",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p62",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "i) Superficie de trabajo I. Identificar la condición en que se encuentran las superficies",
+      "pagina": 62,
+      "texto": "i) Superficie de trabajo I. Identificar la condición en que se encuentran las superficies de trabajo a lo largo de la ruta y determinar el nivel de riesgo utilizando los criterios siguientes: Bueno Razonable Deficiente Seco y limpio, y En mayor parte seco y Contaminado (mojado o con limpio (humedad o escombros en varias áreas), escombros en algunas o áreas), o Nivelado y En pendiente (inclinación Pendiente pronunciada entre 3° y 5°), o (inclinación superior a 5°), o Firme, y Razonablemente firme Suave o inestable bajo los bajo los pies (por ejemplo pies (grava, arena, barro), o alfombrado), o Buen estado (no dañado o Mala condición (daños Muy mal estado (daño irregular) menores) severo) 0 1 4 j) Obstáculos a lo largo de la ruta I. Verificar en la ruta si hay obstáculos. Tener en cuenta si el equipo se mueve por encima de cables, a través de bordes elevados, hacia arriba o hacia abajo en rampas empinadas (pendiente de más de 5°), subiendo o bajando escalones, a través de puertas bloqueadas/estrechas, en espacios confinados, alrededor de curvas, esquinas u objetos, y II. Contar cada tipo de obstáculo sólo una vez, sin importar cuántas veces se pase por éste. Bueno Razonable Deficiente Sin obstáculos Un tipo de obstáculo pero Escalones, rampas sin escalones o rampas empinadas o dos o más empinadas tipos de obstáculos 0 2 3 k) Otros factores Identificar algún otro factor, como, por ejemplo: I. El equipo auxiliar o la carga es inestable; II. La carga es grande y obstruye la vista del trabajador de donde se está moviendo; III. El equipo auxiliar o la carga presenta bordes filosos, está caliente o es potencialmente dañina al tacto; IV. Hay malas condiciones de iluminación; V. Hay temperaturas extremas calientes o frías o alta humedad; VI. Hay ráfagas de viento u otros movimientos fuertes del aire, o VII. El equipo de protección personal o la vestimenta hacen que el uso del equipo sea complicado. Bueno Razonable Deficiente No hay otros factores presentes Un factor presente Dos o más factores presentes 0 1 2",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "NOM036-Apendice-II-p63",
+      "documento": "NOM-036-1-STPS-2018",
+      "seccion": "Apéndice II",
+      "titulo": "AII.6 Estimación del nivel de riesgo de actividades que impliquen empuje o arrastre de car",
+      "pagina": 63,
+      "texto": "AII.6 Estimación del nivel de riesgo de actividades que impliquen empuje o arrastre de cargas con el uso de equipo auxiliar a) Registrar el color y valor obtenido en cada uno de los factores analizados para cada tipo de actividad Equipo Pequeño Equipo mediano Equipo grande Factores de riesgo Color Valor Color Valor Color Valor Peso de la carga Postura Acoplamiento mano-carga Patrón de trabajo Distancia por viaje Condición del equipo auxiliar Superficie de trabajo Obstáculos a lo largo de la ruta Otros factores Puntuación Nivel de Riesgo b) Determinar el nivel de riesgo conforme a lo siguiente: PUNTAJE NIVEL DE RIESGO PRIORIDAD TOTAL Bajo – Aceptable No se requieren acciones correctivas 0a4 Medio – Posible Se requieren acciones correctivas a corto plazo 5 a 12 Alto – Significativo Se requieren acciones correctivas pronto 13 a 20 Muy Alto - Se requieren acciones correctivas inmediatamente 21 a 32 Inaceptable c) Determinar el nivel de acción, para cada factor de riesgo, conforme al nivel de riesgo obtenido, de acuerdo con lo siguiente: NIVEL DE RIESGO ACCIONES Sólo se requiere dar seguimiento a los grupos más vulnerables, Bajo – Aceptable como mujeres en periodo de gestación o trabajadores menores de edad. Se debe examinar las tareas con mayor detalle, mediante la aplicación de una evaluación específica, o bien implantar medidas de Medio – Posible control mediante un Programa de ergonomía para el manejo manual de cargas. Se requiere una acción rápida, por lo que se deben establecer Alto – Significativo medidas de control mediante un Programa de ergonomía para el manejo manual de cargas. Se deben detener las actividades e implementar medidas de control Muy Alto - Inaceptable mediante un Programa de ergonomía para el manejo manual de cargas.",
+      "metadatos": {
+        "fuente": "DOF 23/11/2018"
+      }
+    },
+    {
+      "id": "JABIL-RAG-01",
+      "documento": "16-PE30-6500-00023",
+      "seccion": "Sección 6.4.1",
+      "titulo": "Carga individual > 14 kg",
+      "pagina": 12,
+      "texto": "En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036. Todo levantamiento que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa o manipulador ingrávido). Si se utiliza contención temporal mediante levantamiento en equipo de 2 a 4 personas (Sección 6.4.2), se requiere evaluación médica previa (semáforo amarillo/naranja), llenado formal de la hoja de levantamiento 16-PE80-6500-00014 y liberación de cambio mediante MOC 16-HS80-8000-00021 firmado por EHS. Control recomendado: Integrar asistencia mecánica obligatoria (lifter, grúa o brazo articulado). En caso de contención temporal de 2 a 4 personas, apegarse a tabla de Sección 6.4.2 con aval médico y MOC 16-HS80-8000-00021.",
+      "metadatos": {
+        "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I",
+        "hoja_excel_jabil": "Levantamiento (1)",
+        "layer_autocad": "Equipos",
+        "tramite_moc": "MOC 16-HS80-8000-00021",
+        "palabras_clave": [
+          "carga",
+          "peso",
+          "14 kg",
+          "levantamiento",
+          "lifter",
+          "asistencia mecanica",
+          "polipasto",
+          "6.4.1",
+          "6.4.2"
+        ]
+      }
+    },
+    {
+      "id": "JABIL-RAG-02",
+      "documento": "16-PE30-6500-00023",
+      "seccion": "Sección 6.4.3 y 6.4.4",
+      "titulo": "Restricción postural o toma de material muy alta o baja",
+      "pagina": 12,
+      "texto": "Se debe garantizar un radio mínimo de 60 cm libres sin obstáculos alrededor del operador para realizar maniobras de levantamiento. La altura máxima de alcance sin escalera es de 1.70 m en racks estáticos y de 1.60 m en carros o tarimas rodantes. Queda estrictamente prohibido tomar o depositar carga desde el nivel del piso o por encima de la línea de los hombros/cabeza. Control recomendado: Rediseñar niveles de rack y carros de transporte para mantener la toma entre nudillos y hombros (entre 60 cm y 1.60 m / 1.70 m), garantizando radio de maniobra de 60 cm libres.",
+      "metadatos": {
+        "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I (Incisos c y e); EAWS",
+        "hoja_excel_jabil": "Levantamiento (1) / Transporte (2) y Hoja EAWS",
+        "layer_autocad": "Equipos",
+        "tramite_moc": "16-PE80-6500-00040 Checklist Layout",
+        "palabras_clave": [
+          "rack",
+          "altura",
+          "60 cm",
+          "1.70 m",
+          "1.60 m",
+          "piso",
+          "sobre hombros",
+          "estatico",
+          "tarima",
+          "6.4.3",
+          "6.4.4"
+        ]
+      }
+    },
+    {
+      "id": "JABIL-RAG-03",
+      "documento": "16-PE30-6500-00023",
+      "seccion": "Sección 7.2.2.2",
+      "titulo": "Materiales o herramental fuera de zonas de alcance ergonómico",
+      "pagina": 21,
+      "texto": "Las zonas de alcance en mesa se dividen en 5 posiciones: Posición 1 y 2 (150 mm a 400 mm, ángulo de 20° a 35° respecto a hombros) reservadas para herramental y materiales de ciclo regular; Posición 3 (400 mm a 650 mm) para uso infrecuente (< 1 vez por pieza); Posiciones 4 y 5 (> 650 mm a 1500 mm) fuera del alcance antropométrico admisible. Todo material de uso regular ubicado en Posiciones 4 y 5 debe reubicarse obligatoriamente a Zonas 1 y 2. Control recomendado: Reubicar todo material y herramental de ciclo continuo de las Posiciones 4 y 5 (> 650 mm) o Posición 3 (400-650 mm) hacia las Posiciones 1 y 2 (150-400 mm) para abatir la flexión y abducción de hombro.",
+      "metadatos": {
+        "norma_vinculada": "NOM-036-1-STPS-2018 (Distancia horizontal manos-espalda)",
+        "hoja_excel_jabil": "1 Mov - Sección A (Zonas de Alcance de Material)",
+        "layer_autocad": "Mobiliario",
+        "tramite_moc": "16-PE80-6500-00046 Presentación Layout",
+        "palabras_clave": [
+          "alcance",
+          "zonas de alcance",
+          "zona 1",
+          "zona 2",
+          "zona 4",
+          "zona 5",
+          "150 mm",
+          "400 mm",
+          "650 mm",
+          "abduccion",
+          "brazo",
+          "7.2.2.2"
+        ]
+      }
+    },
+    {
+      "id": "JABIL-RAG-04",
+      "documento": "16-PE30-6500-00023",
+      "seccion": "Sección 7.2.3 y 7.3.3",
+      "titulo": "Flexión de tronco/cuello en mesa o falta de espacio para piernas/pies",
+      "pagina": 21,
+      "texto": "La altura estándar del plano de trabajo en Jabil Chihuahua debe calibrarse entre 95 cm y 125 cm según la tarea (Precisión: 105-125 cm, Ligero: 95-105 cm, Pesado: 85-95 cm). El espesor del borde frontal de la mesa no debe exceder 10 cm. Se debe proveer espacio libre para piernas sentado (mínimo 55 cm de profundidad x 60 cm de ancho), espacio para pies de pie (mínimo 15 cm de profundidad) y reposapiés regulable (altura 21 a 37 cm, retrasado 15 cm). Distancia mínima entre operadores adyacentes: 80 cm. Control recomendado: Ajustar altura de estación dentro del rango 95–125 cm con perfilería estructural o actuadores neumáticos, liberar cajón inferior para piernas (55x60 cm) y pies (15 cm) y limitar espesor de borde a <= 10 cm.",
+      "metadatos": {
+        "norma_vinculada": "NOM-036-1-STPS-2018 (Posturas forzadas de tronco y cuello)",
+        "hoja_excel_jabil": "1 Mov - Sección B y E (Antropometría y Accesibilidad)",
+        "layer_autocad": "Mobiliario",
+        "tramite_moc": "16-FS80-8000-00010 Capacidad de Facilities",
+        "palabras_clave": [
+          "altura de mesa",
+          "95 cm",
+          "125 cm",
+          "tronco",
+          "cuello",
+          "reposapies",
+          "espacio piernas",
+          "profundidad 55 cm",
+          "espesor 10 cm",
+          "7.2.3",
+          "7.3.3"
+        ]
+      }
+    },
+    {
+      "id": "JABIL-RAG-05",
+      "documento": "16-PE30-6500-00023",
+      "seccion": "Sección 7.2.1, 7.2.2 y 7.3.3.1",
+      "titulo": "Trabajo de pie prolongado y cumplimiento Ley Silla STPS",
+      "pagina": 18,
+      "texto": "Si los componentes manipulados pesan menos de 3.0 kg y la tarea es de ensamble fino o requiere uso de pedal, la estación debe configurarse prioritariamente en modalidad Sentado o Combinado. Está estrictamente prohibido mantener al operador de pie por más de 3 horas continuas. Si la operación exige bipedestación, se debe proveer Silla Estándar ESD (5 patas, poliuretano antiestático, aro reposapiés) y aplicar la Estrategia 1 (descanso obligatorio de 5 min con relevo) o Estrategia 2 (rotación periódica pie-sentado). En layout debe demarcarse en piso la leyenda 'SILLA' / 'CHAIR', registrarse en el layer AutoCAD Mobiliario y en Fábrica Visual. Control recomendado: 1º Ingeniería: Convertir a estación sentada/combinada si peso < 3 kg con Silla ESD homologada. 2º Administrativo: Estrategia Ley Silla (5 min descanso / rotación pie-sentado), pintar cajón 'SILLA' en piso y reflejar en layer Mobiliario.",
+      "metadatos": {
+        "norma_vinculada": "Ley Silla STPS (Reforma LFT Art. 132/133); NOM-036-1",
+        "hoja_excel_jabil": "1 Mov - Sección B y Hoja 8 OBSERVACIONES Y MEJORAS",
+        "layer_autocad": "Mobiliario",
+        "tramite_moc": "MOC 16-HS80-8000-00021 / Señalética Fábrica Visual",
+        "palabras_clave": [
+          "ley silla",
+          "3 horas",
+          "silla esd",
+          "pie sentado",
+          "descanso 5 min",
+          "3 kg",
+          "7.2.1",
+          "7.2.2",
+          "7.3.3.1",
+          "rotacion"
+        ]
+      }
+    },
+    {
+      "id": "JABIL-RAG-06",
+      "documento": "16-PE30-6500-00023",
+      "seccion": "Sección 7.3.3.2",
+      "titulo": "Operación o inspección forzada sobre transportador (Conveyor)",
+      "pagina": 23,
+      "texto": "La altura de transportadores continuos debe mantenerse entre 0.50 m y 1.40 m. Los transportadores por gravedad no deben exceder una longitud de 3.0 m. El pasillo de acceso frontal libre debe ser de al menos 80 cm. Se deben prohibir inspecciones visuales prolongadas directamente sobre conveyors en movimiento sin punto de anclaje o apoyo. La estación debe permitir integración de silla o banco de descanso. Control recomendado: Ajustar elevación del conveyor entre 0.50 m y 1.40 m, instalar mesa auxiliar de desacoplamiento para inspección estática fuera de banda y respetar pasillo de servicio >= 80 cm.",
+      "metadatos": {
+        "norma_vinculada": "NOM-036-1-STPS-2018 (Posturas estáticas en transporte mecanizado)",
+        "hoja_excel_jabil": "Hoja 1 Mov y Hoja 8 OBSERVACIONES Y MEJORAS",
+        "layer_autocad": "Equipos",
+        "tramite_moc": "16-FS80-8000-00010 Validación Eléctrica/Mecánica",
+        "palabras_clave": [
+          "conveyor",
+          "transportador",
+          "0.50 m",
+          "1.40 m",
+          "gravedad 3 m",
+          "inspeccion",
+          "acceso 80 cm",
+          "7.3.3.2"
+        ]
+      }
+    },
+    {
+      "id": "JABIL-RAG-07",
+      "documento": "16-PE30-6500-00023",
+      "seccion": "Sección 7.1.1, 7.1.2, 7.1.3 y Anexo 10.2",
+      "titulo": "Empuje/arrastre de carros, tarimas o convivencia con AMR en pasillos",
+      "pagina": 15,
+      "texto": "Los pasillos principales de flujo de material deben tener un ancho libre mínimo de 90 cm (o 1.50 m en zonas con flujo bidireccional o manejo de tarimas). La separación entre tarimas y mesas de trabajo debe ser de al menos 30 cm. En áreas con tránsito de robots móviles autónomos (AMR), se deben garantizar holguras laterales de seguridad de 0.50 m a 0.60 m. Las ruedas de los carros auxiliares deben ser de poliuretano con rodamientos sellados y contar con programa de mantenimiento preventivo. Control recomendado: Demarcar pasillos en layer Pasillos (Amarillo / [255,255,0]) con ancho mínimo de 90 cm (1.50 m con tarimas), separar tarimas a >= 30 cm de mesas de ensamble e integrar programa de mantenimiento de rodajas en carros.",
+      "metadatos": {
+        "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice II (RAPP con auxiliar)",
+        "hoja_excel_jabil": "con auxiliar (5) y sin auxiliar (4)",
+        "layer_autocad": "Pasillos",
+        "tramite_moc": "Checklist 16-PE80-6500-00040 (Verificación de Pasillos)",
+        "palabras_clave": [
+          "pasillos",
+          "amr",
+          "90 cm",
+          "1.50 m",
+          "tarima 30 cm",
+          "ruedas",
+          "empuje",
+          "arrastre",
+          "con auxiliar",
+          "7.1.1",
+          "7.1.2",
+          "7.1.3"
+        ]
+      }
+    },
+    {
+      "id": "JABIL-RAG-08",
+      "documento": "16-PE30-6500-00023",
+      "seccion": "Sección 6.2.3, 6.3.12, 6.3.19 y Sección 8",
+      "titulo": "Aprobación y gobernanza de cambios de layout y rediseño físico",
+      "pagina": 4,
+      "texto": "Todo cambio físico de estación, reubicación de equipo o modificación ergonómica que involucre acometidas eléctricas o neumáticas debe cumplir con el flujo de aprobación 16-PE00-6500-00014, verificarse con el checklist 16-PE80-6500-00040, presentarse con el formato 16-PE80-6500-00046, tramitar la validación de capacidad de Facilities en formato 16-FS80-8000-00010 (reflejando acometidas en layer Servicios Azul-150 / [0,127,255] y equipos en layer Equipos) y ser liberado por EHS mediante el MOC 16-HS80-8000-00021 antes de su implementación en piso. Control recomendado: Integrar en el plan de acción los códigos oficiales Jabil: Flujo 16-PE00-6500-00014, Checklist 16-PE80-6500-00040, Factibilidad Facilities 16-FS80-8000-00010 y firma de MOC 16-HS80-8000-00021.",
+      "metadatos": {
+        "norma_vinculada": "Jabil EHS Management of Change (MOC)",
+        "hoja_excel_jabil": "Hoja 8 OBSERVACIONES Y MEJORAS (Plan de Acción)",
+        "layer_autocad": "Servicios",
+        "tramite_moc": "MOC 16-HS80-8000-00021 / 16-FS80-8000-00010",
+        "palabras_clave": [
+          "moc",
+          "layout",
+          "gobernanza",
+          "facilities",
+          "servicios azul",
+          "checklist",
+          "ehs",
+          "16-HS80-8000-00021",
+          "16-FS80-8000-00010",
+          "6.2.3",
+          "8"
+        ]
+      }
+    }
+  ]
+}

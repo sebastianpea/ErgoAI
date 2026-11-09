@@ -21,30 +21,36 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from backend.app.api.schemas import (
-    Actor, Alerta, Angulo, Autorizacion, CasoAlmacenado, CasoDetalle, CasoResumen, CorreccionContexto, Decision,
+    VISTAS, Actor, Alerta, Angulo, Autorizacion, CasoAlmacenado, CasoDetalle, CasoResumen, CorreccionContexto, Decision,
     Descarte, Hallazgo, Imagen, Implementacion, NuevaRecomendacion, NuevoCaso, Punto, Recomendacion, RecomendacionAlmacenada,
     Residual, ResultadoIntegridad, ResultadoNom036, ResultadoReba, RevisionHallazgo, SegmentoResidual, Validacion,
     Vista,
 )
-from backend.app.core_ergonomics.angle_geometry import extraer_angulos_laterales
+from backend.app.core_ergonomics.angle_geometry import (
+    extraer_angulos_laterales, extraer_angulos_vista, segmentos_de_punto,
+)
 from backend.app.core_ergonomics.cambios import (
     PARAMETROS, describir_contexto, dict_a_efecto, efecto_a_cambios, efecto_a_dict,
 )
 from backend.app.core_ergonomics.modelos import SEGMENTOS, AnguloMedido, Efecto, Segmento
-from backend.app.core_ergonomics.nom036_calculator import color_total, total_factores
+from backend.app.core_ergonomics.nom036_calculator import (
+    EnrutadorNom036, color_total, nivel_riesgo_texto, total_factores,
+)
 from backend.app.core_ergonomics.reba_calculator import RebaCalculator, ResultadoRebaCalculado
 from backend.app.core_ergonomics.residual_simulator import simular
+from backend.app.core_agent.in_memory_rag import InMemoryRAG, ResultadoBusquedaRAG
 from backend.app.session_store import (
     AuditActionEnum, AuditFileManager, BitacoraLedger, ControlHierarchyEnum, EntradaBitacora, NormativeConfigLoader,
     RecommendationSnapshot, SessionStatusEnum,
 )
 from backend.app.core_ergonomics.generador_recomendaciones import generar
-from backend.app.settings import CONFIANZA_MINIMA, MAX_FOTO_MB, TOLERANCIA_UMBRAL_GRADOS
+from backend.app.settings import (
+    CALIDAD_JPEG, CONFIANZA_MINIMA, MAX_FOTO_MB, TOLERANCIA_UMBRAL_GRADOS, USUARIO_SISTEMA,
+)
 from backend.app.vision.estimador import VisionNoDisponible, estimador
 
 log = logging.getLogger("ergoai.casos")
 
-USUARIO_SISTEMA = "sistema"
 ETIQUETA_SEGMENTO: Dict[Segmento, str] = {
     "tronco": "Tronco", "cuello": "Cuello", "piernas": "Piernas",
     "brazo": "Brazo", "antebrazo": "Antebrazo", "muneca": "Muñeca",
@@ -110,6 +116,7 @@ class ServicioCasos:
         self.ledger = BitacoraLedger(mgr)
         self.config = config
         self.reba = RebaCalculator(config.get_reba_tables())
+        self.rag = InMemoryRAG(config.get_jabil_standards(), config.get_nom036_kb())
         self._lock = threading.RLock()
 
     # ================= Persistencia =================
@@ -176,19 +183,35 @@ class ServicioCasos:
 
             for datos in semilla["casos"]:
                 id_caso = datos["id_caso"]
+                case_dir = self.mgr.init_case_workspace(id_caso)
                 imagenes = []
-                for vista in ("lateral", "frontal", "cenital"):
-                    esq = semilla["esqueletos"][vista]
+                for vista in VISTAS:
+                    esq = (datos.get("esqueletos") or {}).get(vista) or semilla.get("esqueletos", {}).get(vista) or semilla["esqueletos"]
+                    foto_nombre = (datos.get("fotos") or {}).get(vista)
+                    foto_origen = None
+                    if foto_nombre:
+                        candidato_dataset = ruta_semilla.parent / "dataset_jabil" / foto_nombre
+                        candidato_directo = ruta_semilla.parent / foto_nombre
+                        if candidato_dataset.exists():
+                            foto_origen = candidato_dataset
+                        elif candidato_directo.exists():
+                            foto_origen = candidato_directo
+                    if foto_origen:
+                        destino = case_dir / "inputs" / foto_origen.name
+                        shutil.copyfile(foto_origen, destino)
+                        url_foto = foto_origen.name
+                    else:
+                        shutil.copyfile(imagen_origen, case_dir / "inputs" / imagen_origen.name)
+                        url_foto = imagen_origen.name
+
                     imagenes.append({
-                        "vista": vista, "url": imagen_origen.name, "ancho": esq["ancho"], "alto": esq["alto"],
+                        "vista": vista, "url": url_foto, "ancho": esq["ancho"], "alto": esq["alto"],
                         "puntos": [{"id": i, "x": x, "y": y, "confianza": c, "corregido": False}
                                    for i, x, y, c in esq["puntos"]],
                     })
                 recs = [{**r, "texto_ia": r["texto"]} for r in datos.get("recomendaciones", [])]
                 caso = CasoAlmacenado.model_validate({**datos, "imagenes": imagenes, "recomendaciones": recs})
 
-                case_dir = self.mgr.init_case_workspace(id_caso)
-                shutil.copyfile(imagen_origen, case_dir / "inputs" / imagen_origen.name)
                 self._guardar(caso)
                 detalle = self._evaluar(caso)
                 self.ledger.registrar(USUARIO_SISTEMA, "caso_creado", id_caso, id_caso)
@@ -212,74 +235,86 @@ class ServicioCasos:
             return None
         return medidos, self.reba.calcular({s: m.grados for s, m in medidos.items()}, caso.contexto)
 
-    def _estado_angulo(self, grados: Optional[float], confianza: float, umbrales: List[float]) -> str:
+    @staticmethod
+    def _clave_angulo(vista: str, segmento: str) -> str:
+        return f"{vista}.{segmento}"
+
+    @staticmethod
+    def _diagnosticar_angulo(
+        grados: Optional[float], confianza: float, umbrales: List[float], confirmado: bool = False,
+    ) -> tuple[str, Optional[str]]:
         if grados is None:
-            return "sin_dato"
-        if confianza < CONFIANZA_MINIMA or any(abs(grados - u) < TOLERANCIA_UMBRAL_GRADOS for u in umbrales):
-            return "revisar"
-        return "ok"
+            return "sin_dato", "Sin puntos suficientes para medir"
+        if confirmado:
+            return "ok", "Confirmado por especialista"
+        razones: List[str] = []
+        if confianza < CONFIANZA_MINIMA:
+            razones.append(f"Baja confianza ({confianza * 100:.0f}% < {CONFIANZA_MINIMA * 100:.0f}%)")
+        cercanos = [u for u in umbrales if abs(grados - u) < TOLERANCIA_UMBRAL_GRADOS]
+        if cercanos:
+            u_min = min(cercanos, key=lambda u: abs(grados - u))
+            razones.append(f"A {abs(grados - u_min):.1f}° del umbral REBA ({u_min:g}°)")
+        if razones:
+            return "revisar", " · ".join(razones)
+        return "ok", None
 
     @staticmethod
     def _aplicable(r: RecomendacionAlmacenada) -> bool:
         """Cuenta para el riesgo residual proyectado."""
         return r.estado != "rechazada" and r.implementacion != "denegada" and not _efecto_vacio(r.efecto)
 
-    def _evaluar(self, caso: CasoAlmacenado) -> CasoDetalle:
+    def _construir_angulos(
+        self, caso: CasoAlmacenado, medidos: Dict[Segmento, AnguloMedido], res: ResultadoRebaCalculado,
+    ) -> List[Angulo]:
+        ctx = caso.contexto
+        confirmados = set(caso.angulos_confirmados)
+        angulos: List[Angulo] = []
+        for img in caso.imagenes:
+            if img.vista == "lateral":
+                medidos_v, res_v = medidos, res
+            else:
+                medidos_v = extraer_angulos_vista(img.puntos, img.vista)
+                res_v = self.reba.calcular({s: m.grados for s, m in medidos_v.items()}, ctx)
+            for seg in SEGMENTOS:
+                m, ps = medidos_v[seg], res_v.segmentos[seg]
+                g, confianza = m.grados, m.confianza
+                confirmado = self._clave_angulo(img.vista, seg) in confirmados
+                if seg == "muneca" and ctx.muneca_grados is not None and (g is None or img.vista == "lateral"):
+                    g, confianza, confirmado = ctx.muneca_grados, 1.0, True
+                estado, motivo = self._diagnosticar_angulo(g, confianza, ps.umbrales, confirmado=confirmado)
+                angulos.append(Angulo(
+                    segmento=seg, lado=m.lado, vista=img.vista, angulo_grados=g,
+                    puntaje_reba=ps.puntaje, modificadores=ps.modificadores,
+                    estado=estado, motivo_estado=motivo, confirmado=confirmado,
+                    puntaje_previo=caso.evaluacion_previa.segmentos.get(seg) if img.vista == "lateral" else None,
+                ))
+        return angulos
+
+    def _auditar_evaluacion_previa(
+        self, caso: CasoAlmacenado, angulos: List[Angulo], res: ResultadoRebaCalculado,
+    ) -> List[Hallazgo]:
+        hallazgos: List[Hallazgo] = []
+        for a in angulos:
+            if a.puntaje_previo is not None and a.puntaje_previo != a.puntaje_reba:
+                hallazgos.append(Hallazgo(
+                    id=f"AUD-{a.segmento}", origen="auditoria", severidad="advertencia",
+                    mensaje=(f"{ETIQUETA_SEGMENTO[a.segmento]}: puntaje capturado en piso {a.puntaje_previo}; "
+                             f"la foto indica {a.puntaje_reba}"),
+                ))
+        previo = caso.evaluacion_previa.reba_final
+        if previo is not None and previo != res.final:
+            cambia_nivel = self.reba.nivel(previo) != res.nivel
+            hallazgos.append(Hallazgo(
+                id="AUD-final", origen="auditoria", severidad="critico" if cambia_nivel else "advertencia",
+                mensaje=(f"REBA capturado en piso {previo} ({ETIQUETA_NIVEL[self.reba.nivel(previo)]}); "
+                         f"recalculado {res.final} ({ETIQUETA_NIVEL[res.nivel]})"),
+            ))
+        return hallazgos
+
+    def _evaluar_reglas_jabil(self, caso: CasoAlmacenado) -> List[Hallazgo]:
         ctx = caso.contexto
         jabil = self.config.get_jabil_standards()
-        angulos: List[Angulo] = []
-        reba: Optional[ResultadoReba] = None
-        residual: Optional[Residual] = None
-        hallazgos: List[Hallazgo] = list(caso.hallazgos_vision)
-        grados: Dict[Segmento, Optional[float]] = {}
-
-        calculo = self._calcular_reba(caso)
-        if calculo:
-            medidos, res = calculo
-            grados = {s: m.grados for s, m in medidos.items()}
-            for seg in SEGMENTOS:
-                m, ps = medidos[seg], res.segmentos[seg]
-                g, confianza = m.grados, m.confianza
-                if seg == "muneca" and g is None and ctx.muneca_grados is not None:
-                    g, confianza = ctx.muneca_grados, 1.0  # medición manual del especialista
-                angulos.append(Angulo(
-                    segmento=seg, lado=m.lado, vista="lateral", angulo_grados=g,
-                    puntaje_reba=ps.puntaje, modificadores=ps.modificadores,
-                    estado=self._estado_angulo(g, confianza, ps.umbrales),
-                    puntaje_previo=caso.evaluacion_previa.segmentos.get(seg),
-                ))
-            reba = ResultadoReba(
-                grupo_a=res.grupo_a, grupo_b=res.grupo_b, tabla_c=res.tabla_c, carga=res.carga,
-                agarre=res.agarre, actividad=res.actividad, final=res.final, nivel=res.nivel,
-            )
-
-            # Auditoría contra la evaluación capturada en piso
-            for a in angulos:
-                if a.puntaje_previo is not None and a.puntaje_previo != a.puntaje_reba:
-                    hallazgos.append(Hallazgo(
-                        id=f"AUD-{a.segmento}", origen="auditoria", severidad="advertencia",
-                        mensaje=(f"{ETIQUETA_SEGMENTO[a.segmento]}: puntaje capturado en piso {a.puntaje_previo}; "
-                                 f"la foto indica {a.puntaje_reba}"),
-                    ))
-            previo = caso.evaluacion_previa.reba_final
-            if previo is not None and previo != res.final:
-                cambia_nivel = self.reba.nivel(previo) != res.nivel
-                hallazgos.append(Hallazgo(
-                    id="AUD-final", origen="auditoria", severidad="critico" if cambia_nivel else "advertencia",
-                    mensaje=(f"REBA capturado en piso {previo} ({ETIQUETA_NIVEL[self.reba.nivel(previo)]}); "
-                             f"recalculado {res.final} ({ETIQUETA_NIVEL[res.nivel]})"),
-                ))
-
-            aplicables = [r for r in caso.recomendaciones if self._aplicable(r)]
-            res2 = simular(self.reba, grados, ctx, [r.efecto for r in aplicables])
-            residual = Residual(
-                antes_final=res.final, antes_nivel=res.nivel, despues_final=res2.final, despues_nivel=res2.nivel,
-                segmentos=[SegmentoResidual(segmento=s, antes=res.segmentos[s].puntaje, despues=res2.segmentos[s].puntaje)
-                           for s in SEGMENTOS],
-                recomendaciones_aplicadas=[r.id for r in aplicables],
-            )
-
-        # Reglas corporativas Jabil (prevalece el límite más estricto)
+        hallazgos: List[Hallazgo] = []
         limite = jabil["load_limits"]["max_single_person_lift_kg"]
         if caso.tipo_tarea in TAREAS_CON_LEVANTAMIENTO and ctx.carga_kg > limite:
             hallazgos.append(Hallazgo(
@@ -295,35 +330,104 @@ class ServicioCasos:
                     mensaje=f"Altura de trabajo de {ctx.altura_trabajo_cm:g} cm fuera del rango {lo:g}–{hi:g} cm",
                     referencia=jabil["references"]["work_height"],
                 ))
+        return hallazgos
 
-        for h in hallazgos:
-            h.descartado = caso.hallazgos_descartados.get(h.id)
-
-        nom036 = None
+    def _calcular_nom036(
+        self, caso: CasoAlmacenado, grados: Optional[Dict[Segmento, Optional[float]]] = None
+    ) -> Optional[ResultadoNom036]:
         if caso.nom036:
             total = total_factores(f.valor for f in caso.nom036.factores)
-            nom036 = ResultadoNom036(
+            return ResultadoNom036(
                 metodo=caso.nom036.metodo, total=total, factores=caso.nom036.factores,
                 nivel=color_total(total, self.config.get_nom036_tables()),
             )
+        if caso.tipo_tarea in ("levantamiento", "transporte", "empuje_sin_auxiliar", "empuje_con_auxiliar"):
+            from backend.app.api.schemas import FactorNom
+            g = grados or {}
+            datos_op = {
+                "carga_kg": caso.contexto.carga_kg,
+                "tronco_grados": g.get("tronco"),
+                "brazo_grados": g.get("brazo"),
+                "torsion_tronco": caso.contexto.modificadores.tronco_torsion_o_inclinacion,
+                "apoyo_unilateral": caso.contexto.apoyo_unilateral,
+                "agarre": caso.contexto.agarre,
+                "actividad": caso.contexto.actividad,
+            }
+            res_est = EnrutadorNom036.evaluar(caso.tipo_tarea, datos_op, self.config.get_nom036_tables())
+            return ResultadoNom036(
+                metodo=res_est.metodo_api,  # type: ignore[arg-type]
+                total=res_est.total,
+                nivel=res_est.color,  # type: ignore[arg-type]
+                factores=[
+                    FactorNom(codigo=f.codigo, etiqueta=f.etiqueta, color=f.color, valor=f.valor)  # type: ignore[arg-type]
+                    for f in res_est.factores
+                ],
+            )
+        return None
 
-        recomendaciones = []
+    def _proyectar_recomendaciones(
+        self, caso: CasoAlmacenado, grados: Dict[Segmento, Optional[float]], tiene_reba: bool,
+    ) -> List[Recomendacion]:
+        ctx = caso.contexto
+        recomendaciones: List[Recomendacion] = []
         for r in caso.recomendaciones:
+            if not r.justificacion_rag:
+                r_dict = r.model_dump()
+                self.rag.enriquecer_recomendacion(r_dict, grados, ctx, caso.tipo_tarea)
+                r.justificacion_rag = r_dict.get("justificacion_rag")
+                r.norma_vinculada = r.norma_vinculada or r_dict.get("norma_vinculada")
+                r.hoja_excel_jabil = r.hoja_excel_jabil or r_dict.get("hoja_excel_jabil")
+                r.layer_autocad = r.layer_autocad or r_dict.get("layer_autocad")
+                r.tramite_moc = r.tramite_moc or r_dict.get("tramite_moc")
+                r.codigo_jabil = r.codigo_jabil or r_dict.get("codigo_jabil")
+
             proyectado = None
-            if calculo and not _efecto_vacio(r.efecto):
+            if tiene_reba and not _efecto_vacio(r.efecto):
                 proyectado = simular(self.reba, grados, ctx, [r.efecto]).final
             base = r.model_dump(exclude={"texto_ia", "efecto", "efecto_ia"})
             recomendaciones.append(Recomendacion(
                 **base, cambios=efecto_a_cambios(r.efecto, grados, ctx), reba_proyectado=proyectado,
                 requiere_autorizacion=r.tipo_cambio == "planta",
             ))
+        return recomendaciones
+
+    def _evaluar(self, caso: CasoAlmacenado) -> CasoDetalle:
+        ctx = caso.contexto
+        angulos: List[Angulo] = []
+        reba: Optional[ResultadoReba] = None
+        residual: Optional[Residual] = None
+        hallazgos: List[Hallazgo] = list(caso.hallazgos_vision)
+        grados: Dict[Segmento, Optional[float]] = {}
+
+        calculo = self._calcular_reba(caso)
+        if calculo:
+            medidos, res = calculo
+            grados = {s: m.grados for s, m in medidos.items()}
+            angulos = self._construir_angulos(caso, medidos, res)
+            reba = ResultadoReba(
+                grupo_a=res.grupo_a, grupo_b=res.grupo_b, tabla_c=res.tabla_c, carga=res.carga,
+                agarre=res.agarre, actividad=res.actividad, final=res.final, nivel=res.nivel,
+            )
+            hallazgos.extend(self._auditar_evaluacion_previa(caso, angulos, res))
+            aplicables = [r for r in caso.recomendaciones if self._aplicable(r)]
+            res2 = simular(self.reba, grados, ctx, [r.efecto for r in aplicables])
+            residual = Residual(
+                antes_final=res.final, antes_nivel=res.nivel, despues_final=res2.final, despues_nivel=res2.nivel,
+                segmentos=[SegmentoResidual(segmento=s, antes=res.segmentos[s].puntaje, despues=res2.segmentos[s].puntaje)
+                           for s in SEGMENTOS],
+                recomendaciones_aplicadas=[r.id for r in aplicables],
+            )
+
+        hallazgos.extend(self._evaluar_reglas_jabil(caso))
+        for h in hallazgos:
+            h.descartado = caso.hallazgos_descartados.get(h.id)
 
         return CasoDetalle(
             id_caso=caso.id_caso, estacion=caso.estacion, tipo_tarea=caso.tipo_tarea, fecha=caso.fecha,
             imagenes=[Imagen(**{**i.model_dump(), "url": f"/media/{caso.id_caso}/{i.url}"}) for i in caso.imagenes],
-            contexto=ctx, angulos=angulos, reba=reba, nom036=nom036, hallazgos=hallazgos,
-            recomendaciones=recomendaciones, residual=residual,
-            validacion=self._validacion(caso, reba),
+            contexto=ctx, angulos=angulos, reba=reba, nom036=self._calcular_nom036(caso, grados), hallazgos=hallazgos,
+            recomendaciones=self._proyectar_recomendaciones(caso, grados, calculo is not None),
+            residual=residual, validacion=self._validacion(caso, reba),
         )
 
     @staticmethod
@@ -357,7 +461,10 @@ class ServicioCasos:
             estado.status = SessionStatusEnum.VALIDATED
         else:
             estado.status = SessionStatusEnum.IN_REVIEW
-        estado.measured_angles = {a.segmento: a.angulo_grados for a in d.angulos if a.angulo_grados is not None}
+        estado.measured_angles = {
+            (a.segmento if a.vista == "lateral" else f"{a.vista}.{a.segmento}"): a.angulo_grados
+            for a in d.angulos if a.angulo_grados is not None
+        }
         if d.reba:
             banda = next(b for b in self.config.get_reba_tables()["risk_levels"].values()
                          if b["score_range"][0] <= d.reba.final <= b["score_range"][1])
@@ -492,13 +599,17 @@ class ServicioCasos:
 
             antes = self._evaluar(caso)
             movidos = 0
+            confirmados = set(caso.angulos_confirmados)
             for p in img.puntos:
                 n = nuevos[p.id]
                 if (n.x, n.y) != (p.x, p.y):
                     p.x, p.y, p.corregido = n.x, n.y, True  # la confianza del detector se conserva
                     movidos += 1
+                    for seg in segmentos_de_punto(p.id):
+                        confirmados.add(self._clave_angulo(vista, seg))
             if movidos == 0:
                 return antes
+            caso.angulos_confirmados = sorted(confirmados)
 
             despues = self._cerrar_mutacion(caso)
             cambio = f"; REBA {antes.reba.final} → {despues.reba.final}" if antes.reba and despues.reba else ""
@@ -507,6 +618,31 @@ class ServicioCasos:
             self._sincronizar(caso, despues, actor.usuario)
             log.info("Puntos corregidos caso=%s vista=%s movidos=%d", id_caso, vista, movidos)
             return despues
+
+    def confirmar_angulo(self, id_caso: str, vista: Vista, segmento: Segmento, actor: Actor) -> CasoDetalle:
+        """El especialista valida manualmente un ángulo marcado 'revisar', pasándolo a 'ok'."""
+        _exigir_rol(actor, "ergonomia", "confirmar ángulos")
+        with self._lock:
+            caso = self._cargar(id_caso)
+            if not any(i.vista == vista for i in caso.imagenes):
+                raise NoEncontrado(f"El caso {id_caso} no tiene imagen {vista}")
+            actual = self._evaluar(caso)
+            angulo = next((a for a in actual.angulos if a.vista == vista and a.segmento == segmento), None)
+            if angulo is None or angulo.angulo_grados is None:
+                raise DatosInvalidos(f"No hay ángulo medido para {ETIQUETA_SEGMENTO[segmento]} en vista {vista}")
+            clave = self._clave_angulo(vista, segmento)
+            if clave not in caso.angulos_confirmados:
+                caso.angulos_confirmados.append(clave)
+                caso.angulos_confirmados.sort()
+                despues = self._cerrar_mutacion(caso)
+                self.ledger.registrar(
+                    actor.usuario, "angulo_confirmado", f"{id_caso} / {vista} / {segmento}", id_caso,
+                    antes=f"revisar ({angulo.motivo_estado or 'umbral/confianza'})",
+                    despues=f"ok ({angulo.angulo_grados:.1f}°, REBA {angulo.puntaje_reba})",
+                )
+                self._sincronizar(caso, despues, actor.usuario)
+                return despues
+            return actual
 
     def corregir_contexto(self, id_caso: str, c: CorreccionContexto) -> CasoDetalle:
         """El especialista corrige los datos de la tarea (carga, agarre, modificadores…)."""
@@ -690,6 +826,298 @@ class ServicioCasos:
             self._sincronizar(caso, despues, n.usuario)
             return rec.id
 
+    def generar_plan_ergoai(self, id_caso: str, usuario: str) -> CasoDetalle:
+        """
+        Ejecuta el Agente ErgoAI (RAG en memoria + LLM local Qwen/Llama vía LangChain)
+        para fundamentar el plan de acción del caso con base en NOM-036 y estándares Jabil,
+        alineado estrictamente con los ángulos medidos en la foto y sin duplicar tarjetas.
+        """
+        with self._lock:
+            caso = self._cargar(id_caso)
+            self._verificar_cadenas(id_caso)
+
+            # Limpiar tarjetas AI* extra que se hayan acumulado en pruebas previas
+            caso.recomendaciones = [r for r in caso.recomendaciones if not r.id.startswith("AI")]
+
+            calculo = self._calcular_reba(caso)
+            medidos_calc = calculo[0] if calculo else None
+            res_reba = calculo[1] if calculo else None
+            grados_map: Dict[Segmento, Optional[float]] = (
+                {s: m.grados for s, m in medidos_calc.items()} if medidos_calc else {}
+            )
+            reba_score = res_reba.final if res_reba else 1
+
+            # Si el caso aún no tiene recomendaciones base para sus desviaciones reales, generarlas deterministamente
+            propuestas_base = generar(
+                grados_map, caso.contexto, caso.tipo_tarea, reba_score,
+                self.config.get_reba_tables(), self.config.get_jabil_standards(), self.rag,
+            )
+            if not caso.recomendaciones and propuestas_base:
+                caso.recomendaciones = [
+                    RecomendacionAlmacenada.model_validate({**r, "texto_ia": r["texto"]})
+                    for r in propuestas_base
+                ]
+
+            evaluacion = self._evaluar(caso)
+
+            # Cargar umbrales normativos desde los catálogos en memoria (cero valores hardcodeados)
+            reba_cfg = self.config.get_reba_tables()
+            jabil_cfg = self.config.get_jabil_standards()
+            seg_cfg = reba_cfg["segment_scoring_deg"]
+            lim_tronco = float(seg_cfg["trunk"]["flexion_limits"][0])
+            obj_tronco = float(seg_cfg["trunk"]["upright_tolerance"])
+            lim_brazo = float(seg_cfg["upper_arm"]["flexion_limits"][1])
+            obj_brazo = float(seg_cfg["upper_arm"]["flexion_limits"][0])
+            lim_cuello = float(seg_cfg["neck"]["flexion_limit"])
+            obj_cuello = round(lim_cuello / 2.0, 1)
+            lim_muneca = float(seg_cfg["wrist"]["limit"])
+            lim_rodilla = float(seg_cfg["legs"]["knee_limits"][0])
+            limite_kg = float(jabil_cfg["load_limits"]["max_single_person_lift_kg"])
+            altura_min, altura_max = jabil_cfg["workstation_geometry"]["recommended_work_height_range_cm"]
+            ref_jabil = jabil_cfg["references"]
+
+            # 1. Construir descripción biomecánica exacta y palabras clave SOLO para los segmentos realmente desviados
+            partes_anomalia = [f"Estación {caso.estacion}, tarea: {caso.tipo_tarea}, carga actual: {caso.contexto.carga_kg:g} kg."]
+            palabras_clave: list[str] = []
+
+            ang_tronco = grados_map.get("tronco")
+            ang_brazo = grados_map.get("brazo")
+            ang_cuello = grados_map.get("cuello")
+            ang_muneca = grados_map.get("muneca") if grados_map.get("muneca") is not None else caso.contexto.muneca_grados
+            ang_piernas = grados_map.get("piernas")
+
+            if caso.tipo_tarea in TAREAS_CON_LEVANTAMIENTO and caso.contexto.carga_kg > limite_kg:
+                partes_anomalia.append(
+                    f"Exceso de carga: levantamiento manual de {caso.contexto.carga_kg:g} kg "
+                    f"(supera el límite Jabil de {limite_kg:g} kg por persona)."
+                )
+                palabras_clave.extend(["carga", "peso", ">14kg", "lifter"])
+
+            if ang_tronco is not None and ang_tronco > lim_tronco:
+                partes_anomalia.append(
+                    f"Flexión de tronco de {ang_tronco:.1f}° (umbral máximo aceptable: {lim_tronco:g}°; objetivo: {obj_tronco:g}°)."
+                )
+                palabras_clave.extend(["tronco", "altura de mesa", "superficie de trabajo"])
+
+            if (ang_brazo is not None and ang_brazo > lim_brazo) or caso.contexto.modificadores.brazo_abducido_o_rotado or caso.contexto.modificadores.hombro_elevado:
+                partes_anomalia.append(
+                    f"Flexión/abducción de brazo de {ang_brazo or 0.0:.1f}° (umbral: {lim_brazo:g}°; objetivo: {obj_brazo:g}° en Zonas 1-2)."
+                )
+                palabras_clave.extend(["brazo", "alcance", "zona 1", "zona 2"])
+
+            if ang_cuello is not None and ang_cuello > lim_cuello:
+                partes_anomalia.append(
+                    f"Flexión cervical (cuello) de {ang_cuello:.1f}° (umbral: {lim_cuello:g}°; objetivo: {obj_cuello:g}° elevando pieza/monitor a la línea de visión)."
+                )
+                palabras_clave.extend(["cuello", "linea de vision", "monitor"])
+
+            if (ang_muneca is not None and abs(ang_muneca) > lim_muneca) or caso.contexto.modificadores.muneca_desviada_o_torcida:
+                partes_anomalia.append(
+                    f"Desviación de muñeca de {ang_muneca or 0.0:.1f}° (umbral: {lim_muneca:g}°; objetivo: 0° postura neutra)."
+                )
+                palabras_clave.extend(["muneca", "herramienta", "sujecion"])
+
+            if (ang_piernas is not None and ang_piernas > lim_rodilla) or caso.contexto.apoyo_unilateral or caso.contexto.actividad >= 2 or caso.tipo_tarea == "pie_prolongado":
+                partes_anomalia.append(
+                    f"Compromiso de extremidades inferiores / bipedestación (flexión de rodilla: {ang_piernas or 0.0:.1f}°)."
+                )
+                palabras_clave.extend(["ley silla", "pie sentado", "piernas"])
+
+            if not palabras_clave:
+                partes_anomalia.append("Postura dentro de rangos neutros (REBA inapreciable/bajo).")
+                palabras_clave = ["cuello", "linea de vision"]
+
+            anomalia_str = " ".join(partes_anomalia)
+
+            # 2. Calcular dictamen determinista inmutable (Patrón Strategy NOM-036 + REBA) e invocar ErgoAIAgent
+            from backend.app.core_agent.ergo_agent import ErgoAIAgent
+            from backend.app.core_agent.knowledge_retriever import InMemoryNormativeRetriever
+            from backend.app.core_agent.llm_factory import LLMFactory
+
+            datos_estrategia = {
+                "carga_kg": caso.contexto.carga_kg,
+                "tronco_grados": ang_tronco,
+                "brazo_grados": ang_brazo,
+                "torsion_tronco": caso.contexto.modificadores.tronco_torsion_o_inclinacion,
+                "apoyo_unilateral": caso.contexto.apoyo_unilateral,
+                "agarre": caso.contexto.agarre,
+                "actividad": caso.contexto.actividad,
+            }
+            res_nom_estrategia = EnrutadorNom036.evaluar(
+                caso.tipo_tarea, datos_estrategia, self.config.get_nom036_tables()
+            )
+            nivel_reba_txt = ETIQUETA_NIVEL.get(evaluacion.reba.nivel, "medio").capitalize() if evaluacion.reba else "Bajo"
+            if evaluacion.nom036:
+                nivel_nom_txt = nivel_riesgo_texto(evaluacion.nom036.nivel, self.config.get_nom036_tables())
+                riesgo_determinista = (
+                    f"REBA: Riesgo {nivel_reba_txt}, {reba_score} puntos | "
+                    f"NOM-036 ({res_nom_estrategia.hoja_excel}): Riesgo {nivel_nom_txt}, {evaluacion.nom036.total} puntos"
+                )
+            else:
+                riesgo_determinista = f"REBA: Riesgo {nivel_reba_txt}, {reba_score} puntos"
+
+            retriever = InMemoryNormativeRetriever(self.config.get_jabil_reglas())
+            llm = LLMFactory.get_llm()
+            agente = ErgoAIAgent(llm=llm, retriever=retriever)
+
+            try:
+                res_ia = agente.evaluar_caso(
+                    anomalia=anomalia_str,
+                    reba_score=reba_score,
+                    palabras_clave=palabras_clave,
+                    tipo_prueba=caso.tipo_tarea,
+                    riesgo_determinista=riesgo_determinista,
+                )
+            except Exception as exc:
+                log.error("Error en evaluación con ErgoAI para caso %s: %s", id_caso, exc)
+                raise DatosInvalidos(
+                    f"No se pudo generar la recomendación con ErgoAI: {exc}. "
+                    "Verifica que Ollama esté corriendo y tenga el modelo descargado."
+                ) from exc
+
+            # 3. Validar coherencia biomecánica (Guardrail Anti-Alucinaciones) y actualizar tarjeta sin duplicar
+            titulo_ia = str(res_ia.get("titulo", "")).strip()
+            desc_ia = str(res_ia.get("descripcion_tecnica", "")).strip()
+            ref_ia = str(res_ia.get("fundamento_normativo", "")).strip()
+            texto_bajo = f"{titulo_ia} {desc_ia} {ref_ia}".lower()
+
+            # Detectar si el LLM pequeño alucinó controles que contradicen las mediciones reales de la foto
+            alucino_carga = (
+                caso.contexto.carga_kg <= limite_kg
+                and any(t in texto_bajo for t in (f"{limite_kg:g} kg", f"{limite_kg:.1f} kg", f"{limite_kg:g}kg", "lifter", "polipasto", "grúa", "grua", "manipulador ingrávido", "asistencia mecánica"))
+            )
+            alucino_mesa_piernas_en_cuello = (
+                (ang_tronco is None or ang_tronco <= lim_tronco)
+                and (ang_cuello is not None and ang_cuello > lim_cuello)
+                and any(t in texto_bajo for t in ("espacio libre para piernas", "espesor del borde", "reposapiés", f"{altura_min:g} cm y {altura_max:g} cm", "diseño físico de la estación", "mesa"))
+            )
+            titulo_generico = (
+                not titulo_ia
+                or "anomalía" in titulo_ia.lower()
+                or "anomalia" in titulo_ia.lower()
+                or "recomendación para" in titulo_ia.lower()
+                or "recomendacion para" in titulo_ia.lower()
+                or "mitigar el riesgo" in titulo_ia.lower()
+                or len(titulo_ia.split()) > 10
+            )
+
+            # Si la postura es totalmente conforme (REBA 1 y sin desviaciones angulares)
+            es_conforme = (
+                reba_score <= 1
+                and (ang_tronco is None or ang_tronco <= lim_tronco)
+                and (ang_cuello is None or ang_cuello <= lim_cuello)
+                and (ang_brazo is None or ang_brazo <= obj_brazo)
+                and caso.contexto.carga_kg <= limite_kg
+            )
+
+            # Seleccionar la tarjeta objetivo existente (primera pendiente o primera del caso) para NUNCA añadir tarjetas extra
+            rec_objetivo = next((r for r in caso.recomendaciones if r.estado == "propuesta"), None)
+            if rec_objetivo is None and caso.recomendaciones:
+                rec_objetivo = caso.recomendaciones[0]
+
+            base_prop = propuestas_base[0] if propuestas_base else None
+            clausula_conforme = self.rag.recuperar_por_condicion("postura_conforme_riesgo_inapreciable")
+            clausula_cuello = self.rag.recuperar_por_condicion("flexion_cervical_linea_vision")
+
+            if es_conforme:
+                titulo_final = clausula_conforme.titulo if clausula_conforme else "Postura Conforme / Riesgo Inapreciable"
+                desc_final = (
+                    f"{clausula_conforme.texto_oficial} {clausula_conforme.control_ingenieria}"
+                    if clausula_conforme
+                    else "La postura se mantiene dentro de los rangos neutros normativos."
+                )
+                ref_final = (
+                    f"{clausula_conforme.norma_vinculada} / {clausula_conforme.documento} {clausula_conforme.seccion}"
+                    if clausula_conforme
+                    else ref_jabil["work_height"]
+                )
+            elif ang_cuello is not None and ang_cuello > lim_cuello and (ang_tronco is None or ang_tronco <= lim_tronco) and caso.contexto.carga_kg <= limite_kg:
+                # Caso de cuello aislado (ej. C-010): enfocado estrictamente en línea visual y monitor/pantalla desde el catálogo RAG
+                titulo_final = base_prop["titulo"] if base_prop else (clausula_cuello.titulo if clausula_cuello else "Elevar la pieza o el monitor a la línea de visión")
+                desc_final = (
+                    f"{clausula_cuello.control_ingenieria} (Flexión cervical medida: {ang_cuello:.1f}°, umbral: <{lim_cuello:g}°; {ref_jabil['work_height']})."
+                    if clausula_cuello
+                    else (base_prop["texto"] if base_prop else "")
+                )
+                ref_final = ref_jabil["work_height"]
+            else:
+                if not titulo_generico and not alucino_carga and not alucino_mesa_piernas_en_cuello:
+                    titulo_final = titulo_ia
+                elif base_prop:
+                    titulo_final = base_prop["titulo"]
+                else:
+                    titulo_final = "Ajuste Ergonómico según Estándar Jabil"
+
+                if desc_ia and not alucino_carga and not alucino_mesa_piernas_en_cuello:
+                    desc_final = desc_ia
+                elif base_prop:
+                    desc_final = base_prop["texto"]
+                else:
+                    desc_final = "Optimizar la postura de trabajo ciñéndose a las tolerancias de la NOM-036-1-STPS-2018."
+
+                if ref_ia and not alucino_carga and not alucino_mesa_piernas_en_cuello:
+                    ref_final = ref_ia
+                elif base_prop:
+                    ref_final = base_prop["referencia"]
+                else:
+                    ref_final = "NOM-036-1-STPS-2018 / 16-PE30-6500-00023"
+
+            if rec_objetivo is not None:
+                rec_objetivo.titulo = titulo_final
+                rec_objetivo.texto_ia = desc_final
+                if rec_objetivo.estado == "propuesta":
+                    rec_objetivo.texto = desc_final
+                rec_objetivo.referencia = ref_final
+
+                # Re-enriquecer metadatos RAG (AutoCAD, Excel Jabil, MOC, cita literal) acordes a la tarjeta
+                rec_dump = rec_objetivo.model_dump()
+                self.rag.enriquecer_recomendacion(rec_dump, grados_map, caso.contexto, caso.tipo_tarea)
+                rec_objetivo.justificacion_rag = rec_dump.get("justificacion_rag")
+                rec_objetivo.norma_vinculada = rec_dump.get("norma_vinculada")
+                rec_objetivo.hoja_excel_jabil = rec_dump.get("hoja_excel_jabil")
+                rec_objetivo.layer_autocad = rec_dump.get("layer_autocad")
+                rec_objetivo.tramite_moc = rec_dump.get("tramite_moc")
+                rec_objetivo.codigo_jabil = rec_dump.get("codigo_jabil")
+                id_rec_log = rec_objetivo.id
+                titulo_log = rec_objetivo.titulo
+                nivel_log = rec_objetivo.nivel_control
+                ref_log = rec_objetivo.referencia
+            else:
+                nueva_rec = RecomendacionAlmacenada(
+                    id="R1",
+                    nivel_control="administrativo" if es_conforme else "ingenieria",
+                    tipo_cambio="postura" if es_conforme else "planta",
+                    titulo=titulo_final,
+                    texto=desc_final,
+                    texto_ia=desc_final,
+                    referencia=ref_final,
+                    origen="ia",
+                    estado="propuesta",
+                    implementacion="por_implementar",
+                )
+                rec_dump = nueva_rec.model_dump()
+                self.rag.enriquecer_recomendacion(rec_dump, grados_map, caso.contexto, caso.tipo_tarea)
+                nueva_rec.justificacion_rag = rec_dump.get("justificacion_rag")
+                nueva_rec.norma_vinculada = rec_dump.get("norma_vinculada")
+                nueva_rec.hoja_excel_jabil = rec_dump.get("hoja_excel_jabil")
+                nueva_rec.layer_autocad = rec_dump.get("layer_autocad")
+                nueva_rec.tramite_moc = rec_dump.get("tramite_moc")
+                nueva_rec.codigo_jabil = rec_dump.get("codigo_jabil")
+                caso.recomendaciones = [nueva_rec]
+                id_rec_log = nueva_rec.id
+                titulo_log = nueva_rec.titulo
+                nivel_log = nueva_rec.nivel_control
+                ref_log = nueva_rec.referencia
+
+            despues = self._cerrar_mutacion(caso)
+            self.ledger.registrar(
+                usuario, "plan_ia_generado", f"{id_caso} / {id_rec_log}", id_caso,
+                despues=f"{titulo_log} ({nivel_log}): {ref_log}",
+                motivo="Generación asistida por ErgoAI (Ollama/Qwen/LangChain)",
+            )
+            self._sincronizar(caso, despues, usuario)
+            return despues
+
     def crear_caso(self, datos: NuevoCaso, fotos: Dict[str, bytes]) -> str:
         """
         Crea un caso a partir de fotos reales: visión (YOLOX + RTMPose) → puntos → REBA → hallazgos →
@@ -698,7 +1126,7 @@ class ServicioCasos:
         _exigir_rol(datos, "ergonomia", "crear casos")
         if "lateral" not in fotos:
             raise DatosInvalidos("La foto lateral es obligatoria: de ella se miden los ángulos REBA")
-        desconocidas = set(fotos) - {"lateral", "frontal", "cenital"}
+        desconocidas = set(fotos) - set(VISTAS)
         if desconocidas:
             raise DatosInvalidos(f"Vistas no válidas: {', '.join(sorted(desconocidas))}")
         ok, detalle_vision = estimador.estado()
@@ -730,13 +1158,13 @@ class ServicioCasos:
             case_dir = self.mgr.init_case_workspace(id_caso)
 
             imagenes, hallazgos = [], []
-            for vista in ("lateral", "frontal", "cenital"):
+            for vista in VISTAS:
                 r = resultados.get(vista)
                 if r is None:
                     continue
                 archivo = f"{vista}.jpg"
                 # Se re-codifica: elimina metadatos EXIF y conserva solo la versión anonimizada.
-                if not cv2.imwrite(str(case_dir / "inputs" / archivo), r.imagen_bgr, [cv2.IMWRITE_JPEG_QUALITY, 90]):
+                if not cv2.imwrite(str(case_dir / "inputs" / archivo), r.imagen_bgr, [cv2.IMWRITE_JPEG_QUALITY, CALIDAD_JPEG]):
                     raise RuntimeError(f"No se pudo guardar la foto {vista}")
                 h, w = r.imagen_bgr.shape[:2]
                 imagenes.append(Imagen(vista=vista, url=archivo, ancho=w, alto=h, puntos=[
@@ -765,7 +1193,7 @@ class ServicioCasos:
             medidos, res = self._calcular_reba(caso)  # type: ignore[misc]  (hay foto lateral)
             propuestas = generar(
                 {s: m.grados for s, m in medidos.items()}, caso.contexto, caso.tipo_tarea, res.final,
-                self.config.get_reba_tables(), self.config.get_jabil_standards())
+                self.config.get_reba_tables(), self.config.get_jabil_standards(), self.rag)
             caso.recomendaciones = [RecomendacionAlmacenada.model_validate({**r, "texto_ia": r["texto"]})
                                     for r in propuestas]
 
@@ -821,3 +1249,8 @@ class ServicioCasos:
         if ruta.parent != base or not ruta.is_file():
             raise NoEncontrado("Imagen no encontrada")
         return ruta
+
+    def consultar_rag(self, consulta: str, top_k: int = 3) -> List[ResultadoBusquedaRAG]:
+        """Consulta el motor RAG léxico en memoria RAM sin bases de datos."""
+        with self._lock:
+            return self.rag.buscar(consulta, top_k=top_k)

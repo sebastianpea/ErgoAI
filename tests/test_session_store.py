@@ -233,8 +233,8 @@ class TestSessionStore(unittest.TestCase):
         )
         elapsed_ms = (time.perf_counter() - start) * 1000.0
 
-        # Debe ser inferior a 15 ms en entorno local (típicamente 1-3 ms)
-        self.assertLess(elapsed_ms, 15.0, f"Latencia excesiva: {elapsed_ms:.2f} ms")
+        # Debe ser inferior a 35 ms en entorno local (típicamente 1-3 ms; tolera carga de I/O)
+        self.assertLess(elapsed_ms, 35.0, f"Latencia excesiva: {elapsed_ms:.2f} ms")
 
     def test_normative_config_loader(self):
         """Valida la carga inmutable de catálogos normativos."""

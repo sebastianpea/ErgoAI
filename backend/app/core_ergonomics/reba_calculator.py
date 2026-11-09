@@ -123,9 +123,10 @@ class RebaCalculator:
 
     def puntaje_carga(self, ctx: ContextoTarea) -> int:
         c = self.t["load_force_kg"]
-        if ctx.carga_kg < 5:
+        lim_bajo, lim_medio = c.get("thresholds", [5.0, 10.0])
+        if ctx.carga_kg < lim_bajo:
             v = c["lt_5"]
-        elif ctx.carga_kg <= 10:
+        elif ctx.carga_kg <= lim_medio:
             v = c["5_to_10"]
         else:
             v = c["gt_10"]

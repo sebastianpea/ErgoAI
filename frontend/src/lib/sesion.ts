@@ -4,12 +4,12 @@ import type { Actor, Rol } from "../types/caso";
 
 export const PERFILES: Record<Rol, { usuario: string; etiqueta: string; descripcion: string }> = {
   ergonomia: {
-    usuario: "Ing. Ergonomía",
+    usuario: import.meta.env.VITE_USER_ERGONOMIA ?? "Ing. Ergonomía",
     etiqueta: "Ergonomía",
     descripcion: "Revisa el análisis y aprueba, edita o rechaza recomendaciones",
   },
   ingenieria: {
-    usuario: "Ing. Procesos (IE)",
+    usuario: import.meta.env.VITE_USER_INGENIERIA ?? "Ing. Procesos (IE)",
     etiqueta: "Ingeniería (IE/Facilities)",
     descripcion: "Autoriza o deniega los cambios en planta",
   },

@@ -8,6 +8,7 @@ Ejecutar desde la raíz del repositorio:
 from __future__ import annotations
 
 import logging
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Optional
@@ -19,9 +20,9 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 
 from backend.app.api.schemas import (
-    ID_PATRON, Alerta, AtenderAlerta, Autorizacion, CasoDetalle, CasoResumen, CorreccionContexto, CorreccionPuntos,
-    Decision, EstadoVision, Implementacion, NuevaRecomendacion, NuevoCaso, Ok, ResultadoIntegridad, RevisionHallazgo,
-    Vista,
+    ID_PATRON, Actor, Alerta, AtenderAlerta, Autorizacion, CasoDetalle, CasoResumen, ConsultaRAGRequest,
+    CorreccionContexto, CorreccionPuntos, Decision, EstadoVision, FragmentoNormativo, Implementacion,
+    NuevaRecomendacion, NuevoCaso, Ok, RespuestaRAG, ResultadoIntegridad, RevisionHallazgo, Segmento, Vista,
 )
 from backend.app.vision.estimador import VisionNoDisponible, estimador
 from backend.app.core_ergonomics.cambios import PARAMETROS
@@ -29,7 +30,9 @@ from backend.app.services.casos import Conflicto, DatosInvalidos, NoEncontrado, 
 from backend.app.session_store import (
     AuditFileManager, AuditIntegrityError, EntradaBitacora, NormativeConfigLoader,
 )
-from backend.app.settings import CONFIG_DIR, CORS_ORIGINS, SEED_DIR, WORKSPACE_DIR
+from backend.app.settings import (
+    BACKEND_HOST, BACKEND_PORT, CONFIG_DIR, CORS_ORIGINS, SEED_DIR, WORKSPACE_DIR,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("ergoai")
@@ -58,25 +61,19 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
     def svc(request: Request) -> ServicioCasos:
         return request.app.state.servicio
 
-    @app.exception_handler(NoEncontrado)
-    async def _404(_: Request, e: NoEncontrado):
-        return JSONResponse(status_code=404, content={"detail": str(e)})
-
-    @app.exception_handler(Conflicto)
-    async def _409(_: Request, e: Conflicto):
-        return JSONResponse(status_code=409, content={"detail": str(e)})
-
-    @app.exception_handler(VisionNoDisponible)
-    async def _503(_: Request, e: VisionNoDisponible):
-        return JSONResponse(status_code=503, content={"detail": str(e)})
-
-    @app.exception_handler(Prohibido)
-    async def _403(_: Request, e: Prohibido):
-        return JSONResponse(status_code=403, content={"detail": str(e)})
-
-    @app.exception_handler(DatosInvalidos)
-    async def _422(_: Request, e: DatosInvalidos):
-        return JSONResponse(status_code=422, content={"detail": str(e)})
+    CodigosError = {
+        NoEncontrado: 404,
+        Conflicto: 409,
+        VisionNoDisponible: 503,
+        Prohibido: 403,
+        DatosInvalidos: 422,
+    }
+    for exc_cls, status_code in CodigosError.items():
+        def _crear_manejador(codigo: int):
+            async def _manejador(_: Request, e: Exception):
+                return JSONResponse(status_code=codigo, content={"detail": str(e)})
+            return _manejador
+        app.add_exception_handler(exc_cls, _crear_manejador(status_code))
 
     @app.exception_handler(AuditIntegrityError)
     async def _integridad(_: Request, e: AuditIntegrityError):
@@ -135,6 +132,11 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
     def corregir_puntos(request: Request, cuerpo: CorreccionPuntos, vista: Vista, id_caso: str = IdCaso):
         return svc(request).corregir_puntos(id_caso, vista, cuerpo.puntos, cuerpo)
 
+    @app.post("/casos/{id_caso}/angulos/{vista}/{segmento}/confirmar", response_model=CasoDetalle)
+    def confirmar_angulo(request: Request, vista: Vista, segmento: Segmento,
+                         cuerpo: Optional[Actor] = None, id_caso: str = IdCaso):
+        return svc(request).confirmar_angulo(id_caso, vista, segmento, cuerpo or Actor())
+
     @app.put("/casos/{id_caso}/contexto", response_model=CasoDetalle)
     def corregir_contexto(request: Request, cuerpo: CorreccionContexto, id_caso: str = IdCaso):
         return svc(request).corregir_contexto(id_caso, cuerpo)
@@ -147,6 +149,11 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
     @app.post("/casos/{id_caso}/recomendaciones", response_model=dict)
     def crear_recomendacion(request: Request, cuerpo: NuevaRecomendacion, id_caso: str = IdCaso):
         return {"ok": True, "id": svc(request).crear_recomendacion(id_caso, cuerpo)}
+
+    @app.post("/casos/{id_caso}/generar-plan-ia", response_model=CasoDetalle)
+    async def generar_plan_ia(request: Request, cuerpo: Optional[Actor] = None, id_caso: str = IdCaso):
+        actor = cuerpo or Actor()
+        return await run_in_threadpool(svc(request).generar_plan_ergoai, id_caso, actor.usuario)
 
     @app.post("/casos/{id_caso}/recomendaciones/{id_recomendacion}/decision", response_model=Ok)
     def decidir(request: Request, d: Decision, id_caso: str = IdCaso, id_recomendacion: str = IdRec):
@@ -186,7 +193,42 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
               archivo: str = RutaParam(pattern=r"^[A-Za-z0-9_.-]{1,128}$")):
         return FileResponse(svc(request).ruta_media(id_caso, archivo))
 
+    @app.post("/rag/consultar", response_model=RespuestaRAG)
+    def consultar_rag(request: Request, cuerpo: ConsultaRAGRequest):
+        t0 = time.perf_counter()
+        resultados = svc(request).consultar_rag(cuerpo.consulta, top_k=cuerpo.top_k)
+        t_ms = round((time.perf_counter() - t0) * 1000, 2)
+        return RespuestaRAG(
+            consulta=cuerpo.consulta,
+            total_coincidencias=len(resultados),
+            resultados=[
+                FragmentoNormativo(
+                    id=r.clausula.id,
+                    condicion=r.clausula.condicion,
+                    titulo=r.clausula.titulo,
+                    documento=r.clausula.documento,
+                    seccion=r.clausula.seccion,
+                    pagina=r.clausula.pagina,
+                    norma_vinculada=r.clausula.norma_vinculada,
+                    hoja_excel_jabil=r.clausula.hoja_excel_jabil,
+                    layer_autocad=r.clausula.layer_autocad,
+                    tramite_moc=r.clausula.tramite_moc,
+                    texto_oficial=r.clausula.texto_oficial,
+                    control_ingenieria=r.clausula.control_ingenieria,
+                    score=r.score,
+                    terminos_coincidentes=r.terminos_coincidentes,
+                )
+                for r in resultados
+            ],
+            tiempo_ms=t_ms,
+        )
+
     return app
 
 
 app = create_app()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("backend.main:app", host=BACKEND_HOST, port=BACKEND_PORT, reload=True)
+

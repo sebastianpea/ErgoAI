@@ -1,7 +1,7 @@
 // Única puerta al backend. Con VITE_USE_MOCK=true trabaja con datos simulados en memoria.
 import type {
   CambioPropuesto, CasoDetalle, CasoResumen, ContextoTarea, Decision, EntradaBitacora, NuevaRecomendacion, Punto,
-  Recomendacion, ResultadoIntegridad, TipoTarea, Validacion, ValorCambio, Vista,
+  Recomendacion, ResultadoIntegridad, Segmento, TipoTarea, Validacion, ValorCambio, Vista,
 } from "./types/caso";
 import type { Alerta } from "./types/alerta";
 import { API_URL, USE_MOCK } from "./lib/config";
@@ -34,7 +34,7 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
       headers: { "Content-Type": "application/json", ...init?.headers },
     });
   } catch {
-    throw new Error(`No se pudo conectar con el backend en ${API_URL}. ¿Está en ejecución?`);
+    throw new Error(`No se pudo conectar con el backend (${API_URL || "servidor local"}). ¿Está en ejecución?`);
   }
   if (!res.ok) throw new Error(mensajeError(res.status, await res.text()));
   return res.json() as Promise<T>;
@@ -76,6 +76,8 @@ const real = {
   obtenerCaso: (id: string) => http<CasoDetalle>(`/casos/${seg(id)}`),
   corregirPuntos: (id: string, vista: Vista, puntos: Punto[]) =>
     http<CasoDetalle>(`/casos/${seg(id)}/puntos/${vista}`, enviar("PUT", { puntos, ...actorActual() })),
+  confirmarAngulo: (id: string, vista: Vista, segmento: Segmento) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/angulos/${vista}/${segmento}/confirmar`, enviar("POST", actorActual())),
   corregirContexto: (id: string, contexto: ContextoTarea, motivo: string) =>
     http<CasoDetalle>(`/casos/${seg(id)}/contexto`, enviar("PUT", { contexto, motivo, ...actorActual() })),
   revisarHallazgo: (id: string, idHallazgo: string, accion: "descartar" | "restaurar", motivo: string) =>
@@ -88,6 +90,8 @@ const real = {
     http<Ok>(`${rutaRec(idCaso, idRec)}/implementacion`, enviar("POST", { nota, ...actorActual() })),
   crearRecomendacion: (idCaso: string, n: NuevaRecomendacion) =>
     http<{ ok: true; id: string }>(`/casos/${seg(idCaso)}/recomendaciones`, enviar("POST", n)),
+  generarPlanErgoAI: (idCaso: string) =>
+    http<CasoDetalle>(`/casos/${seg(idCaso)}/generar-plan-ia`, enviar("POST", actorActual())),
   listarAlertas: () => http<Alerta[]>("/alertas"),
   atenderAlerta: (id: string) => http<Ok>(`/alertas/${seg(id)}/atender`, enviar("POST", actorActual())),
   bitacora: (idCaso?: string) =>
@@ -197,6 +201,22 @@ const mock: typeof real = {
     return copia(detalle(c));
   },
 
+  confirmarAngulo: (id, vista, segmento) => {
+    const c = buscarCaso(id);
+    if (!c) return falla(`Caso ${id} no encontrado`);
+    if (!rolEs("ergonomia")) return falla("Solo Ergonomía puede confirmar ángulos");
+    const a = c.angulos.find(x => x.vista === vista && x.segmento === segmento);
+    if (a) {
+      a.estado = "ok";
+      a.confirmado = true;
+      a.motivo_estado = "Confirmado por especialista";
+    }
+    registrar({
+      usuario: actorActual().usuario, accion: "angulo_confirmado", objetivo: `${id} / ${vista} / ${segmento}`, id_caso: id,
+    });
+    return copia(detalle(c));
+  },
+
   corregirContexto: (id, contexto, motivo) => {
     const c = buscarCaso(id);
     if (!c) return falla(`Caso ${id} no encontrado`);
@@ -297,6 +317,18 @@ const mock: typeof real = {
     c.recomendaciones.push(rec);
     registrar({ usuario: n.usuario, accion: "recomendacion_creada", objetivo: `${idCaso} / ${rec.id}`, id_caso: idCaso, despues: rec.titulo, motivo: n.motivo });
     return copia({ ok: true as const, id: rec.id });
+  },
+
+  generarPlanErgoAI: idCaso => {
+    const c = buscarCaso(idCaso);
+    if (!c) return falla(`Caso ${idCaso} no encontrado`);
+    c.recomendaciones = c.recomendaciones.filter(r => !r.id.startsWith("AI"));
+    const r = c.recomendaciones.find(x => x.estado === "propuesta") ?? c.recomendaciones[0];
+    if (r) {
+      r.justificacion_rag = "[16-PE30-6500-00023 / NOM-036-1-STPS-2018]: Fundamentación normativa validada en memoria RAM sobre los ángulos medidos.";
+      registrar({ usuario: actorActual().usuario, accion: "plan_ia_generado", objetivo: `${idCaso} / ${r.id}`, id_caso: idCaso, despues: r.titulo });
+    }
+    return copia(detalle(c));
   },
 
   listarAlertas: () => copia(store.alertas),

@@ -1,0 +1,8 @@
+# ============================================================================
+# ErgoAI - Requerimientos Unificados del Proyecto (Backend + Agente IA + Visión)
+# ============================================================================
+# Instalación completa desde la raíz de ErgoAI:
+#   pip install -r requirements.txt
+
+-r backend/requirements.txt
+-r backend/requirements-vision.txt

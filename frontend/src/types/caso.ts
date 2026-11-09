@@ -39,6 +39,8 @@ export interface Angulo {
   puntaje_reba: number;
   modificadores: string[];
   estado: "ok" | "revisar" | "sin_dato";
+  motivo_estado?: string | null;
+  confirmado?: boolean;
   puntaje_previo?: number | null; // de la evaluación capturada en piso, si existe
 }
 
@@ -156,6 +158,12 @@ export interface Recomendacion {
   cambios: CambioPropuesto[];
   reba_proyectado: number | null;
   requiere_autorizacion: boolean;
+  justificacion_rag?: string | null;
+  norma_vinculada?: string | null;
+  codigo_jabil?: string | null;
+  hoja_excel_jabil?: string | null;
+  layer_autocad?: string | null;
+  tramite_moc?: string | null;
 }
 
 export interface Residual {

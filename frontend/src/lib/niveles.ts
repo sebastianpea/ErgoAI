@@ -1,5 +1,7 @@
-import type { ColorNom, EstadoImplementacion, NivelReba, Segmento, TipoCambio, TipoTarea } from "../types/caso";
+import type { ColorNom, EstadoImplementacion, NivelReba, Segmento, TipoCambio, TipoTarea, Vista } from "../types/caso";
 import type { NivelUrgencia, TipoEvento } from "../types/alerta";
+
+export const VISTAS: Vista[] = ["lateral", "frontal", "cenital"];
 
 export type Semaforo = "gris" | "verde" | "amarillo" | "naranja" | "rojo" | "morado";
 
@@ -12,13 +14,21 @@ export const COLOR_SEMAFORO: Record<Semaforo, string> = {
   morado: "#7B3FA0",
 };
 
-export const NIVEL_REBA: Record<NivelReba, { etiqueta: string; color: Semaforo; orden: number }> = {
-  inapreciable: { etiqueta: "Inapreciable", color: "gris", orden: 0 },
-  bajo: { etiqueta: "Bajo", color: "verde", orden: 1 },
-  medio: { etiqueta: "Medio", color: "amarillo", orden: 2 },
-  alto: { etiqueta: "Alto", color: "naranja", orden: 3 },
-  muy_alto: { etiqueta: "Muy alto", color: "rojo", orden: 4 },
+export const NIVEL_REBA: Record<NivelReba, { etiqueta: string; color: Semaforo; orden: number; maxScore: number }> = {
+  inapreciable: { etiqueta: "Inapreciable", color: "gris", orden: 0, maxScore: 1 },
+  bajo: { etiqueta: "Bajo", color: "verde", orden: 1, maxScore: 3 },
+  medio: { etiqueta: "Medio", color: "amarillo", orden: 2, maxScore: 7 },
+  alto: { etiqueta: "Alto", color: "naranja", orden: 3, maxScore: 10 },
+  muy_alto: { etiqueta: "Muy alto", color: "rojo", orden: 4, maxScore: 15 },
 };
+
+export function nivelDeReba(final: number) {
+  if (final <= NIVEL_REBA.inapreciable.maxScore) return NIVEL_REBA.inapreciable;
+  if (final <= NIVEL_REBA.bajo.maxScore) return NIVEL_REBA.bajo;
+  if (final <= NIVEL_REBA.medio.maxScore) return NIVEL_REBA.medio;
+  if (final <= NIVEL_REBA.alto.maxScore) return NIVEL_REBA.alto;
+  return NIVEL_REBA.muy_alto;
+}
 
 export const ETIQUETA_COLOR_NOM: Record<ColorNom, string> = {
   verde: "Verde",

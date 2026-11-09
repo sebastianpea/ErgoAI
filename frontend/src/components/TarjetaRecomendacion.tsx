@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { CambioPropuesto, Decision, Recomendacion, ValorCambio } from "../types/caso";
-import { ETIQUETA_IMPLEMENTACION, ETIQUETA_TIPO_CAMBIO, NIVEL_REBA, valorCambio } from "../lib/niveles";
+import { ETIQUETA_IMPLEMENTACION, ETIQUETA_TIPO_CAMBIO, nivelDeReba, valorCambio } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
 import { CampoValor } from "./CampoValor";
 import { Semaforo } from "./Semaforo";
@@ -28,14 +28,6 @@ function diferencia(c: CambioPropuesto, objetivo: ValorCambio | null): string {
   const d = objetivo - c.actual;
   if (Math.abs(d) < 0.05) return "sin cambio";
   return `${d > 0 ? "+" : "−"}${valorCambio(Math.abs(d), c.unidad)}`;
-}
-
-function nivelDeReba(final: number) {
-  if (final <= 1) return NIVEL_REBA.inapreciable;
-  if (final <= 3) return NIVEL_REBA.bajo;
-  if (final <= 7) return NIVEL_REBA.medio;
-  if (final <= 10) return NIVEL_REBA.alto;
-  return NIVEL_REBA.muy_alto;
 }
 
 export function TarjetaRecomendacion({ rec, rebaActual, ocupado, onDecidir, onAutorizar, onImplementar }: Props) {
@@ -81,7 +73,7 @@ export function TarjetaRecomendacion({ rec, rebaActual, ocupado, onDecidir, onAu
       <header>
         <div className="rec-etiquetas">
           <span className={`etiqueta-control ${rec.nivel_control}`}>
-            {rec.nivel_control === "ingenieria" ? "Control de ingeniería" : "Control administrativo"}
+            {rec.nivel_control === "ingenieria" ? "PRIORIDAD 1: INGENIERÍA" : "CONTROL ADMINISTRATIVO"}
           </span>
           <span className={`etiqueta-tipo tipo-${rec.tipo_cambio}`}>{ETIQUETA_TIPO_CAMBIO[rec.tipo_cambio]}</span>
           {rec.origen === "especialista" && <span className="etiqueta-tipo">Del especialista</span>}
@@ -134,6 +126,72 @@ export function TarjetaRecomendacion({ rec, rebaActual, ocupado, onDecidir, onAu
         </p>
       )}
       <p className="referencia">Referencia: {rec.referencia}</p>
+
+      {(rec.layer_autocad || rec.hoja_excel_jabil || rec.tramite_moc) && (
+        <div className="rec-rag-badges" style={{ display: "flex", flexWrap: "wrap", gap: "6px", margin: "8px 0" }}>
+          {rec.layer_autocad && (
+            <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "4px", background: "#e0f2fe", color: "#0369a1", fontWeight: 600, border: "1px solid #bae6fd" }}>
+              📐 AutoCAD: Layer {rec.layer_autocad}
+            </span>
+          )}
+          {rec.hoja_excel_jabil && (
+            <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "4px", background: "#dcfce7", color: "#15803d", fontWeight: 600, border: "1px solid #bbf7d0" }}>
+              📊 Excel Jabil: {rec.hoja_excel_jabil}
+            </span>
+          )}
+          {rec.tramite_moc && (
+            <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "4px", background: "#fef3c7", color: "#b45309", fontWeight: 600, border: "1px solid #fde68a" }}>
+              🛡️ {rec.tramite_moc}
+            </span>
+          )}
+        </div>
+      )}
+
+      {rec.justificacion_rag && (
+        <div
+          className="rec-rag-justificacion-destacada"
+          style={{
+            margin: "12px 0 16px 0",
+            padding: "12px 14px",
+            background: "linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%)",
+            border: "1.5px solid #38bdf8",
+            borderLeft: "5px solid #0284c7",
+            borderRadius: "8px",
+            boxShadow: "0 2px 4px rgba(2, 132, 199, 0.06)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontWeight: 700,
+              fontSize: "0.88rem",
+              color: "#0369a1",
+              marginBottom: "8px",
+              letterSpacing: "0.2px",
+            }}
+          >
+            <span style={{ fontSize: "1.15rem" }}>📑</span>
+            <span>Justificación RAG (16-PE30-6500-00023 / NOM-036) · Párrafo Oficial Citado:</span>
+          </div>
+          <div
+            style={{
+              margin: 0,
+              fontSize: "0.88rem",
+              lineHeight: "1.55",
+              color: "#0f172a",
+              background: "#ffffff",
+              padding: "10px 14px",
+              borderRadius: "6px",
+              border: "1px solid #e2e8f0",
+              fontStyle: "normal",
+            }}
+          >
+            {rec.justificacion_rag}
+          </div>
+        </div>
+      )}
 
       <ol className={`flujo${detenido ? " detenido" : ""}`} aria-label="Avance de la recomendación">
         {pasos.map((p, i) => (

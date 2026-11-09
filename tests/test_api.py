@@ -29,9 +29,10 @@ class TestApi(unittest.TestCase):
 
     def test_listado_y_detalle(self):
         casos = self.cliente.get("/casos").json()
-        self.assertEqual({c["id_caso"] for c in casos}, {"C-001", "C-002", "C-003"})
+        self.assertEqual({c["id_caso"] for c in casos}, {f"C-{i:03d}" for i in range(1, 8)})
         d = self.cliente.get("/casos/C-001").json()
-        self.assertEqual(len(d["angulos"]), 6)
+        self.assertEqual(len(d["angulos"]), 18)
+        self.assertEqual({a["vista"] for a in d["angulos"]}, {"lateral", "frontal", "cenital"})
         self.assertEqual(d["nom036"]["total"], sum(f["valor"] for f in d["nom036"]["factores"]))
         self.assertTrue(any(h["origen"] == "reglas_jabil" for h in d["hallazgos"]))
         self.assertFalse(d["validacion"]["completa"])
@@ -118,6 +119,25 @@ class TestApi(unittest.TestCase):
         puntos[0]["x"] = 99999
         self.assertEqual(self.cliente.put("/casos/C-001/puntos/lateral", json={"puntos": puntos}).status_code, 422)
 
+    def test_confirmar_angulo_revisar(self):
+        d = self.cliente.get("/casos/C-001").json()
+        revisar = next(a for a in d["angulos"] if a["estado"] == "revisar")
+        self.assertIsNotNone(revisar["motivo_estado"])
+        r = self.cliente.post(
+            f"/casos/C-001/angulos/{revisar['vista']}/{revisar['segmento']}/confirmar",
+            json={"usuario": USUARIO, "rol": "ergonomia"},
+        )
+        self.assertEqual(r.status_code, 200, r.text)
+        actualizado = next(
+            a for a in r.json()["angulos"]
+            if a["vista"] == revisar["vista"] and a["segmento"] == revisar["segmento"]
+        )
+        self.assertEqual(actualizado["estado"], "ok")
+        self.assertTrue(actualizado["confirmado"])
+        self.assertEqual(actualizado["motivo_estado"], "Confirmado por especialista")
+        entradas = self.cliente.get("/bitacora?id_caso=C-001").json()
+        self.assertTrue(any(e["accion"] == "angulo_confirmado" for e in entradas))
+
     def test_alertas(self):
         alertas = self.cliente.get("/alertas").json()
         self.assertTrue(any(a["tipo_evento"] == "EMERGENCIA_CAIDA" for a in alertas))
@@ -154,7 +174,7 @@ class TestApi(unittest.TestCase):
         self.cliente.__enter__()
         d = self.cliente.get("/casos/C-003").json()
         self.assertEqual(d["recomendaciones"][0]["estado"], "aprobada")
-        self.assertEqual(len(self.cliente.get("/casos").json()), 3)  # no se vuelve a sembrar
+        self.assertEqual(len(self.cliente.get("/casos").json()), 7)  # no se vuelve a sembrar
 
 
 if __name__ == "__main__":
