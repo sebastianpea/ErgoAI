@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Entorno y secretos
+.env
+*.env.local
+frontend/.env
+frontend/.env.local
+
+# Modelos LLM locales de Ollama y caché
+llm_models/
+
+# Datos de runtime (casos, bitácora, alertas). Se regeneran desde backend/app/seed.
+casos_jabil_workspace/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Modelos ONNX de visión (~150 MB). Se descargan con: python -m backend.app.vision.modelos
+models/

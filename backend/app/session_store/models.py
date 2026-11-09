@@ -9,14 +9,18 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
+from pydantic import BaseModel, Field
 
 
 class AuditActionEnum(str, Enum):
     APPROVED = "APPROVED"
     EDITED = "EDITED"
     REJECTED = "REJECTED"
+    CREATED = "CREATED"          # recomendación redactada por el especialista
+    AUTHORIZED = "AUTHORIZED"    # ingeniería autoriza un cambio en planta
+    DENIED = "DENIED"            # ingeniería deniega un cambio en planta
+    IMPLEMENTED = "IMPLEMENTED"  # el cambio se ejecutó en piso
 
 
 class ControlHierarchyEnum(str, Enum):
@@ -76,9 +80,9 @@ class AuditEvent(BaseModel):
             "specialist_id": self.specialist_id,
             "action": self.action.value,
             "target_recommendation_id": self.target_recommendation_id,
-            "original_ai_recommendation": self.original_ai_recommendation.model_dump(),
+            "original_ai_recommendation": self.original_ai_recommendation.model_dump(mode="json"),
             "human_edited_recommendation": (
-                self.human_edited_recommendation.model_dump()
+                self.human_edited_recommendation.model_dump(mode="json")
                 if self.human_edited_recommendation else None
             ),
             "initial_risk_score": self.initial_risk_score,
@@ -106,7 +110,9 @@ class AuditTrailDocument(BaseModel):
     Documento completo de auditoría para un caso de estudio (audit_trail.json).
     Implementa un libro inmutable encadenado (Hash Chain).
     """
-    GENESIS_HASH: str = "0" * 64
+    # ClassVar: constante del esquema. Como campo Pydantic se serializaba al JSON y
+    # un archivo alterado podía redefinir el bloque génesis contra el que se verifica.
+    GENESIS_HASH: ClassVar[str] = "0" * 64
 
     case_id: str = Field(..., description="Identificador del caso Jabil (ej. caso_01_levantamiento)")
     created_at_utc: str = Field(
@@ -135,6 +141,8 @@ class AuditTrailDocument(BaseModel):
         timestamp_utc: Optional[str] = None,
     ) -> AuditEvent:
         """Agrega un nuevo evento al registro calculando automáticamente la cadena de hashes."""
+        if any(e.event_id == event_id for e in self.events):
+            raise ValueError(f"event_id duplicado en '{self.case_id}': {event_id}")
         prev_hash = self.get_latest_hash()
         event_data: Dict[str, Any] = {
             "event_id": event_id,

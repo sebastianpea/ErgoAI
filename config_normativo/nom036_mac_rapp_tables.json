@@ -1,7 +1,7 @@
 {
   "normative_id": "NOM-036-1-STPS-2018",
   "tool_sheet_reference": "16-PE80-6500-00014-H",
-  "version": "1.0",
+  "version": "1.1",
   "risk_bands": {
     "VERDE": {
       "level": "Bajo",
@@ -20,27 +20,234 @@
       "action": "Inaceptable; detener o rediseñar inmediatamente"
     }
   },
+  "total_score_bands": [
+    { "color": "verde", "nivel": "Bajo", "min": 0, "max": 4 },
+    { "color": "amarillo", "nivel": "Medio", "min": 5, "max": 12 },
+    { "color": "rojo", "nivel": "Alto", "min": 13, "max": 20 },
+    { "color": "morado", "nivel": "Muy Alto", "min": 21, "max": 999 }
+  ],
+  "factor_color_bands": [
+    { "color": "verde", "max": 0 },
+    { "color": "amarillo", "max": 2 },
+    { "color": "naranja", "max": 5 },
+    { "color": "rojo", "max": 10 },
+    { "color": "morado", "max": 999 }
+  ],
+  "posture_angle_thresholds_deg": {
+    "trunk_moderate": 20.0,
+    "trunk_severe": 45.0,
+    "arm_moderate": 25.0,
+    "arm_severe": 45.0
+  },
+  "common_factor_scores": {
+    "horizontal_distance_scores": [0, 3, 6],
+    "vertical_region_scores": [0, 1, 3],
+    "push_pull_posture_scores": [0, 3, 6],
+    "torsion_score": 2,
+    "coupling_scores": {
+      "bueno": 0,
+      "regular": 1,
+      "malo": 2,
+      "inaceptable": 2
+    },
+    "travel_distance_scores": [0, 1, 3],
+    "route_obstacles_scores": [0, 1, 3],
+    "surface_condition_scores": {
+      "buena": 0,
+      "regular": 1,
+      "mala": 4
+    }
+  },
+  "metodos": {
+    "_fuente": "Factores del Apéndice de la NOM-036-1-STPS-2018 (adaptación del método MAC de la HSE). VERIFICAR los valores contra la hoja oficial 16-PE80-6500-00014-H antes de la entrega. En empuje/arrastre el valor se captura directamente de la hoja.",
+    "levantamiento": {
+      "hoja": "Levantamiento (1)",
+      "factores": [
+        { "codigo": "peso_frecuencia", "etiqueta": "Peso de la carga y frecuencia", "opciones": { "verde": 0, "amarillo": 4, "rojo": 6, "morado": 10 } },
+        { "codigo": "distancia_horizontal", "etiqueta": "Distancia horizontal manos–espalda", "opciones": { "verde": 0, "amarillo": 3, "rojo": 6 } },
+        { "codigo": "region_vertical", "etiqueta": "Región vertical del levantamiento", "opciones": { "verde": 0, "amarillo": 1, "rojo": 3 } },
+        { "codigo": "torsion", "etiqueta": "Torsión e inclinación lateral del tronco", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "postura", "etiqueta": "Restricciones posturales", "opciones": { "verde": 0, "amarillo": 1, "rojo": 3 } },
+        { "codigo": "agarre", "etiqueta": "Agarre de la carga", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "piso", "etiqueta": "Superficie del piso", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "otros", "etiqueta": "Otros factores ambientales", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } }
+      ]
+    },
+    "transporte": {
+      "hoja": "Transporte (2)",
+      "factores": [
+        { "codigo": "peso_frecuencia", "etiqueta": "Peso de la carga y frecuencia", "opciones": { "verde": 0, "amarillo": 4, "rojo": 6, "morado": 10 } },
+        { "codigo": "distancia_manos_espalda", "etiqueta": "Distancia horizontal manos–espalda", "opciones": { "verde": 0, "amarillo": 3, "rojo": 6 } },
+        { "codigo": "asimetria", "etiqueta": "Asimetría del tronco y la carga", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "postura", "etiqueta": "Restricciones posturales", "opciones": { "verde": 0, "amarillo": 1, "rojo": 3 } },
+        { "codigo": "agarre", "etiqueta": "Agarre de la carga", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "piso", "etiqueta": "Superficie del piso", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "otros", "etiqueta": "Otros factores ambientales", "opciones": { "verde": 0, "amarillo": 1, "rojo": 2 } },
+        { "codigo": "distancia_transporte", "etiqueta": "Distancia de transporte", "opciones": { "verde": 0, "amarillo": 1, "rojo": 3 } },
+        { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta", "opciones": { "verde": 0, "amarillo": 2, "rojo": 3 } }
+      ]
+    },
+    "empuje_sin_auxiliar": {
+      "hoja": "sin auxiliar (4)",
+      "captura_libre": true,
+      "factores": [
+        { "codigo": "fuerza_inicial", "etiqueta": "Fuerza inicial" },
+        { "codigo": "fuerza_sostenida", "etiqueta": "Fuerza sostenida" },
+        { "codigo": "postura", "etiqueta": "Postura" },
+        { "codigo": "agarre", "etiqueta": "Agarre de manos" },
+        { "codigo": "patron_trabajo", "etiqueta": "Patrón de trabajo" },
+        { "codigo": "distancia", "etiqueta": "Distancia recorrida" },
+        { "codigo": "piso", "etiqueta": "Condición del piso" },
+        { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta" },
+        { "codigo": "otros", "etiqueta": "Otros factores" }
+      ]
+    },
+    "empuje_con_auxiliar": {
+      "hoja": "con auxiliar (5)",
+      "captura_libre": true,
+      "factores": [
+        { "codigo": "peso_carga", "etiqueta": "Peso de la carga en el equipo" },
+        { "codigo": "postura", "etiqueta": "Postura" },
+        { "codigo": "agarre", "etiqueta": "Agarre de manos" },
+        { "codigo": "patron_trabajo", "etiqueta": "Patrón de trabajo" },
+        { "codigo": "distancia", "etiqueta": "Distancia recorrida" },
+        { "codigo": "piso", "etiqueta": "Condición del piso" },
+        { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta" },
+        { "codigo": "estado_equipo", "etiqueta": "Estado del equipo (ruedas, frenos)" },
+        { "codigo": "otros", "etiqueta": "Otros factores" }
+      ]
+    }
+  },
   "sheets_mapping": {
     "levantamiento_1": {
       "name": "Levantamiento (1)",
+      "metodo_api": "levantamiento",
+      "safe_weight_kg": 7.0,
       "max_acceptable_weight_kg": 25.0,
-      "jabil_restrictive_weight_kg": 14.0
+      "jabil_restrictive_weight_kg": 14.0,
+      "weight_scores": [0, 4, 6, 10],
+      "horizontal_distance_thresholds_cm": [25.0, 45.0],
+      "default_horizontal_distances_cm": [20.0, 30.0, 46.0],
+      "factors": [
+        "peso_frecuencia",
+        "distancia_manos_espalda",
+        "region_vertical",
+        "torsion_flexion_lateral",
+        "restricciones_posturales",
+        "acoplamiento_mano_carga",
+        "superficie_trabajo",
+        "factores_ambientales"
+      ]
     },
     "transporte_2": {
       "name": "Transporte (2)",
-      "factors": ["peso_frecuencia", "distancia_manos_espalda", "asimetria", "distancia_transporte", "obstaculos"]
+      "metodo_api": "transporte",
+      "safe_weight_kg": 7.0,
+      "max_acceptable_weight_kg": 25.0,
+      "jabil_restrictive_weight_kg": 14.0,
+      "weight_scores": [0, 4, 6, 10],
+      "distance_thresholds_m": [4.0, 10.0],
+      "default_distances_m": [4.0, 12.0],
+      "asymmetry_scores": {
+        "simetrica": 0,
+        "leve": 1,
+        "lateral": 2,
+        "un_hombro": 3,
+        "severa": 3
+      },
+      "factors": [
+        "peso_frecuencia",
+        "distancia_manos_espalda",
+        "asimetria_torso",
+        "restricciones_posturales",
+        "acoplamiento_mano_carga",
+        "superficie_trabajo",
+        "factores_ambientales",
+        "distancia_transporte",
+        "obstaculos_ruta"
+      ]
     },
     "equipo_3": {
       "name": "Equipo (3)",
-      "coordination_required": true
+      "metodo_api": "levantamiento",
+      "coordination_required": true,
+      "weight_scores": [0, 4, 6, 10],
+      "team_limits_kg": {
+        "2_personas_verde": 19.0,
+        "2_personas_naranja": 28.0,
+        "2_personas_rojo": 40.0,
+        "3_personas_verde": 23.0,
+        "3_personas_naranja": 42.0,
+        "3_personas_rojo": 56.0,
+        "4_personas_verde": 23.0,
+        "4_personas_naranja": 56.0
+      },
+      "coordination_scores": {
+        "buena": 0,
+        "regular": 1,
+        "deficiente": 3,
+        "mala": 3
+      },
+      "factors": [
+        "peso_equipo_operadores",
+        "distancia_manos_espalda",
+        "region_vertical",
+        "torsion_flexion_lateral",
+        "restricciones_posturales",
+        "acoplamiento_mano_carga",
+        "superficie_trabajo",
+        "factores_ambientales",
+        "comunicacion_coordinacion_control"
+      ]
     },
     "sin_auxiliar_4": {
       "name": "sin auxiliar (4)",
-      "modes": ["rodando", "girando", "arrastrando"]
+      "metodo_api": "empuje_sin_auxiliar",
+      "modes": ["rodando", "girando", "arrastrando"],
+      "weight_thresholds_kg": [10.0, 14.0, 25.0],
+      "weight_scores": [0, 2, 4, 8],
+      "distance_thresholds_m": [2.0, 10.0],
+      "default_distance_m": 5.0,
+      "factors": [
+        "actividad_y_peso",
+        "postura",
+        "agarre_mano",
+        "patron_trabajo",
+        "distancia_viaje",
+        "condicion_superficie",
+        "obstaculos",
+        "otros_factores"
+      ]
     },
     "con_auxiliar_5": {
       "name": "con auxiliar (5)",
-      "equipment_types": ["1_2_ruedas", "3_mas_ruedas", "grande_rieles"]
+      "metodo_api": "empuje_con_auxiliar",
+      "equipment_types": ["1_2_ruedas", "3_mas_ruedas", "grande_rieles"],
+      "unacceptable_weight_score": 21,
+      "weight_scores": [0, 2, 4, 8],
+      "distance_thresholds_m": [10.0, 30.0],
+      "default_distance_m": 10.0,
+      "equipment_weight_thresholds_kg": {
+        "1_2_ruedas": [25.0, 50.0, 75.0, 100.0],
+        "3_mas_ruedas": [50.0, 100.0, 180.0, 250.0],
+        "grande_rieles": [150.0, 300.0, 450.0, 600.0]
+      },
+      "maintenance_scores": {
+        "bueno": 0,
+        "regular": 2,
+        "malo": 4
+      },
+      "factors": [
+        "tipo_equipo_y_peso",
+        "postura",
+        "acoplamiento_agarre",
+        "patron_trabajo",
+        "distancia_viaje",
+        "condicion_mantenimiento_equipo",
+        "superficie_piso",
+        "obstaculos_ruta",
+        "otros_factores"
+      ]
     },
     "eaws": {
       "name": "EAWS",

@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 import threading
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
+from backend.app.settings import WORKSPACE_DIR
 from backend.app.session_store.models import (
     AuditActionEnum,
     AuditEvent,
@@ -19,6 +21,9 @@ from backend.app.session_store.models import (
     RecommendationSnapshot,
     SessionStateDocument,
 )
+
+
+CASE_ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
 
 
 class AuditIntegrityError(Exception):
@@ -32,7 +37,7 @@ class AuditFileManager:
     Satisface la restricción 'Cero Base de Datos' de la Rúbrica Track 4 X-RAIC.
     """
 
-    DEFAULT_WORKSPACE_DIR = Path("casos_jabil_workspace")
+    DEFAULT_WORKSPACE_DIR = WORKSPACE_DIR
 
     def __init__(self, workspace_root: Optional[Path] = None):
         self.workspace_root = Path(workspace_root or self.DEFAULT_WORKSPACE_DIR)
@@ -47,7 +52,9 @@ class AuditFileManager:
             return self._locks[case_id]
 
     def get_case_dir(self, case_id: str) -> Path:
-        """Retorna la ruta absoluta/relativa al directorio de un caso específico."""
+        """Retorna la ruta al directorio de un caso. Rechaza IDs que podrían salir del workspace."""
+        if not CASE_ID_RE.fullmatch(case_id or ""):
+            raise ValueError(f"case_id inválido: {case_id!r}")
         return self.workspace_root / case_id
 
     def init_case_workspace(self, case_id: str) -> Path:
@@ -63,16 +70,20 @@ class AuditFileManager:
         audit_path = case_dir / "audit_trail.json"
         if not audit_path.exists():
             initial_doc = AuditTrailDocument(case_id=case_id)
-            self._write_atomic(audit_path, initial_doc.model_dump())
+            self._write_atomic(audit_path, initial_doc.model_dump(mode="json"))
 
         state_path = case_dir / "session_state.json"
         if not state_path.exists():
             initial_state = SessionStateDocument(case_id=case_id)
-            self._write_atomic(state_path, initial_state.model_dump())
+            self._write_atomic(state_path, initial_state.model_dump(mode="json"))
 
         return case_dir
 
-    def _write_atomic(self, target_path: Path, data: dict) -> None:
+    def write_json_atomic(self, target_path: Path, data: Any) -> None:
+        """Escritura atómica pública para otros documentos del workspace (caso, bitácora, alertas)."""
+        self._write_atomic(target_path, data)
+
+    def _write_atomic(self, target_path: Path, data: Any) -> None:
         """
         Escribe un archivo JSON usando el patrón atómico Write-Replace.
         1. Escribe en archivo temporal en el mismo directorio.
@@ -88,17 +99,14 @@ class AuditFileManager:
             encoding="utf-8"
         )
         try:
-            json.dump(data, temp_file, indent=2, ensure_ascii=False)
-            temp_file.flush()
-            os.fsync(temp_file.fileno())
-            temp_file.close()
+            with temp_file:
+                json.dump(data, temp_file, indent=2, ensure_ascii=False)
+                temp_file.flush()
+                os.fsync(temp_file.fileno())
             os.replace(temp_file.name, target_path)
-        except Exception:
-            if os.path.exists(temp_file.name):
-                try:
-                    os.remove(temp_file.name)
-                except OSError:
-                    pass
+        except BaseException:
+            # El archivo ya está cerrado (with); en Windows no se puede borrar uno abierto.
+            Path(temp_file.name).unlink(missing_ok=True)
             raise
 
     def load_audit_trail(self, case_id: str, verify: bool = True) -> AuditTrailDocument:
@@ -131,7 +139,7 @@ class AuditFileManager:
             )
         with self._get_case_lock(case_id):
             audit_path = self.get_case_dir(case_id) / "audit_trail.json"
-            self._write_atomic(audit_path, doc.model_dump())
+            self._write_atomic(audit_path, doc.model_dump(mode="json"))
 
     def append_audit_event(
         self,
@@ -164,7 +172,7 @@ class AuditFileManager:
                 timestamp_utc=timestamp_utc,
             )
             audit_path = self.get_case_dir(case_id) / "audit_trail.json"
-            self._write_atomic(audit_path, doc.model_dump())
+            self._write_atomic(audit_path, doc.model_dump(mode="json"))
             return event
 
     def verify_case_audit_integrity(self, case_id: str) -> tuple[bool, Optional[str]]:
@@ -191,7 +199,7 @@ class AuditFileManager:
         """Guarda atómicamente el estado de sesión actual."""
         with self._get_case_lock(case_id):
             state_path = self.get_case_dir(case_id) / "session_state.json"
-            self._write_atomic(state_path, state.model_dump())
+            self._write_atomic(state_path, state.model_dump(mode="json"))
 
     def list_cases(self) -> List[str]:
         """Lista todos los casos inicializados en el workspace actual."""

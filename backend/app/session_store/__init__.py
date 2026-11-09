@@ -16,6 +16,11 @@ from backend.app.session_store.audit_file_manager import (
     AuditFileManager,
     AuditIntegrityError,
 )
+from backend.app.session_store.bitacora_ledger import (
+    BitacoraLedger,
+    EntradaBitacora,
+    ResultadoVerificacion,
+)
 from backend.app.session_store.config_loader import (
     NormativeConfigLoader,
     ConfigLoadError,
@@ -32,6 +37,9 @@ __all__ = [
     "SessionStateDocument",
     "AuditFileManager",
     "AuditIntegrityError",
+    "BitacoraLedger",
+    "EntradaBitacora",
+    "ResultadoVerificacion",
     "NormativeConfigLoader",
     "ConfigLoadError",
     "default_config_loader",

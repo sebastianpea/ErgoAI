@@ -1,0 +1,59 @@
+services:
+  llm_engine:
+    image: ollama/ollama:latest
+    container_name: ergoai_ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ./llm_models:/root/.ollama  # Persistencia: Evita descargar el modelo cada vez
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    networks:
+      - ergoai_net
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ergoai_backend
+    env_file:
+      - .env
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-OLLAMA}
+      - MODEL_NAME=${MODEL_NAME:-qwen2.5}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://llm_engine:11434}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app/backend
+      - ./config_normativo:/app/config_normativo:ro
+      - ./casos_jabil_workspace:/app/casos_jabil_workspace
+      - ./models:/app/models:ro
+    depends_on:
+      - llm_engine
+    restart: unless-stopped
+    networks:
+      - ergoai_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ergoai_frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - ergoai_net
+
+networks:
+  ergoai_net:
+    driver: bridge
