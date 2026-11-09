@@ -1,4 +1,4 @@
-"""
+r"""
 Punto de entrada FastAPI de ErgoAI.
 
 Ejecutar desde la raíz del repositorio:
@@ -59,8 +59,8 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
 
     app = FastAPI(title="ErgoAI API", version="0.1.0", lifespan=lifespan)
     app.add_middleware(
-        CORSMiddleware, allow_origins=CORS_ORIGINS, allow_methods=["GET", "POST", "PUT"],
-        allow_headers=["Content-Type"],
+        CORSMiddleware, allow_origins=CORS_ORIGINS, allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     # Routers separados por dominio (Fase 6)

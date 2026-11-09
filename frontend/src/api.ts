@@ -3,7 +3,7 @@ import type {
   CambioPropuesto, CasoDetalle, CasoResumen, ColorNom, ContextoTarea, Decision, EntradaBitacora, EvaluacionPrevia,
   FactorNom, Impacto, MetodoNom036,
   NuevaRecomendacion, Punto,
-  Recomendacion, ResultadoIntegridad, TipoTarea, Validacion, ValorCambio, Vista,
+  Recomendacion, ResultadoIntegridad, Segmento, TipoTarea, Validacion, ValorCambio, Vista,
 } from "./types/caso";
 import type { Alerta } from "./types/alerta";
 import { API_URL, USE_MOCK } from "./lib/config";

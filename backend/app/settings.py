@@ -133,7 +133,7 @@ CORS_ORIGINS = [
     o.strip()
     for o in _env_str(
         ["ERGOAI_CORS_ORIGINS", "CORS_ORIGINS"],
-        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:80,http://localhost",
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5180,http://127.0.0.1:5180,http://localhost:80,http://localhost",
     ).split(",")
     if o.strip()
 ]

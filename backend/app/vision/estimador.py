@@ -129,8 +129,14 @@ class EstimadorPose:
         self._pose = RTMPose(onnx_model=str(ruta_modelo("pose")), model_input_size=MODELOS["pose"].entrada,
                              to_openpose=False, backend="onnxruntime", device=VISION_DEVICE)
 
-    def analizar(self, img_bgr: np.ndarray) -> ResultadoFoto:
+    def analizar(self, img_bgr: np.ndarray | str) -> ResultadoFoto:
         """Detecta personas, elige al operador (la de mayor tamaño) y anonimiza rostros."""
+        if not isinstance(img_bgr, np.ndarray):
+            import cv2
+            leida = cv2.imread(str(img_bgr))
+            if leida is None:
+                raise ValueError(f"No se pudo leer la imagen: {img_bgr}")
+            img_bgr = leida
         with self._lock:  # ONNX Runtime admite concurrencia, pero en CPU no gana nada y duplica memoria
             self._cargar()
             img = reducir(img_bgr).copy()
