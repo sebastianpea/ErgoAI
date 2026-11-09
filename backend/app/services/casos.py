@@ -289,7 +289,7 @@ class ServicioCasos:
                     segmento=seg, lado=m.lado, vista=img.vista, angulo_grados=g,
                     puntaje_reba=ps.puntaje, modificadores=ps.modificadores,
                     estado=estado, motivo_estado=motivo, confirmado=confirmado,
-                    puntaje_previo=caso.evaluacion_previa.segmentos.get(seg) if img.vista == "lateral" else None,
+                    puntaje_previo=caso.evaluacion_previa.segmentos.get(seg),
                 ))
         return angulos
 
@@ -338,6 +338,8 @@ class ServicioCasos:
     def _calcular_nom036(
         self, caso: CasoAlmacenado, grados: Optional[Dict[Segmento, Optional[float]]] = None
     ) -> Optional[ResultadoNom036]:
+        if caso.nom036_override:
+            return None
         if caso.nom036:
             total = total_factores(f.valor for f in caso.nom036.factores)
             return ResultadoNom036(
@@ -1293,6 +1295,7 @@ class ServicioCasos:
 
             antes = txt(caso.nom036)
             caso.nom036 = c.nom036
+            caso.nom036_override = c.nom036 is None
             despues = self._cerrar_mutacion(caso)
             self.ledger.registrar(c.usuario, "nom036_capturada", f"{id_caso} / NOM-036", id_caso,
                                   antes=antes, despues=txt(c.nom036), motivo=c.motivo.strip())

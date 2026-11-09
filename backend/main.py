@@ -2,8 +2,9 @@
 Punto de entrada FastAPI de ErgoAI.
 
 Ejecutar desde la raíz del repositorio:
-    .venv\\Scripts\\python -m uvicorn backend.main:app --reload --port 8000
+    .venv\Scripts\python -m uvicorn backend.main:app --reload --port 8000
 """
+
 
 from __future__ import annotations
 
@@ -25,6 +26,9 @@ from backend.app.api.schemas import (
     FragmentoNormativo, Impacto, Implementacion, NuevaRecomendacion, NuevoCaso, Ok, RespuestaRAG,
     ResultadoIntegridad, RevisionHallazgo, Segmento, Vista,
 )
+from backend.app.api.routes_evaluation import router as router_evaluation
+from backend.app.api.routes_validation import router as router_validation
+from backend.app.api.routes_reports import router as router_reports
 from backend.app.vision.estimador import VisionNoDisponible, estimador
 from backend.app.core_ergonomics.cambios import PARAMETROS
 from backend.app.services.casos import Conflicto, DatosInvalidos, NoEncontrado, Prohibido, ServicioCasos
@@ -59,6 +63,11 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
         allow_headers=["Content-Type"],
     )
 
+    # Routers separados por dominio (Fase 6)
+    app.include_router(router_evaluation)
+    app.include_router(router_validation)
+    app.include_router(router_reports)
+
     def svc(request: Request) -> ServicioCasos:
         return request.app.state.servicio
 
@@ -81,133 +90,12 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
         log.error("Integridad comprometida: %s", e)
         return JSONResponse(status_code=409, content={"detail": str(e)})
 
-    IdCaso = RutaParam(pattern=ID_PATRON)
-
-    @app.get("/salud")
-    def salud() -> dict:
-        return {"ok": True}
-
-    @app.get("/catalogo/parametros")
-    def catalogo_parametros() -> list:
-        """Parámetros que una recomendación puede modificar (fuente única para los formularios)."""
-        return [{"parametro": k, "etiqueta": p.etiqueta, "tipo": p.tipo, "unidad": p.unidad,
-                 "minimo": p.minimo, "maximo": p.maximo, "opciones": list(p.opciones)}
-                for k, p in PARAMETROS.items()]
-
-    @app.get("/casos", response_model=List[CasoResumen])
-    def listar_casos(request: Request):
-        return svc(request).listar()
-
-    @app.get("/vision/estado", response_model=EstadoVision)
-    def estado_vision():
-        disponible, detalle = estimador.estado()
-        return EstadoVision(disponible=disponible, detalle=detalle)
-
-    @app.post("/casos", response_model=dict)
-    async def crear_caso(
-        request: Request,
-        datos: str = Form(..., description="JSON con estacion, tipo_tarea, contexto, usuario y rol"),
-        lateral: UploadFile = File(...),
-        frontal: Optional[UploadFile] = File(None),
-        cenital: Optional[UploadFile] = File(None),
-    ):
-        try:
-            nuevo = NuevoCaso.model_validate_json(datos)
-        except ValidationError as e:
-            raise DatosInvalidos("; ".join(err["msg"] for err in e.errors())) from e
-        fotos = {"lateral": await lateral.read()}
-        for vista, archivo in (("frontal", frontal), ("cenital", cenital)):
-            if archivo is not None and archivo.filename:
-                fotos[vista] = await archivo.read()
-        # La inferencia es CPU-intensiva: fuera del event loop.
-        id_caso = await run_in_threadpool(svc(request).crear_caso, nuevo, fotos)
-        return {"ok": True, "id": id_caso}
-
-    @app.get("/casos/{id_caso}", response_model=CasoDetalle)
-    def obtener_caso(request: Request, id_caso: str = IdCaso):
-        return svc(request).obtener(id_caso)
-
-    IdRec = RutaParam(pattern=ID_PATRON)
-
-    @app.put("/casos/{id_caso}/puntos/{vista}", response_model=CasoDetalle)
-    def corregir_puntos(request: Request, cuerpo: CorreccionPuntos, vista: Vista, id_caso: str = IdCaso):
-        return svc(request).corregir_puntos(id_caso, vista, cuerpo.puntos, cuerpo)
-
-    @app.post("/casos/{id_caso}/angulos/{vista}/{segmento}/confirmar", response_model=CasoDetalle)
-    def confirmar_angulo(request: Request, vista: Vista, segmento: Segmento,
-                         cuerpo: Optional[Actor] = None, id_caso: str = IdCaso):
-        return svc(request).confirmar_angulo(id_caso, vista, segmento, cuerpo or Actor())
-
-    @app.put("/casos/{id_caso}/contexto", response_model=CasoDetalle)
-    def corregir_contexto(request: Request, cuerpo: CorreccionContexto, id_caso: str = IdCaso):
-        return svc(request).corregir_contexto(id_caso, cuerpo)
-
-    @app.get("/catalogo/nom036")
-    def catalogo_nom036(request: Request) -> dict:
-        """Factores por método de la NOM-036 (fuente única para el formulario)."""
-        return svc(request).config.get_nom036_tables()["metodos"]
-
-    @app.put("/casos/{id_caso}/nom036", response_model=CasoDetalle)
-    def corregir_nom036(request: Request, cuerpo: CorreccionNom036, id_caso: str = IdCaso):
-        return svc(request).corregir_nom036(id_caso, cuerpo)
-
-    @app.put("/casos/{id_caso}/referencia", response_model=CasoDetalle)
-    def corregir_referencia(request: Request, cuerpo: CorreccionReferencia, id_caso: str = IdCaso):
-        return svc(request).corregir_referencia(id_caso, cuerpo)
-
     @app.get("/metricas/impacto", response_model=Impacto)
     def impacto(request: Request):
         return svc(request).impacto()
 
-    @app.post("/casos/{id_caso}/hallazgos/{id_hallazgo}/revision", response_model=CasoDetalle)
-    def revisar_hallazgo(request: Request, cuerpo: RevisionHallazgo, id_caso: str = IdCaso,
-                         id_hallazgo: str = RutaParam(pattern=ID_PATRON)):
-        return svc(request).revisar_hallazgo(id_caso, id_hallazgo, cuerpo)
-
-    @app.post("/casos/{id_caso}/recomendaciones", response_model=dict)
-    def crear_recomendacion(request: Request, cuerpo: NuevaRecomendacion, id_caso: str = IdCaso):
-        return {"ok": True, "id": svc(request).crear_recomendacion(id_caso, cuerpo)}
-
-    @app.post("/casos/{id_caso}/generar-plan-ia", response_model=CasoDetalle)
-    async def generar_plan_ia(request: Request, cuerpo: Optional[Actor] = None, id_caso: str = IdCaso):
-        actor = cuerpo or Actor()
-        return await run_in_threadpool(svc(request).generar_plan_ergoai, id_caso, actor.usuario)
-
-    @app.post("/casos/{id_caso}/recomendaciones/{id_recomendacion}/decision", response_model=Ok)
-    def decidir(request: Request, d: Decision, id_caso: str = IdCaso, id_recomendacion: str = IdRec):
-        svc(request).decidir(id_caso, id_recomendacion, d)
-        return Ok()
-
-    @app.post("/casos/{id_caso}/recomendaciones/{id_recomendacion}/autorizacion", response_model=Ok)
-    def autorizar(request: Request, cuerpo: Autorizacion, id_caso: str = IdCaso, id_recomendacion: str = IdRec):
-        svc(request).autorizar(id_caso, id_recomendacion, cuerpo)
-        return Ok()
-
-    @app.post("/casos/{id_caso}/recomendaciones/{id_recomendacion}/implementacion", response_model=Ok)
-    def implementar(request: Request, cuerpo: Implementacion, id_caso: str = IdCaso, id_recomendacion: str = IdRec):
-        svc(request).implementar(id_caso, id_recomendacion, cuerpo)
-        return Ok()
-
-    @app.get("/alertas", response_model=List[Alerta])
-    def listar_alertas(request: Request):
-        return svc(request).listar_alertas()
-
-    @app.post("/alertas/{id_alerta}/atender", response_model=Ok)
-    def atender_alerta(request: Request, cuerpo: Optional[AtenderAlerta] = None,
-                       id_alerta: str = RutaParam(pattern=ID_PATRON)):
-        svc(request).atender_alerta(id_alerta, (cuerpo or AtenderAlerta()).usuario)
-        return Ok()
-
-    @app.get("/bitacora", response_model=List[EntradaBitacora])
-    def bitacora(request: Request, id_caso: Optional[str] = Query(None, pattern=ID_PATRON)):
-        return svc(request).bitacora(id_caso)
-
-    @app.get("/bitacora/verificar", response_model=ResultadoIntegridad)
-    def verificar(request: Request):
-        return svc(request).verificar_integridad()
-
     @app.get("/media/{id_caso}/{archivo}")
-    def media(request: Request, id_caso: str = IdCaso,
+    def media(request: Request, id_caso: str = RutaParam(pattern=r"^[A-Za-z0-9_.-]{1,128}$"),
               archivo: str = RutaParam(pattern=r"^[A-Za-z0-9_.-]{1,128}$")):
         return FileResponse(svc(request).ruta_media(id_caso, archivo))
 
@@ -249,4 +137,3 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host=BACKEND_HOST, port=BACKEND_PORT, reload=True)
-

@@ -237,6 +237,7 @@ class CasoAlmacenado(BaseModel):
     contexto: ContextoTarea = Field(default_factory=ContextoTarea)
     evaluacion_previa: EvaluacionPrevia = Field(default_factory=EvaluacionPrevia)
     nom036: Optional[Nom036Captura] = None
+    nom036_override: bool = False
     hallazgos_vision: List[Hallazgo] = Field(default_factory=list)
     hallazgos_descartados: Dict[str, Descarte] = Field(default_factory=dict)
     angulos_confirmados: List[str] = Field(default_factory=list)
