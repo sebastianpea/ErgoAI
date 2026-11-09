@@ -14,11 +14,11 @@ type Accion =
   | { tipo: "autorizar"; rec: string; accion: "autorizar" | "denegar"; motivo?: string }
   | { tipo: "implementar"; rec: string; nota?: string };
 
-// Ingeniería primero (jerarquía de controles NOM-036); dentro, lo que requiere acción primero.
+// Lo pendiente de validar ("propuesta") siempre arriba; dentro de cada grupo, Ingeniería primero (NOM-036).
 const ORDEN_IMPL: Record<string, number> = { pendiente_autorizacion: 0, por_implementar: 1, ninguna: 2, implementada: 3, denegada: 4 };
 const ordenar = (a: Recomendacion, b: Recomendacion) =>
-  (a.nivel_control === b.nivel_control ? 0 : a.nivel_control === "ingenieria" ? -1 : 1) ||
   Number(a.estado !== "propuesta") - Number(b.estado !== "propuesta") ||
+  (a.nivel_control === b.nivel_control ? 0 : a.nivel_control === "ingenieria" ? -1 : 1) ||
   ORDEN_IMPL[a.implementacion ?? "ninguna"] - ORDEN_IMPL[b.implementacion ?? "ninguna"];
 
 export function Plan() {
@@ -50,6 +50,14 @@ export function Plan() {
     mutationFn: (n: Omit<NuevaRecomendacion, "usuario" | "rol">) =>
       api.crearRecomendacion(id, { ...n, usuario: sesion.usuario, rol: sesion.rol }),
     onSuccess: () => { setCreando(false); refrescar(); },
+  });
+
+  const generarIA = useMutation({
+    mutationFn: () => api.generarPlanErgoAI(id),
+    onSuccess: (actualizado) => {
+      qc.setQueryData(["caso", id], actualizado);
+      refrescar();
+    },
   });
 
   if (isLoading) return <p className="cargando">Cargando…</p>;
@@ -93,6 +101,72 @@ export function Plan() {
       {v.falta_ingenieria && v.pendientes === 0 && (
         <p className="aviso error">
           Riesgo alto o muy alto: se requiere al menos un control de ingeniería aprobado y no denegado (NOM-036-1-STPS-2018).
+        </p>
+      )}
+
+      {sesion.esErgonomia && (
+        <div style={{
+          background: "linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)",
+          border: "2px solid #3b82f6",
+          borderRadius: "12px",
+          padding: "16px 20px",
+          marginBottom: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+          boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.1)"
+        }}>
+          <div>
+            <h3 style={{ margin: "0 0 4px 0", color: "#1e3a8a", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>✨</span> Generador Inteligente ErgoAI (NOM-036 + Jabil)
+            </h3>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155" }}>
+              Consulta el corpus normativo en RAM y genera una recomendación estructurada de control con LLM local.
+            </p>
+          </div>
+          <button
+            className="primario"
+            style={{
+              padding: "10px 20px",
+              fontWeight: 700,
+              fontSize: "0.95rem",
+              background: "#2563eb",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "8px",
+              cursor: generarIA.isPending ? "wait" : "pointer",
+            }}
+            disabled={generarIA.isPending}
+            onClick={() => generarIA.mutate()}
+          >
+            {generarIA.isPending
+              ? "⏳ Consultando normativa..."
+              : v.pendientes === 0
+                ? "🔄 Actualizar fundamentación con ErgoAI"
+                : "Generar Plan de Mitigación con ErgoAI"}
+          </button>
+        </div>
+      )}
+
+      {generarIA.isPending && (
+        <div className="aviso ok" style={{
+          fontSize: "1rem",
+          fontWeight: 600,
+          padding: "14px 18px",
+          marginBottom: "16px",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px"
+        }}>
+          <span style={{ fontSize: "1.4rem" }}>🔄</span>
+          <span>ErgoAI está consultando la NOM-036 y estándares Jabil...</span>
+        </div>
+      )}
+      {generarIA.isError && (
+        <p className="aviso error">
+          Error al generar recomendación con ErgoAI: {generarIA.error.message}
         </p>
       )}
 

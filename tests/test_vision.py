@@ -70,7 +70,7 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
         r = self.crear()
         self.assertEqual(r.status_code, 200, r.text)
         id_caso = r.json()["id"]
-        self.assertEqual(id_caso, "C-004")  # después de los 3 casos de ejemplo
+        self.assertEqual(id_caso, "C-008")  # después de los 7 casos de ejemplo
         d = self.c.get(f"/casos/{id_caso}").json()
 
         muneca = next(a for a in d["angulos"] if a["segmento"] == "muneca")

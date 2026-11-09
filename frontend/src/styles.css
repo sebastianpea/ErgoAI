@@ -294,6 +294,13 @@ tbody tr:hover { background: #F9FAFB; }
 .estado-ok { background: #E3F4EA; color: #1E6B3E; }
 .estado-revisar { background: #FDEBD8; color: #8A4508; }
 .estado-sin_dato { background: #ECEFF3; color: var(--sutil); }
+.celda-estado { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.motivo-estado { font-size: 0.76rem; color: var(--sutil); margin-top: 0.2rem; }
+.boton-confirmar {
+  font-size: 0.7rem; min-height: 0; padding: 0.15rem 0.5rem; border-width: 1px;
+  border-color: var(--cyan-texto); color: var(--cyan-texto);
+}
+.boton-confirmar:hover:not(:disabled) { background: var(--cyan-texto); color: white; border-color: var(--cyan-texto); }
 .discrepancia { color: #B42323; font-weight: 500; }
 
 .desglose { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0 0 0.75rem; }
@@ -542,7 +549,14 @@ main > section > .tarjeta, main > section > .rejilla { animation: entrar 0.45s v
   .informe { border: none; padding: 0; margin: 0; }
   .informe h2 { break-after: avoid; }
   table, figure { break-inside: avoid; }
-  .chip, .informe-cabecera::after, .etiqueta-control { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .chip, .informe-cabecera::after, .etiqueta-control, .informe-justificacion-rag, .rec-rag-justificacion-destacada {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .informe-justificacion-rag {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
   * { animation: none !important; }
 }
 

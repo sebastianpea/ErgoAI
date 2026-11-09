@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
-import type { CasoDetalle, ContextoTarea, Punto, Vista } from "../types/caso";
-import { COLOR_SEMAFORO, ETIQUETA_TAREA, semaforoSegmento } from "../lib/niveles";
+import type { CasoDetalle, ContextoTarea, Punto, Segmento, Vista } from "../types/caso";
+import { COLOR_SEMAFORO, ETIQUETA_TAREA, VISTAS, semaforoSegmento } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
 import { SkeletonEditor } from "../components/SkeletonEditor";
 import { TablaAngulos } from "../components/TablaAngulos";
@@ -11,8 +11,6 @@ import { DesgloseNom036, DesgloseReba } from "../components/DesgloseReba";
 import { Encabezado } from "../components/Encabezado";
 import { FormContexto } from "../components/FormContexto";
 import { ListaHallazgos } from "../components/ListaHallazgos";
-
-const VISTAS: Vista[] = ["lateral", "frontal", "cenital"];
 
 export function Analisis() {
   const { id = "" } = useParams();
@@ -44,14 +42,23 @@ export function Analisis() {
       api.revisarHallazgo(id, h, accion, motivo),
     onSuccess: aplicar,
   });
+  const confirmarAngulo = useMutation({
+    mutationFn: ({ v, s }: { v: Vista; s: Segmento }) => api.confirmarAngulo(id, v, s),
+    onSuccess: aplicar,
+  });
 
   if (isLoading) return <p className="cargando">Cargando caso…</p>;
   if (error || !caso) return <p className="aviso error">{(error as Error)?.message ?? "Caso no encontrado"}</p>;
 
   const imagen = caso.imagenes.find(i => i.vista === vista);
   const puntajePorSegmento = new Map<string, number>();
-  for (const a of caso.angulos) {
-    puntajePorSegmento.set(a.segmento, Math.max(puntajePorSegmento.get(a.segmento) ?? 0, a.puntaje_reba));
+  for (const a of caso.angulos.filter(x => x.vista === vista)) {
+    puntajePorSegmento.set(a.segmento, a.puntaje_reba);
+  }
+  if (puntajePorSegmento.size === 0) {
+    for (const a of caso.angulos) {
+      puntajePorSegmento.set(a.segmento, Math.max(puntajePorSegmento.get(a.segmento) ?? 0, a.puntaje_reba));
+    }
   }
   const colorSegmento = (s: string) => COLOR_SEMAFORO[semaforoSegmento(puntajePorSegmento.get(s))];
   const v = caso.validacion;
@@ -106,7 +113,13 @@ export function Analisis() {
 
       <div className="tarjeta">
         <h2>Ángulos por segmento</h2>
-        <TablaAngulos angulos={caso.angulos} />
+        <TablaAngulos
+          angulos={caso.angulos}
+          editable={esErgonomia}
+          ocupado={confirmarAngulo.isPending}
+          onConfirmar={(v, s) => confirmarAngulo.mutate({ v, s })}
+        />
+        {confirmarAngulo.isError && <p className="aviso error">{confirmarAngulo.error.message}</p>}
       </div>
 
       <div className="tarjeta">
@@ -129,6 +142,26 @@ export function Analisis() {
         {caso.nom036 && (
           <div className="tarjeta"><h2>NOM-036-1-STPS-2018</h2><DesgloseNom036 nom={caso.nom036} /></div>
         )}
+      </div>
+
+      <div className="tarjeta" style={{
+        marginTop: "20px",
+        background: "linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%)",
+        border: "2px solid #3b82f6",
+        textAlign: "center",
+        padding: "24px 20px",
+        borderRadius: "12px",
+      }}>
+        <h3 style={{ margin: "0 0 8px 0", color: "#1e3a8a", fontSize: "1.2rem" }}>
+          Paso 2: Generar Plan de Mitigación con ErgoAI
+        </h3>
+        <p style={{ margin: "0 0 16px 0", color: "#475569", maxWidth: "680px", marginLeft: "auto", marginRight: "auto", fontSize: "0.95rem" }}>
+          El análisis biomecánico se ha completado con exactitud matemática (REBA {caso.reba?.final ?? "—"}).
+          Continúa al plan de acción para que el Agente consulte la NOM-036-1-STPS-2018 y los estándares de Jabil y redacte las recomendaciones técnicas.
+        </p>
+        <Link className="boton primario" style={{ fontSize: "1rem", padding: "12px 28px", display: "inline-block" }} to={`/casos/${id}/plan`}>
+          ✨ Generar Plan de Mitigación con ErgoAI →
+        </Link>
       </div>
     </section>
   );

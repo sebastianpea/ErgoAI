@@ -1,154 +1,3791 @@
 {
-  "_nota": "Casos de demostración. Los keypoints simulan la salida del detector de pose (COCO-17: [id, x, y, confianza]). Ángulos, REBA, NOM-036 total, hallazgos de auditoría/Jabil y riesgo residual los calcula el backend.",
+  "_nota": "Casos oficiales de prueba Track 4 (Jabil X-RAIC 2026). Integra 6 casos de evaluación (Levantamiento, Transporte c/auxiliar, Transporte s/auxiliar) y 1 caso de control conforme. Fotografías reales procesadas por YOLOX + RTMPose WholeBody-133 con anonimización facial automática.",
   "imagen_placeholder": "placeholder.svg",
   "esqueletos": {
     "lateral": {
-      "ancho": 1280, "alto": 720,
+      "ancho": 1280,
+      "alto": 720,
       "puntos": [
-        [0, 772, 300, 0.62], [1, 765, 288, 0.55], [2, 768, 290, 0.5], [3, 745, 292, 0.81], [4, 742, 295, 0.4],
-        [5, 700, 332, 0.93], [6, 694, 336, 0.71], [7, 724, 452, 0.9], [8, 716, 456, 0.66],
-        [9, 795, 520, 0.88], [10, 788, 526, 0.35], [11, 580, 442, 0.95], [12, 574, 446, 0.8],
-        [13, 612, 560, 0.92], [14, 606, 564, 0.77], [15, 600, 680, 0.9], [16, 594, 684, 0.74]
+        [
+          0,
+          772,
+          300,
+          0.62
+        ],
+        [
+          1,
+          765,
+          288,
+          0.55
+        ],
+        [
+          2,
+          768,
+          290,
+          0.5
+        ],
+        [
+          3,
+          745,
+          292,
+          0.81
+        ],
+        [
+          4,
+          742,
+          295,
+          0.4
+        ],
+        [
+          5,
+          700,
+          332,
+          0.93
+        ],
+        [
+          6,
+          694,
+          336,
+          0.71
+        ],
+        [
+          7,
+          724,
+          452,
+          0.9
+        ],
+        [
+          8,
+          716,
+          456,
+          0.66
+        ],
+        [
+          9,
+          795,
+          520,
+          0.88
+        ],
+        [
+          10,
+          788,
+          526,
+          0.35
+        ],
+        [
+          11,
+          580,
+          442,
+          0.95
+        ],
+        [
+          12,
+          574,
+          446,
+          0.8
+        ],
+        [
+          13,
+          612,
+          560,
+          0.92
+        ],
+        [
+          14,
+          606,
+          564,
+          0.77
+        ],
+        [
+          15,
+          600,
+          680,
+          0.9
+        ],
+        [
+          16,
+          594,
+          684,
+          0.74
+        ]
       ]
     },
     "frontal": {
-      "ancho": 1280, "alto": 720,
+      "ancho": 1280,
+      "alto": 720,
       "puntos": [
-        [0, 640, 232, 0.7], [1, 650, 220, 0.6], [2, 630, 220, 0.6], [3, 665, 230, 0.75], [4, 615, 230, 0.75],
-        [5, 720, 300, 0.95], [6, 560, 300, 0.95], [7, 762, 392, 0.9], [8, 528, 402, 0.9],
-        [9, 742, 472, 0.86], [10, 558, 482, 0.84], [11, 690, 450, 0.93], [12, 590, 450, 0.93],
-        [13, 682, 570, 0.9], [14, 598, 570, 0.9], [15, 680, 690, 0.88], [16, 600, 690, 0.88]
+        [
+          0,
+          640,
+          232,
+          0.7
+        ],
+        [
+          1,
+          650,
+          220,
+          0.6
+        ],
+        [
+          2,
+          630,
+          220,
+          0.6
+        ],
+        [
+          3,
+          665,
+          230,
+          0.75
+        ],
+        [
+          4,
+          615,
+          230,
+          0.75
+        ],
+        [
+          5,
+          720,
+          300,
+          0.95
+        ],
+        [
+          6,
+          560,
+          300,
+          0.95
+        ],
+        [
+          7,
+          762,
+          392,
+          0.9
+        ],
+        [
+          8,
+          528,
+          402,
+          0.9
+        ],
+        [
+          9,
+          742,
+          472,
+          0.86
+        ],
+        [
+          10,
+          558,
+          482,
+          0.84
+        ],
+        [
+          11,
+          690,
+          450,
+          0.93
+        ],
+        [
+          12,
+          590,
+          450,
+          0.93
+        ],
+        [
+          13,
+          682,
+          570,
+          0.9
+        ],
+        [
+          14,
+          598,
+          570,
+          0.9
+        ],
+        [
+          15,
+          680,
+          690,
+          0.88
+        ],
+        [
+          16,
+          600,
+          690,
+          0.88
+        ]
       ]
     },
     "cenital": {
-      "ancho": 1280, "alto": 720,
+      "ancho": 1280,
+      "alto": 720,
       "puntos": [
-        [0, 640, 300, 0.45], [1, 652, 296, 0.4], [2, 628, 296, 0.4], [3, 668, 290, 0.6], [4, 612, 290, 0.6],
-        [5, 715, 330, 0.88], [6, 565, 330, 0.88], [7, 770, 410, 0.8], [8, 520, 405, 0.82],
-        [9, 760, 500, 0.78], [10, 535, 495, 0.8], [11, 680, 360, 0.3], [12, 600, 360, 0.3],
-        [13, 680, 380, 0.15], [14, 600, 380, 0.15], [15, 680, 390, 0.1], [16, 600, 390, 0.1]
+        [
+          0,
+          640,
+          300,
+          0.45
+        ],
+        [
+          1,
+          652,
+          296,
+          0.4
+        ],
+        [
+          2,
+          628,
+          296,
+          0.4
+        ],
+        [
+          3,
+          668,
+          290,
+          0.6
+        ],
+        [
+          4,
+          612,
+          290,
+          0.6
+        ],
+        [
+          5,
+          715,
+          330,
+          0.88
+        ],
+        [
+          6,
+          565,
+          330,
+          0.88
+        ],
+        [
+          7,
+          770,
+          410,
+          0.8
+        ],
+        [
+          8,
+          520,
+          405,
+          0.82
+        ],
+        [
+          9,
+          760,
+          500,
+          0.78
+        ],
+        [
+          10,
+          535,
+          495,
+          0.8
+        ],
+        [
+          11,
+          680,
+          360,
+          0.3
+        ],
+        [
+          12,
+          600,
+          360,
+          0.3
+        ],
+        [
+          13,
+          680,
+          380,
+          0.15
+        ],
+        [
+          14,
+          600,
+          380,
+          0.15
+        ],
+        [
+          15,
+          680,
+          390,
+          0.1
+        ],
+        [
+          16,
+          600,
+          390,
+          0.1
+        ]
       ]
     }
   },
   "casos": [
     {
       "id_caso": "C-001",
-      "estacion": "Linea_2 · Estación 04",
+      "estacion": "Línea 2 · Estación 04 (Subensamble SMT)",
       "tipo_tarea": "levantamiento",
       "fecha": "2026-11-06T10:00:00-06:00",
+      "fotos": {
+        "lateral": "lev_03_caja_lateral_perfil_C.jpg",
+        "frontal": "lev_01_caja_pecho_munecas_A.jpg",
+        "cenital": "cen_02_vista_cenital_oblicua_25deg.jpg"
+      },
       "contexto": {
-        "carga_kg": 16, "agarre": "regular", "actividad": 1,
-        "modificadores": { "tronco_torsion_o_inclinacion": true, "cuello_torsion_o_inclinacion": true }
+        "carga_kg": 16,
+        "carga_brusca": false,
+        "agarre": "regular",
+        "actividad": 1,
+        "altura_trabajo_cm": 85,
+        "modificadores": {
+          "tronco_torsion_o_inclinacion": true,
+          "cuello_torsion_o_inclinacion": true,
+          "muneca_desviada_o_torcida": true
+        }
       },
       "evaluacion_previa": {
-        "segmentos": { "tronco": 2, "cuello": 1, "piernas": 1, "brazo": 3, "antebrazo": 1 },
+        "segmentos": {
+          "tronco": 2,
+          "cuello": 1,
+          "piernas": 1,
+          "brazo": 3,
+          "antebrazo": 1
+        },
         "reba_final": 7
       },
       "nom036": {
         "metodo": "levantamiento",
         "factores": [
-          { "codigo": "peso_frecuencia", "etiqueta": "Peso de la carga y frecuencia", "color": "rojo", "valor": 6 },
-          { "codigo": "distancia_horizontal", "etiqueta": "Distancia horizontal manos–espalda", "color": "amarillo", "valor": 3 },
-          { "codigo": "region_vertical", "etiqueta": "Región vertical del levantamiento", "color": "naranja", "valor": 3 },
-          { "codigo": "torsion", "etiqueta": "Torsión e inclinación lateral", "color": "amarillo", "valor": 1 },
-          { "codigo": "postura", "etiqueta": "Restricciones posturales", "color": "verde", "valor": 0 },
-          { "codigo": "agarre", "etiqueta": "Agarre de la carga", "color": "amarillo", "valor": 1 },
-          { "codigo": "piso", "etiqueta": "Superficie del piso", "color": "verde", "valor": 0 },
-          { "codigo": "otros", "etiqueta": "Otros factores ambientales", "color": "verde", "valor": 0 }
+          {
+            "codigo": "peso_frecuencia",
+            "etiqueta": "Peso de la carga y frecuencia",
+            "color": "rojo",
+            "valor": 6
+          },
+          {
+            "codigo": "distancia_horizontal",
+            "etiqueta": "Distancia horizontal manos–espalda",
+            "color": "amarillo",
+            "valor": 3
+          },
+          {
+            "codigo": "region_vertical",
+            "etiqueta": "Región vertical del levantamiento",
+            "color": "naranja",
+            "valor": 3
+          },
+          {
+            "codigo": "torsion",
+            "etiqueta": "Torsión e inclinación lateral",
+            "color": "amarillo",
+            "valor": 1
+          },
+          {
+            "codigo": "postura",
+            "etiqueta": "Restricciones posturales",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "agarre",
+            "etiqueta": "Agarre de la carga",
+            "color": "amarillo",
+            "valor": 1
+          },
+          {
+            "codigo": "piso",
+            "etiqueta": "Superficie del piso",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "otros",
+            "etiqueta": "Otros factores ambientales",
+            "color": "verde",
+            "valor": 0
+          }
         ]
       },
       "hallazgos_vision": [
-        { "id": "V1", "origen": "vision", "severidad": "advertencia", "mensaje": "Botella sobre la mesa en zona de alcance 2", "vista": "cenital", "caja": [930, 420, 70, 150] }
+        {
+          "id": "V1",
+          "origen": "vision",
+          "severidad": "advertencia",
+          "mensaje": "Botella sobre la mesa en zona de alcance 2",
+          "vista": "cenital",
+          "caja": [
+            930,
+            420,
+            70,
+            150
+          ]
+        }
       ],
       "recomendaciones": [
-        { "id": "R1", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Asistencia mecánica para la carga",
+        {
+          "id": "R1",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Asistencia mecánica para la carga",
           "texto": "Instalar lifter o mesa elevadora para eliminar el levantamiento manual de 16 kg.",
           "referencia": "16-PE30-6500-00023 §6.4.1; NOM-036-1-STPS-2018",
-          "efecto": { "carga_kg": 0 } },
-        { "id": "R2", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Elevar la superficie de toma",
+          "efecto": {
+            "carga_kg": 0
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 6.4.1 (Pág. 12)]: En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036. Todo levantamiento que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa o manipulador ingrávido). Si se utiliza contención temporal mediante levantamiento en equipo de 2 a 4 personas (Sección 6.4.2), se requiere evaluación médica previa (semáforo amarillo/naranja), llenado formal de la hoja de levantamiento 16-PE80-6500-00014 y liberación de cambio mediante MOC 16-HS80-8000-00021 firmado por EHS.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I",
+          "hoja_excel_jabil": "Levantamiento (1)",
+          "layer_autocad": "Equipos",
+          "tramite_moc": "MOC 16-HS80-8000-00021",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 6.4.1"
+        },
+        {
+          "id": "R2",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Elevar la superficie de toma",
           "texto": "Colocar el material a la altura de codos (95–120 cm) para reducir la flexión de tronco.",
           "referencia": "16-PE30-6500-00023 §6.4.4 y §7.2.3",
-          "efecto": { "angulos": { "tronco": 10, "brazo": 15 }, "modificadores": { "tronco_torsion_o_inclinacion": false } } },
-        { "id": "R3", "nivel_control": "administrativo", "tipo_cambio": "administrativo", "titulo": "Rotación de puesto",
+          "efecto": {
+            "angulos": {
+              "tronco": 10,
+              "brazo": 15
+            },
+            "modificadores": {
+              "tronco_torsion_o_inclinacion": false
+            }
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 6.4.1 (Pág. 12)]: En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036. Todo levantamiento que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa o manipulador ingrávido). Si se utiliza contención temporal mediante levantamiento en equipo de 2 a 4 personas (Sección 6.4.2), se requiere evaluación médica previa (semáforo amarillo/naranja), llenado formal de la hoja de levantamiento 16-PE80-6500-00014 y liberación de cambio mediante MOC 16-HS80-8000-00021 firmado por EHS.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I",
+          "hoja_excel_jabil": "Levantamiento (1)",
+          "layer_autocad": "Equipos",
+          "tramite_moc": "MOC 16-HS80-8000-00021",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 6.4.1"
+        },
+        {
+          "id": "R3",
+          "nivel_control": "administrativo",
+          "tipo_cambio": "administrativo",
+          "titulo": "Rotación de puesto",
           "texto": "Rotar entre esta estación y una de bajo riesgo cada 2 horas mientras se implementan los controles de ingeniería.",
-          "referencia": "NOM-036-1-STPS-2018" },
-        { "id": "R4", "nivel_control": "administrativo", "tipo_cambio": "postura", "titulo": "Corregir técnica de levantamiento",
+          "referencia": "NOM-036-1-STPS-2018",
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 6.4.1 (Pág. 12)]: En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036. Todo levantamiento que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa o manipulador ingrávido). Si se utiliza contención temporal mediante levantamiento en equipo de 2 a 4 personas (Sección 6.4.2), se requiere evaluación médica previa (semáforo amarillo/naranja), llenado formal de la hoja de levantamiento 16-PE80-6500-00014 y liberación de cambio mediante MOC 16-HS80-8000-00021 firmado por EHS.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I",
+          "hoja_excel_jabil": "Levantamiento (1)",
+          "layer_autocad": "Equipos",
+          "tramite_moc": "MOC 16-HS80-8000-00021",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 6.4.1"
+        },
+        {
+          "id": "R4",
+          "nivel_control": "administrativo",
+          "tipo_cambio": "postura",
+          "titulo": "Corregir técnica de levantamiento",
           "texto": "Capacitar al operador para flexionar rodillas y reducir 15° la flexión de tronco al tomar la pieza.",
           "referencia": "NOM-036-1-STPS-2018 capacitación",
-          "efecto": { "angulos": { "tronco": 32.5 } } }
-      ]
+          "efecto": {
+            "angulos": {
+              "tronco": 32.5
+            }
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 6.4.1 (Pág. 12)]: En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036. Todo levantamiento que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa o manipulador ingrávido). Si se utiliza contención temporal mediante levantamiento en equipo de 2 a 4 personas (Sección 6.4.2), se requiere evaluación médica previa (semáforo amarillo/naranja), llenado formal de la hoja de levantamiento 16-PE80-6500-00014 y liberación de cambio mediante MOC 16-HS80-8000-00021 firmado por EHS.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I",
+          "hoja_excel_jabil": "Levantamiento (1)",
+          "layer_autocad": "Equipos",
+          "tramite_moc": "MOC 16-HS80-8000-00021",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 6.4.1"
+        }
+      ],
+      "esqueletos": {
+        "lateral": {
+          "ancho": 1280,
+          "alto": 720,
+          "puntos": [
+            [
+              0,
+              772,
+              300,
+              0.62
+            ],
+            [
+              1,
+              765,
+              288,
+              0.55
+            ],
+            [
+              2,
+              768,
+              290,
+              0.5
+            ],
+            [
+              3,
+              745,
+              292,
+              0.81
+            ],
+            [
+              4,
+              742,
+              295,
+              0.4
+            ],
+            [
+              5,
+              700,
+              332,
+              0.93
+            ],
+            [
+              6,
+              694,
+              336,
+              0.71
+            ],
+            [
+              7,
+              724,
+              452,
+              0.9
+            ],
+            [
+              8,
+              716,
+              456,
+              0.66
+            ],
+            [
+              9,
+              795,
+              520,
+              0.88
+            ],
+            [
+              10,
+              788,
+              526,
+              0.35
+            ],
+            [
+              11,
+              580,
+              442,
+              0.95
+            ],
+            [
+              12,
+              574,
+              446,
+              0.8
+            ],
+            [
+              13,
+              612,
+              560,
+              0.92
+            ],
+            [
+              14,
+              606,
+              564,
+              0.77
+            ],
+            [
+              15,
+              600,
+              680,
+              0.9
+            ],
+            [
+              16,
+              594,
+              684,
+              0.74
+            ]
+          ]
+        },
+        "frontal": {
+          "ancho": 1280,
+          "alto": 720,
+          "puntos": [
+            [
+              0,
+              640,
+              232,
+              0.7
+            ],
+            [
+              1,
+              650,
+              220,
+              0.6
+            ],
+            [
+              2,
+              630,
+              220,
+              0.6
+            ],
+            [
+              3,
+              665,
+              230,
+              0.75
+            ],
+            [
+              4,
+              615,
+              230,
+              0.75
+            ],
+            [
+              5,
+              720,
+              300,
+              0.95
+            ],
+            [
+              6,
+              560,
+              300,
+              0.95
+            ],
+            [
+              7,
+              762,
+              392,
+              0.9
+            ],
+            [
+              8,
+              528,
+              402,
+              0.9
+            ],
+            [
+              9,
+              742,
+              472,
+              0.86
+            ],
+            [
+              10,
+              558,
+              482,
+              0.84
+            ],
+            [
+              11,
+              690,
+              450,
+              0.93
+            ],
+            [
+              12,
+              590,
+              450,
+              0.93
+            ],
+            [
+              13,
+              682,
+              570,
+              0.9
+            ],
+            [
+              14,
+              598,
+              570,
+              0.9
+            ],
+            [
+              15,
+              680,
+              690,
+              0.88
+            ],
+            [
+              16,
+              600,
+              690,
+              0.88
+            ]
+          ]
+        },
+        "cenital": {
+          "ancho": 1280,
+          "alto": 720,
+          "puntos": [
+            [
+              0,
+              640,
+              300,
+              0.45
+            ],
+            [
+              1,
+              652,
+              296,
+              0.4
+            ],
+            [
+              2,
+              628,
+              296,
+              0.4
+            ],
+            [
+              3,
+              668,
+              290,
+              0.6
+            ],
+            [
+              4,
+              612,
+              290,
+              0.6
+            ],
+            [
+              5,
+              715,
+              330,
+              0.88
+            ],
+            [
+              6,
+              565,
+              330,
+              0.88
+            ],
+            [
+              7,
+              770,
+              410,
+              0.8
+            ],
+            [
+              8,
+              520,
+              405,
+              0.82
+            ],
+            [
+              9,
+              760,
+              500,
+              0.78
+            ],
+            [
+              10,
+              535,
+              495,
+              0.8
+            ],
+            [
+              11,
+              680,
+              360,
+              0.3
+            ],
+            [
+              12,
+              600,
+              360,
+              0.3
+            ],
+            [
+              13,
+              680,
+              380,
+              0.15
+            ],
+            [
+              14,
+              600,
+              380,
+              0.15
+            ],
+            [
+              15,
+              680,
+              390,
+              0.1
+            ],
+            [
+              16,
+              600,
+              390,
+              0.1
+            ]
+          ]
+        }
+      }
     },
     {
       "id_caso": "C-002",
-      "estacion": "Linea_5 · Empaque",
-      "tipo_tarea": "empuje_sin_auxiliar",
-      "fecha": "2026-11-06T11:30:00-06:00",
+      "estacion": "Línea 1 · Estación 08 (Pick & Place)",
+      "tipo_tarea": "levantamiento",
+      "fecha": "2026-11-06T10:30:00-06:00",
+      "fotos": {
+        "lateral": "lev_02_caja_pecho_munecas_B.jpg",
+        "frontal": "sr_03_recorte_hombros_operarioC.jpg",
+        "cenital": "cen_01_vista_picado_frontal.jpg"
+      },
       "contexto": {
-        "carga_kg": 25, "carga_brusca": true, "agarre": "malo", "actividad": 2, "apoyo_unilateral": true,
-        "altura_trabajo_cm": 85,
+        "carga_kg": 12.0,
+        "carga_brusca": false,
+        "agarre": "regular",
+        "actividad": 2,
+        "altura_trabajo_cm": 135,
         "modificadores": {
-          "tronco_torsion_o_inclinacion": true, "cuello_torsion_o_inclinacion": true,
-          "brazo_abducido_o_rotado": true, "muneca_desviada_o_torcida": true
+          "brazo_abducido_o_rotado": true,
+          "hombro_elevado": true,
+          "cuello_torsion_o_inclinacion": true
         }
       },
       "evaluacion_previa": {
-        "segmentos": { "tronco": 3, "cuello": 2, "piernas": 1, "brazo": 3, "antebrazo": 1, "muneca": 1 },
-        "reba_final": 9
+        "segmentos": {
+          "tronco": 2,
+          "cuello": 1,
+          "piernas": 1,
+          "brazo": 2,
+          "antebrazo": 1,
+          "muneca": 1
+        },
+        "reba_final": 5
       },
       "nom036": {
-        "metodo": "empuje_sin_auxiliar",
+        "metodo": "levantamiento",
         "factores": [
-          { "codigo": "fuerza_inicial", "etiqueta": "Fuerza inicial", "color": "morado", "valor": 6 },
-          { "codigo": "fuerza_sostenida", "etiqueta": "Fuerza sostenida", "color": "rojo", "valor": 3 },
-          { "codigo": "postura", "etiqueta": "Postura", "color": "rojo", "valor": 3 },
-          { "codigo": "agarre", "etiqueta": "Agarre de manos", "color": "amarillo", "valor": 1 },
-          { "codigo": "patron_trabajo", "etiqueta": "Patrón de trabajo", "color": "amarillo", "valor": 2 },
-          { "codigo": "distancia", "etiqueta": "Distancia recorrida", "color": "rojo", "valor": 3 },
-          { "codigo": "piso", "etiqueta": "Condición del piso", "color": "amarillo", "valor": 1 },
-          { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta", "color": "rojo", "valor": 3 }
+          {
+            "codigo": "peso_frecuencia",
+            "etiqueta": "Peso de la carga y frecuencia (12 kg, alta freq)",
+            "color": "naranja",
+            "valor": 4
+          },
+          {
+            "codigo": "distancia_horizontal",
+            "etiqueta": "Distancia horizontal manos–espalda",
+            "color": "amarillo",
+            "valor": 3
+          },
+          {
+            "codigo": "region_vertical",
+            "etiqueta": "Región vertical alta (toma en estante)",
+            "color": "naranja",
+            "valor": 3
+          },
+          {
+            "codigo": "torsion",
+            "etiqueta": "Torsión axial y alcance lateral",
+            "color": "amarillo",
+            "valor": 1
+          },
+          {
+            "codigo": "postura",
+            "etiqueta": "Restricciones posturales",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "agarre",
+            "etiqueta": "Agarre de contenedor",
+            "color": "amarillo",
+            "valor": 1
+          },
+          {
+            "codigo": "piso",
+            "etiqueta": "Superficie de trabajo",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "otros",
+            "etiqueta": "Factores ambientales",
+            "color": "verde",
+            "valor": 0
+          }
         ]
       },
-      "hallazgos_vision": [],
+      "hallazgos_vision": [
+        {
+          "id": "V1",
+          "origen": "vision",
+          "severidad": "advertencia",
+          "mensaje": "Toma de material en Zona 4 (> 500 mm) fuera del alcance regular",
+          "vista": "cenital",
+          "caja": [
+            200,
+            100,
+            120,
+            120
+          ]
+        },
+        {
+          "id": "V2",
+          "origen": "vision",
+          "severidad": "advertencia",
+          "mensaje": "Elevación de hombros y flexión coronal de brazo > 45°",
+          "vista": "frontal",
+          "caja": [
+            180,
+            120,
+            160,
+            140
+          ]
+        }
+      ],
       "recomendaciones": [
-        { "id": "R1", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Carro con ruedas de baja resistencia",
-          "texto": "Sustituir el empuje manual por un carro de 4 ruedas giratorias con frenos y asas a 95–110 cm.",
-          "referencia": "NOM-036-1-STPS-2018; 16-PE80-6500-00014-H con auxiliar (5)",
-          "efecto": { "carga_kg": 8, "carga_brusca": false, "agarre": "bueno", "apoyo_unilateral": false } },
-        { "id": "R2", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Ajustar altura de trabajo",
-          "texto": "Elevar la superficie de empaque de 85 cm al rango 95–125 cm para eliminar la flexión de tronco.",
+        {
+          "id": "R1",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Reubicar material a zonas de alcance 1–2",
+          "texto": "Acercar los componentes a 150–400 mm del operador para eliminar la abducción de hombros y flexión forzada.",
+          "referencia": "16-PE30-6500-00023 §7.2.2.2 zonas de alcance",
+          "efecto": {
+            "angulos": {
+              "brazo": 15
+            },
+            "modificadores": {
+              "brazo_abducido_o_rotado": false,
+              "hombro_elevado": false
+            }
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 7.2.2.2 (Pág. 21)]: Las zonas de alcance en mesa se dividen en 5 posiciones: Posición 1 y 2 (150 mm a 400 mm, ángulo de 20° a 35° respecto a hombros) reservadas para herramental y materiales de ciclo regular; Posición 3 (400 mm a 650 mm) para uso infrecuente (< 1 vez por pieza); Posiciones 4 y 5 (> 650 mm a 1500 mm) fuera del alcance antropométrico admisible. Todo material de uso regular ubicado en Posiciones 4 y 5 debe reubicarse obligatoriamente a Zonas 1 y 2.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 (Distancia horizontal manos-espalda)",
+          "hoja_excel_jabil": "1 Mov - Sección A (Zonas de Alcance de Material)",
+          "layer_autocad": "Mobiliario",
+          "tramite_moc": "16-PE80-6500-00046 Presentación Layout",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 7.2.2.2"
+        },
+        {
+          "id": "R2",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Ajustar altura de plano de trabajo a 105 cm",
+          "texto": "Bajar el rack superior para no exceder 1.70 m de altura y situar el plano de pick a 105 cm.",
           "referencia": "16-PE30-6500-00023 §6.4.4 y §7.2.3",
-          "efecto": { "angulos": { "tronco": 10, "brazo": 15 },
-                      "modificadores": { "tronco_torsion_o_inclinacion": false, "brazo_abducido_o_rotado": false } } },
-        { "id": "R3", "nivel_control": "administrativo", "tipo_cambio": "administrativo", "titulo": "Rotación y pausas",
-          "texto": "Rotar al personal cada hora y aplicar pausas de 5 minutos con relevo (Ley Silla).",
-          "referencia": "NOM-036-1-STPS-2018; Ley Silla STPS",
-          "efecto": { "actividad": 1 } }
-      ]
+          "efecto": {
+            "angulos": {
+              "tronco": 10,
+              "cuello": 10
+            },
+            "actividad": 1
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 7.2.3 y 7.3.3 (Pág. 21)]: La altura estándar del plano de trabajo en Jabil Chihuahua debe calibrarse entre 95 cm y 125 cm según la tarea (Precisión: 105-125 cm, Ligero: 95-105 cm, Pesado: 85-95 cm). El espesor del borde frontal de la mesa no debe exceder 10 cm. Se debe proveer espacio libre para piernas sentado (mínimo 55 cm de profundidad x 60 cm de ancho), espacio para pies de pie (mínimo 15 cm de profundidad) y reposapiés regulable (altura 21 a 37 cm, retrasado 15 cm). Distancia mínima entre operadores adyacentes: 80 cm.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 (Posturas forzadas de tronco y cuello)",
+          "hoja_excel_jabil": "1 Mov - Sección B y E (Antropometría y Accesibilidad)",
+          "layer_autocad": "Mobiliario",
+          "tramite_moc": "16-FS80-8000-00010 Capacidad de Facilities",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 7.2.3 y 7.3.3"
+        }
+      ],
+      "esqueletos": {
+        "lateral": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              247.1,
+              92.8,
+              0.834
+            ],
+            [
+              1,
+              261.8,
+              78.1,
+              0.842
+            ],
+            [
+              2,
+              223.1,
+              79.4,
+              0.828
+            ],
+            [
+              3,
+              280.6,
+              86.1,
+              0.782
+            ],
+            [
+              4,
+              180.3,
+              87.4,
+              0.865
+            ],
+            [
+              5,
+              334.1,
+              151.6,
+              0.662
+            ],
+            [
+              6,
+              146.8,
+              161.0,
+              0.655
+            ],
+            [
+              7,
+              356.8,
+              250.6,
+              0.465
+            ],
+            [
+              8,
+              113.4,
+              272.0,
+              0.424
+            ],
+            [
+              9,
+              336.7,
+              308.1,
+              0.272
+            ],
+            [
+              10,
+              172.2,
+              187.7,
+              0.324
+            ],
+            [
+              11,
+              272.5,
+              349.6,
+              0.539
+            ],
+            [
+              12,
+              173.6,
+              350.9,
+              0.528
+            ],
+            [
+              13,
+              351.5,
+              400.4,
+              0.736
+            ],
+            [
+              14,
+              133.4,
+              392.4,
+              0.524
+            ],
+            [
+              15,
+              203.0,
+              479.3,
+              0.717
+            ],
+            [
+              16,
+              174.9,
+              523.4,
+              0.783
+            ],
+            [
+              17,
+              348.8,
+              158.3,
+              0.265
+            ],
+            [
+              18,
+              178.9,
+              169.0,
+              0.402
+            ]
+          ]
+        },
+        "frontal": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              407.4,
+              0.0,
+              0.309
+            ],
+            [
+              1,
+              412.5,
+              0.0,
+              0.292
+            ],
+            [
+              2,
+              412.5,
+              0.0,
+              0.275
+            ],
+            [
+              3,
+              439.1,
+              0.0,
+              0.276
+            ],
+            [
+              4,
+              422.6,
+              0.0,
+              0.196
+            ],
+            [
+              5,
+              434.1,
+              7.2,
+              0.539
+            ],
+            [
+              6,
+              431.5,
+              3.4,
+              0.415
+            ],
+            [
+              7,
+              436.6,
+              94.6,
+              0.679
+            ],
+            [
+              8,
+              435.3,
+              88.3,
+              0.481
+            ],
+            [
+              9,
+              306.1,
+              76.9,
+              0.622
+            ],
+            [
+              10,
+              314.9,
+              76.9,
+              0.391
+            ],
+            [
+              11,
+              448.0,
+              230.2,
+              0.569
+            ],
+            [
+              12,
+              450.5,
+              215.0,
+              0.475
+            ],
+            [
+              13,
+              354.2,
+              344.2,
+              0.645
+            ],
+            [
+              14,
+              352.9,
+              344.2,
+              0.494
+            ],
+            [
+              15,
+              265.5,
+              479.8,
+              0.724
+            ],
+            [
+              16,
+              276.9,
+              477.3,
+              0.535
+            ],
+            [
+              17,
+              279.4,
+              64.2,
+              0.651
+            ],
+            [
+              18,
+              283.2,
+              62.9,
+              0.501
+            ]
+          ]
+        },
+        "cenital": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              215.4,
+              154.9,
+              0.892
+            ],
+            [
+              1,
+              223.5,
+              144.4,
+              0.939
+            ],
+            [
+              2,
+              197.9,
+              142.1,
+              0.928
+            ],
+            [
+              3,
+              228.2,
+              154.9,
+              0.678
+            ],
+            [
+              4,
+              160.7,
+              150.3,
+              0.887
+            ],
+            [
+              5,
+              243.3,
+              215.4,
+              0.715
+            ],
+            [
+              6,
+              115.4,
+              227.0,
+              0.75
+            ],
+            [
+              7,
+              287.5,
+              299.1,
+              0.753
+            ],
+            [
+              8,
+              195.6,
+              299.1,
+              0.727
+            ],
+            [
+              9,
+              217.7,
+              308.4,
+              0.536
+            ],
+            [
+              10,
+              263.1,
+              282.8,
+              0.745
+            ],
+            [
+              11,
+              228.2,
+              378.2,
+              0.522
+            ],
+            [
+              12,
+              157.2,
+              388.6,
+              0.562
+            ],
+            [
+              13,
+              241.0,
+              360.7,
+              0.429
+            ],
+            [
+              14,
+              159.6,
+              346.8,
+              0.403
+            ],
+            [
+              15,
+              274.7,
+              518.9,
+              0.678
+            ],
+            [
+              16,
+              141.0,
+              517.7,
+              0.692
+            ],
+            [
+              17,
+              207.2,
+              314.2,
+              0.403
+            ],
+            [
+              18,
+              279.3,
+              278.2,
+              0.619
+            ]
+          ]
+        }
+      }
     },
     {
       "id_caso": "C-003",
-      "estacion": "Linea_1 · Ensamble fino",
-      "tipo_tarea": "postura",
-      "fecha": "2026-11-06T09:10:00-06:00",
-      "contexto": { "carga_kg": 0, "agarre": "bueno", "actividad": 1, "altura_trabajo_cm": 105 },
+      "estacion": "Línea 3 · Backend (Transporte Charolas SMT)",
+      "tipo_tarea": "empuje_con_auxiliar",
+      "fecha": "2026-11-06T11:00:00-06:00",
+      "fotos": {
+        "lateral": "aux_01_carrito_tapa_rodillas_A.jpg",
+        "frontal": "aux_02_carrito_tapa_rodillas_B.jpg",
+        "cenital": "cen_03_vista_cenital_rotada_neg30deg.jpg"
+      },
+      "contexto": {
+        "carga_kg": 8.0,
+        "carga_brusca": false,
+        "agarre": "bueno",
+        "actividad": 1,
+        "altura_trabajo_cm": 95,
+        "modificadores": {
+          "tronco_torsion_o_inclinacion": false,
+          "brazo_abducido_o_rotado": false
+        }
+      },
       "evaluacion_previa": {
-        "segmentos": { "tronco": 3, "cuello": 1, "piernas": 1, "brazo": 3, "antebrazo": 2, "muneca": 1 },
+        "segmentos": {
+          "tronco": 1,
+          "cuello": 1,
+          "piernas": 1,
+          "brazo": 2,
+          "antebrazo": 1,
+          "muneca": 1
+        },
         "reba_final": 4
       },
+      "nom036": {
+        "metodo": "empuje_con_auxiliar",
+        "factores": [
+          {
+            "codigo": "tipo_equipo_peso",
+            "etiqueta": "Carro 4 ruedas y carga (8 kg)",
+            "color": "verde",
+            "valor": 2
+          },
+          {
+            "codigo": "postura",
+            "etiqueta": "Postura durante empuje",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "acoplamiento",
+            "etiqueta": "Manerales de sujeción",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "patron_trabajo",
+            "etiqueta": "Patrón de trabajo",
+            "color": "verde",
+            "valor": 1
+          },
+          {
+            "codigo": "distancia",
+            "etiqueta": "Distancia recorrida",
+            "color": "verde",
+            "valor": 1
+          },
+          {
+            "codigo": "mantenimiento",
+            "etiqueta": "Condición de ruedas y frenos",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "superficie",
+            "etiqueta": "Condición del piso",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "obstaculos",
+            "etiqueta": "Obstáculos en pasillo",
+            "color": "verde",
+            "valor": 0
+          }
+        ]
+      },
       "hallazgos_vision": [
-        { "id": "V1", "origen": "vision", "severidad": "advertencia", "mensaje": "Botella sobre la mesa en zona de alcance 2", "vista": "cenital", "caja": [930, 420, 70, 150] }
+        {
+          "id": "V1",
+          "origen": "vision",
+          "severidad": "advertencia",
+          "mensaje": "Oclusión inferior de rodillas y pies por bastidor del carro",
+          "vista": "lateral",
+          "caja": [
+            100,
+            320,
+            260,
+            240
+          ]
+        }
       ],
       "recomendaciones": [
-        { "id": "R1", "nivel_control": "ingenieria", "tipo_cambio": "planta", "titulo": "Acercar componentes a zona 1–2",
-          "texto": "Reubicar los componentes de ciclo regular a menos de 400 mm del operador y elevar la base de ensamble para reducir la flexión de tronco y brazo.",
-          "referencia": "16-PE30-6500-00023 zonas de alcance",
-          "efecto": { "angulos": { "tronco": 10, "brazo": 15 } } }
-      ]
+        {
+          "id": "R1",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Mantenimiento preventivo a rodamientos del carro auxiliar",
+          "texto": "Verificar rodillos giratorios y frenos del carro para garantizar rodadura suave sin esfuerzo de empuje.",
+          "referencia": "16-PE80-6500-00014-H con auxiliar (5)",
+          "efecto": {
+            "carga_kg": 4
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 7.1.1, 7.1.2, 7.1.3 y Anexo 10.2 (Pág. 15)]: Los pasillos principales de flujo de material deben tener un ancho libre mínimo de 90 cm (o 1.50 m en zonas con flujo bidireccional o manejo de tarimas). La separación entre tarimas y mesas de trabajo debe ser de al menos 30 cm. En áreas con tránsito de robots móviles autónomos (AMR), se deben garantizar holguras laterales de seguridad de 0.50 m a 0.60 m. Las ruedas de los carros auxiliares deben ser de poliuretano con rodamientos sellados y contar con programa de mantenimiento preventivo.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice II (RAPP con auxiliar)",
+          "hoja_excel_jabil": "con auxiliar (5) y sin auxiliar (4)",
+          "layer_autocad": "Pasillos",
+          "tramite_moc": "Checklist 16-PE80-6500-00040 (Verificación de Pasillos)",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 7.1.1, 7.1.2, 7.1.3 y Anexo 10.2"
+        },
+        {
+          "id": "R2",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Ajuste de altura del maneral a 105 cm",
+          "texto": "Ajustar las barras de empuje entre 95 y 110 cm para mantener los antebrazos en rango neutro (60°–100°).",
+          "referencia": "16-PE30-6500-00023 §7.2.3",
+          "efecto": {
+            "angulos": {
+              "brazo": 15,
+              "antebrazo": 80
+            }
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 7.2.3 y 7.3.3 (Pág. 21)]: La altura estándar del plano de trabajo en Jabil Chihuahua debe calibrarse entre 95 cm y 125 cm según la tarea (Precisión: 105-125 cm, Ligero: 95-105 cm, Pesado: 85-95 cm). El espesor del borde frontal de la mesa no debe exceder 10 cm. Se debe proveer espacio libre para piernas sentado (mínimo 55 cm de profundidad x 60 cm de ancho), espacio para pies de pie (mínimo 15 cm de profundidad) y reposapiés regulable (altura 21 a 37 cm, retrasado 15 cm). Distancia mínima entre operadores adyacentes: 80 cm.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 (Posturas forzadas de tronco y cuello)",
+          "hoja_excel_jabil": "1 Mov - Sección B y E (Antropometría y Accesibilidad)",
+          "layer_autocad": "Mobiliario",
+          "tramite_moc": "16-FS80-8000-00010 Capacidad de Facilities",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 7.2.3 y 7.3.3"
+        }
+      ],
+      "esqueletos": {
+        "lateral": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              208.2,
+              90.2,
+              0.793
+            ],
+            [
+              1,
+              216.9,
+              79.6,
+              0.773
+            ],
+            [
+              2,
+              188.0,
+              79.6,
+              0.817
+            ],
+            [
+              3,
+              219.8,
+              88.2,
+              0.542
+            ],
+            [
+              4,
+              143.7,
+              86.3,
+              0.786
+            ],
+            [
+              5,
+              209.2,
+              160.5,
+              0.505
+            ],
+            [
+              6,
+              76.2,
+              157.6,
+              0.625
+            ],
+            [
+              7,
+              311.4,
+              231.8,
+              0.615
+            ],
+            [
+              8,
+              188.0,
+              233.8,
+              0.644
+            ],
+            [
+              9,
+              216.9,
+              244.4,
+              0.387
+            ],
+            [
+              10,
+              273.8,
+              208.7,
+              0.632
+            ],
+            [
+              11,
+              207.3,
+              428.4,
+              0.393
+            ],
+            [
+              12,
+              108.0,
+              428.4,
+              0.451
+            ],
+            [
+              13,
+              286.3,
+              428.4,
+              0.362
+            ],
+            [
+              14,
+              230.4,
+              428.4,
+              0.279
+            ],
+            [
+              15,
+              292.1,
+              428.4,
+              0.313
+            ],
+            [
+              16,
+              234.3,
+              428.4,
+              0.251
+            ],
+            [
+              17,
+              209.2,
+              155.7,
+              0.321
+            ],
+            [
+              18,
+              294.0,
+              202.9,
+              0.443
+            ]
+          ]
+        },
+        "frontal": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              248.9,
+              91.9,
+              0.726
+            ],
+            [
+              1,
+              261.6,
+              78.2,
+              0.726
+            ],
+            [
+              2,
+              222.5,
+              79.2,
+              0.776
+            ],
+            [
+              3,
+              278.6,
+              88.7,
+              0.588
+            ],
+            [
+              4,
+              174.9,
+              89.8,
+              0.774
+            ],
+            [
+              5,
+              330.4,
+              148.0,
+              0.555
+            ],
+            [
+              6,
+              146.3,
+              154.3,
+              0.458
+            ],
+            [
+              7,
+              367.4,
+              203.0,
+              0.604
+            ],
+            [
+              8,
+              129.4,
+              225.2,
+              0.319
+            ],
+            [
+              9,
+              209.8,
+              182.9,
+              0.596
+            ],
+            [
+              10,
+              182.3,
+              211.5,
+              0.208
+            ],
+            [
+              11,
+              290.2,
+              359.6,
+              0.373
+            ],
+            [
+              12,
+              185.4,
+              364.9,
+              0.363
+            ],
+            [
+              13,
+              283.8,
+              446.4,
+              0.264
+            ],
+            [
+              14,
+              182.3,
+              446.4,
+              0.25
+            ],
+            [
+              15,
+              308.2,
+              446.4,
+              0.261
+            ],
+            [
+              16,
+              166.4,
+              446.4,
+              0.255
+            ],
+            [
+              17,
+              134.6,
+              172.3,
+              0.793
+            ],
+            [
+              18,
+              157.9,
+              170.2,
+              0.239
+            ]
+          ]
+        },
+        "cenital": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              312.7,
+              275.7,
+              0.923
+            ],
+            [
+              1,
+              342.3,
+              261.6,
+              0.953
+            ],
+            [
+              2,
+              309.9,
+              236.2,
+              0.927
+            ],
+            [
+              3,
+              346.6,
+              279.9,
+              0.748
+            ],
+            [
+              4,
+              271.8,
+              223.5,
+              0.873
+            ],
+            [
+              5,
+              266.2,
+              346.1,
+              0.592
+            ],
+            [
+              6,
+              184.4,
+              315.1,
+              0.643
+            ],
+            [
+              7,
+              190.1,
+              491.3,
+              0.493
+            ],
+            [
+              8,
+              98.4,
+              454.7,
+              0.688
+            ],
+            [
+              9,
+              195.7,
+              568.9,
+              0.407
+            ],
+            [
+              10,
+              85.7,
+              557.6,
+              0.537
+            ],
+            [
+              11,
+              168.9,
+              566.1,
+              0.539
+            ],
+            [
+              12,
+              111.1,
+              556.2,
+              0.553
+            ],
+            [
+              13,
+              205.6,
+              618.2,
+              0.216
+            ],
+            [
+              14,
+              77.3,
+              618.2,
+              0.282
+            ],
+            [
+              15,
+              168.9,
+              575.9,
+              0.224
+            ],
+            [
+              16,
+              80.1,
+              605.5,
+              0.215
+            ],
+            [
+              17,
+              238.0,
+              442.0,
+              0.438
+            ],
+            [
+              18,
+              221.1,
+              436.4,
+              0.293
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id_caso": "C-004",
+      "estacion": "Línea 4 · Ensamble Mecánico (Mesa Móvil)",
+      "tipo_tarea": "empuje_con_auxiliar",
+      "fecha": "2026-11-06T11:45:00-06:00",
+      "fotos": {
+        "lateral": "aux_03_mesa_transporte_cadera_C.jpg",
+        "frontal": "aux_02_carrito_tapa_rodillas_B.jpg",
+        "cenital": "cen_02_vista_cenital_oblicua_25deg.jpg"
+      },
+      "contexto": {
+        "carga_kg": 10.5,
+        "carga_brusca": false,
+        "agarre": "regular",
+        "actividad": 1,
+        "altura_trabajo_cm": 75,
+        "modificadores": {
+          "tronco_torsion_o_inclinacion": true,
+          "brazo_abducido_o_rotado": true
+        }
+      },
+      "evaluacion_previa": {
+        "segmentos": {
+          "tronco": 2,
+          "cuello": 1,
+          "piernas": 1,
+          "brazo": 2,
+          "antebrazo": 1,
+          "muneca": 1
+        },
+        "reba_final": 5
+      },
+      "nom036": {
+        "metodo": "empuje_con_auxiliar",
+        "factores": [
+          {
+            "codigo": "tipo_equipo_peso",
+            "etiqueta": "Mesa móvil y carga (10.5 kg)",
+            "color": "verde",
+            "valor": 2
+          },
+          {
+            "codigo": "postura",
+            "etiqueta": "Postura asimétrica durante tracción",
+            "color": "amarillo",
+            "valor": 3
+          },
+          {
+            "codigo": "acoplamiento",
+            "etiqueta": "Maneral bajo a nivel de cadera (< 95 cm)",
+            "color": "amarillo",
+            "valor": 2
+          },
+          {
+            "codigo": "patron_trabajo",
+            "etiqueta": "Patrón de trabajo",
+            "color": "verde",
+            "valor": 1
+          },
+          {
+            "codigo": "distancia",
+            "etiqueta": "Distancia de traslado",
+            "color": "amarillo",
+            "valor": 1
+          },
+          {
+            "codigo": "mantenimiento",
+            "etiqueta": "Estado de mantenimiento",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "superficie",
+            "etiqueta": "Condición del piso",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "obstaculos",
+            "etiqueta": "Obstáculos en la ruta",
+            "color": "verde",
+            "valor": 0
+          }
+        ]
+      },
+      "hallazgos_vision": [
+        {
+          "id": "V1",
+          "origen": "vision",
+          "severidad": "critico",
+          "mensaje": "Tracción baja < 95 cm que induce flexión de tronco lateral y asimetría de hombros",
+          "vista": "lateral",
+          "caja": [
+            80,
+            200,
+            240,
+            200
+          ]
+        }
+      ],
+      "recomendaciones": [
+        {
+          "id": "R1",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Rediseñar maneral de tracción a cota ergonómica de 105 cm",
+          "texto": "Elevar los puntos de empuje/tracción a 105 cm para eliminar la inclinación lateral del tronco.",
+          "referencia": "16-PE30-6500-00023 §7.2.3 y §6.4.4",
+          "efecto": {
+            "angulos": {
+              "tronco": 10,
+              "brazo": 20
+            },
+            "modificadores": {
+              "tronco_torsion_o_inclinacion": false,
+              "brazo_abducido_o_rotado": false
+            }
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 7.1.1, 7.1.2, 7.1.3 y Anexo 10.2 (Pág. 15)]: Los pasillos principales de flujo de material deben tener un ancho libre mínimo de 90 cm (o 1.50 m en zonas con flujo bidireccional o manejo de tarimas). La separación entre tarimas y mesas de trabajo debe ser de al menos 30 cm. En áreas con tránsito de robots móviles autónomos (AMR), se deben garantizar holguras laterales de seguridad de 0.50 m a 0.60 m. Las ruedas de los carros auxiliares deben ser de poliuretano con rodamientos sellados y contar con programa de mantenimiento preventivo.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice II (RAPP con auxiliar)",
+          "hoja_excel_jabil": "con auxiliar (5) y sin auxiliar (4)",
+          "layer_autocad": "Pasillos",
+          "tramite_moc": "Checklist 16-PE80-6500-00040 (Verificación de Pasillos)",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 7.1.1, 7.1.2, 7.1.3 y Anexo 10.2"
+        },
+        {
+          "id": "R2",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Sustituir ruedas de mesa por rodamiento ESD de baja fricción",
+          "texto": "Instalar rodaduras ESD de poliamida para minimizar la fuerza de tracción inicial en área EPA.",
+          "referencia": "16-QE30-1000-00082; 16-PE30-6500-00023",
+          "efecto": {
+            "carga_kg": 5
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 7.1.1, 7.1.2, 7.1.3 y Anexo 10.2 (Pág. 15)]: Los pasillos principales de flujo de material deben tener un ancho libre mínimo de 90 cm (o 1.50 m en zonas con flujo bidireccional o manejo de tarimas). La separación entre tarimas y mesas de trabajo debe ser de al menos 30 cm. En áreas con tránsito de robots móviles autónomos (AMR), se deben garantizar holguras laterales de seguridad de 0.50 m a 0.60 m. Las ruedas de los carros auxiliares deben ser de poliuretano con rodamientos sellados y contar con programa de mantenimiento preventivo.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice II (RAPP con auxiliar)",
+          "hoja_excel_jabil": "con auxiliar (5) y sin auxiliar (4)",
+          "layer_autocad": "Pasillos",
+          "tramite_moc": "Checklist 16-PE80-6500-00040 (Verificación de Pasillos)",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 7.1.1, 7.1.2, 7.1.3 y Anexo 10.2"
+        }
+      ],
+      "esqueletos": {
+        "lateral": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              458.8,
+              146.6,
+              0.431
+            ],
+            [
+              1,
+              479.1,
+              151.2,
+              0.378
+            ],
+            [
+              2,
+              460.3,
+              134.1,
+              0.406
+            ],
+            [
+              3,
+              480.0,
+              212.2,
+              0.357
+            ],
+            [
+              4,
+              443.1,
+              134.1,
+              0.336
+            ],
+            [
+              5,
+              460.3,
+              299.7,
+              0.343
+            ],
+            [
+              6,
+              393.1,
+              176.2,
+              0.29
+            ],
+            [
+              7,
+              443.1,
+              393.4,
+              0.245
+            ],
+            [
+              8,
+              324.4,
+              218.4,
+              0.273
+            ],
+            [
+              9,
+              349.4,
+              298.1,
+              0.217
+            ],
+            [
+              10,
+              283.8,
+              209.1,
+              0.234
+            ],
+            [
+              11,
+              346.2,
+              321.6,
+              0.168
+            ],
+            [
+              12,
+              265.0,
+              273.1,
+              0.169
+            ],
+            [
+              13,
+              149.4,
+              323.1,
+              0.156
+            ],
+            [
+              14,
+              152.5,
+              309.1,
+              0.187
+            ],
+            [
+              15,
+              52.5,
+              395.0,
+              0.149
+            ],
+            [
+              16,
+              40.0,
+              326.2,
+              0.17
+            ],
+            [
+              17,
+              421.2,
+              287.2,
+              0.273
+            ],
+            [
+              18,
+              280.6,
+              201.2,
+              0.265
+            ]
+          ]
+        },
+        "frontal": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              248.9,
+              91.9,
+              0.726
+            ],
+            [
+              1,
+              261.6,
+              78.2,
+              0.726
+            ],
+            [
+              2,
+              222.5,
+              79.2,
+              0.776
+            ],
+            [
+              3,
+              278.6,
+              88.7,
+              0.588
+            ],
+            [
+              4,
+              174.9,
+              89.8,
+              0.774
+            ],
+            [
+              5,
+              330.4,
+              148.0,
+              0.555
+            ],
+            [
+              6,
+              146.3,
+              154.3,
+              0.458
+            ],
+            [
+              7,
+              367.4,
+              203.0,
+              0.604
+            ],
+            [
+              8,
+              129.4,
+              225.2,
+              0.319
+            ],
+            [
+              9,
+              209.8,
+              182.9,
+              0.596
+            ],
+            [
+              10,
+              182.3,
+              211.5,
+              0.208
+            ],
+            [
+              11,
+              290.2,
+              359.6,
+              0.373
+            ],
+            [
+              12,
+              185.4,
+              364.9,
+              0.363
+            ],
+            [
+              13,
+              283.8,
+              446.4,
+              0.264
+            ],
+            [
+              14,
+              182.3,
+              446.4,
+              0.25
+            ],
+            [
+              15,
+              308.2,
+              446.4,
+              0.261
+            ],
+            [
+              16,
+              166.4,
+              446.4,
+              0.255
+            ],
+            [
+              17,
+              134.6,
+              172.3,
+              0.793
+            ],
+            [
+              18,
+              157.9,
+              170.2,
+              0.239
+            ]
+          ]
+        },
+        "cenital": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              181.9,
+              181.5,
+              0.887
+            ],
+            [
+              1,
+              187.8,
+              163.6,
+              0.895
+            ],
+            [
+              2,
+              159.0,
+              177.5,
+              0.884
+            ],
+            [
+              3,
+              203.8,
+              167.6,
+              0.728
+            ],
+            [
+              4,
+              131.1,
+              201.4,
+              0.891
+            ],
+            [
+              5,
+              262.5,
+              205.4,
+              0.756
+            ],
+            [
+              6,
+              128.1,
+              285.0,
+              0.715
+            ],
+            [
+              7,
+              299.3,
+              249.2,
+              0.787
+            ],
+            [
+              8,
+              170.9,
+              349.7,
+              0.628
+            ],
+            [
+              9,
+              197.8,
+              274.1,
+              0.765
+            ],
+            [
+              10,
+              213.7,
+              387.5,
+              0.688
+            ],
+            [
+              11,
+              320.2,
+              400.5,
+              0.596
+            ],
+            [
+              12,
+              250.6,
+              433.3,
+              0.516
+            ],
+            [
+              13,
+              411.8,
+              493.0,
+              0.325
+            ],
+            [
+              14,
+              321.2,
+              512.9,
+              0.295
+            ],
+            [
+              15,
+              411.8,
+              465.2,
+              0.341
+            ],
+            [
+              16,
+              272.5,
+              478.1,
+              0.506
+            ],
+            [
+              17,
+              150.0,
+              288.0,
+              0.883
+            ],
+            [
+              18,
+              230.6,
+              396.5,
+              0.771
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id_caso": "C-005",
+      "estacion": "Línea 5 · Empaque Final (Acarreo Manual)",
+      "tipo_tarea": "empuje_sin_auxiliar",
+      "fecha": "2026-11-06T12:15:00-06:00",
+      "fotos": {
+        "lateral": "lev_03_caja_lateral_perfil_C.jpg",
+        "frontal": "sr_02_recuadro_negro_operarioB.jpg",
+        "cenital": "cen_01_vista_picado_frontal.jpg"
+      },
+      "contexto": {
+        "carga_kg": 15.0,
+        "carga_brusca": true,
+        "agarre": "malo",
+        "actividad": 1,
+        "altura_trabajo_cm": 85,
+        "apoyo_unilateral": true,
+        "modificadores": {
+          "tronco_torsion_o_inclinacion": true,
+          "cuello_torsion_o_inclinacion": true,
+          "brazo_abducido_o_rotado": true,
+          "muneca_desviada_o_torcida": true
+        }
+      },
+      "evaluacion_previa": {
+        "segmentos": {
+          "tronco": 3,
+          "cuello": 2,
+          "piernas": 1,
+          "brazo": 3,
+          "antebrazo": 1,
+          "muneca": 1
+        },
+        "reba_final": 7
+      },
+      "nom036": {
+        "metodo": "transporte",
+        "factores": [
+          {
+            "codigo": "peso_frecuencia",
+            "etiqueta": "Masa de carga (15 kg > límite Jabil 14 kg)",
+            "color": "rojo",
+            "valor": 6
+          },
+          {
+            "codigo": "distancia_horizontal",
+            "etiqueta": "Distancia manos–cuerpo durante marcha",
+            "color": "amarillo",
+            "valor": 3
+          },
+          {
+            "codigo": "asimetria",
+            "etiqueta": "Carga asimétrica sobre el torso",
+            "color": "amarillo",
+            "valor": 2
+          },
+          {
+            "codigo": "postura",
+            "etiqueta": "Restricciones posturales en ruta",
+            "color": "amarillo",
+            "valor": 2
+          },
+          {
+            "codigo": "agarre",
+            "etiqueta": "Agarre deficiente de contenedor",
+            "color": "rojo",
+            "valor": 2
+          },
+          {
+            "codigo": "distancia_transporte",
+            "etiqueta": "Distancia de acarreo (> 10 m)",
+            "color": "amarillo",
+            "valor": 2
+          },
+          {
+            "codigo": "piso",
+            "etiqueta": "Condición del piso",
+            "color": "verde",
+            "valor": 0
+          },
+          {
+            "codigo": "obstaculos",
+            "etiqueta": "Obstáculos en pasillo",
+            "color": "amarillo",
+            "valor": 1
+          }
+        ]
+      },
+      "hallazgos_vision": [
+        {
+          "id": "V1",
+          "origen": "vision",
+          "severidad": "critico",
+          "mensaje": "Acarreo manual individual de 15.0 kg supera límite normativo Jabil (14.0 kg)",
+          "vista": "lateral",
+          "caja": [
+            120,
+            240,
+            220,
+            180
+          ]
+        }
+      ],
+      "recomendaciones": [
+        {
+          "id": "R1",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Sustituir acarreo manual por carro auxiliar de 4 ruedas",
+          "texto": "Dotar de carro de 4 ruedas giratorias con asas a 95–110 cm para eliminar el acarreo manual unipersonal.",
+          "referencia": "NOM-036-1-STPS-2018; 16-PE80-6500-00014-H con auxiliar (5)",
+          "efecto": {
+            "carga_kg": 5,
+            "carga_brusca": false,
+            "agarre": "bueno",
+            "apoyo_unilateral": false
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 6.4.1 (Pág. 12)]: En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036. Todo levantamiento que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa o manipulador ingrávido). Si se utiliza contención temporal mediante levantamiento en equipo de 2 a 4 personas (Sección 6.4.2), se requiere evaluación médica previa (semáforo amarillo/naranja), llenado formal de la hoja de levantamiento 16-PE80-6500-00014 y liberación de cambio mediante MOC 16-HS80-8000-00021 firmado por EHS.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I",
+          "hoja_excel_jabil": "Levantamiento (1)",
+          "layer_autocad": "Equipos",
+          "tramite_moc": "MOC 16-HS80-8000-00021",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 6.4.1"
+        },
+        {
+          "id": "R2",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Ajustar altura de mesa de empaque a 105 cm",
+          "texto": "Elevar la superficie de empaque de 85 cm al rango 95–125 cm para eliminar la flexión de tronco.",
+          "referencia": "16-PE30-6500-00023 §6.4.4 y §7.2.3",
+          "efecto": {
+            "angulos": {
+              "tronco": 10,
+              "brazo": 15
+            },
+            "modificadores": {
+              "tronco_torsion_o_inclinacion": false,
+              "brazo_abducido_o_rotado": false
+            }
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 6.4.1 (Pág. 12)]: En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036. Todo levantamiento que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa o manipulador ingrávido). Si se utiliza contención temporal mediante levantamiento en equipo de 2 a 4 personas (Sección 6.4.2), se requiere evaluación médica previa (semáforo amarillo/naranja), llenado formal de la hoja de levantamiento 16-PE80-6500-00014 y liberación de cambio mediante MOC 16-HS80-8000-00021 firmado por EHS.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I",
+          "hoja_excel_jabil": "Levantamiento (1)",
+          "layer_autocad": "Equipos",
+          "tramite_moc": "MOC 16-HS80-8000-00021",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 6.4.1"
+        },
+        {
+          "id": "R3",
+          "nivel_control": "administrativo",
+          "tipo_cambio": "administrativo",
+          "titulo": "Rotación y rol de descanso Ley Silla",
+          "texto": "Rotar al personal cada hora y aplicar pausas de 5 minutos con relevo programado.",
+          "referencia": "NOM-036-1-STPS-2018; Ley Silla STPS",
+          "efecto": {
+            "actividad": 0
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 6.4.1 (Pág. 12)]: En Jabil Chihuahua rige el límite estricto de 14.0 kg por persona, el cual prevalece sobre el límite legal general de 25 kg de la NOM-036. Todo levantamiento que supere los 14 kg requiere asistencia mecánica obligatoria (lifter, polipasto, grúa o manipulador ingrávido). Si se utiliza contención temporal mediante levantamiento en equipo de 2 a 4 personas (Sección 6.4.2), se requiere evaluación médica previa (semáforo amarillo/naranja), llenado formal de la hoja de levantamiento 16-PE80-6500-00014 y liberación de cambio mediante MOC 16-HS80-8000-00021 firmado por EHS.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 Apéndice I",
+          "hoja_excel_jabil": "Levantamiento (1)",
+          "layer_autocad": "Equipos",
+          "tramite_moc": "MOC 16-HS80-8000-00021",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 6.4.1"
+        }
+      ],
+      "esqueletos": {
+        "lateral": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              444.8,
+              83.3,
+              0.654
+            ],
+            [
+              1,
+              447.8,
+              75.9,
+              0.683
+            ],
+            [
+              2,
+              453.7,
+              72.9,
+              0.642
+            ],
+            [
+              3,
+              459.7,
+              83.3,
+              0.685
+            ],
+            [
+              4,
+              479.1,
+              77.4,
+              0.624
+            ],
+            [
+              5,
+              446.3,
+              147.6,
+              0.641
+            ],
+            [
+              6,
+              461.2,
+              143.1,
+              0.585
+            ],
+            [
+              7,
+              353.7,
+              184.9,
+              0.467
+            ],
+            [
+              8,
+              453.7,
+              183.4,
+              0.393
+            ],
+            [
+              9,
+              404.5,
+              167.0,
+              0.301
+            ],
+            [
+              10,
+              410.4,
+              170.0,
+              0.3
+            ],
+            [
+              11,
+              446.3,
+              343.2,
+              0.577
+            ],
+            [
+              12,
+              453.7,
+              337.2,
+              0.539
+            ],
+            [
+              13,
+              352.2,
+              411.9,
+              0.573
+            ],
+            [
+              14,
+              343.2,
+              411.9,
+              0.544
+            ],
+            [
+              15,
+              261.1,
+              517.9,
+              0.684
+            ],
+            [
+              16,
+              280.5,
+              516.4,
+              0.603
+            ],
+            [
+              17,
+              413.4,
+              132.6,
+              0.261
+            ],
+            [
+              18,
+              413.4,
+              140.1,
+              0.286
+            ]
+          ]
+        },
+        "frontal": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              243.4,
+              81.8,
+              0.175
+            ],
+            [
+              1,
+              243.4,
+              81.8,
+              0.181
+            ],
+            [
+              2,
+              243.4,
+              81.8,
+              0.173
+            ],
+            [
+              3,
+              267.0,
+              177.7,
+              0.166
+            ],
+            [
+              4,
+              127.2,
+              81.8,
+              0.154
+            ],
+            [
+              5,
+              324.6,
+              81.8,
+              0.309
+            ],
+            [
+              6,
+              130.6,
+              81.8,
+              0.344
+            ],
+            [
+              7,
+              365.2,
+              196.9,
+              0.518
+            ],
+            [
+              8,
+              108.0,
+              208.1,
+              0.361
+            ],
+            [
+              9,
+              226.4,
+              187.8,
+              0.392
+            ],
+            [
+              10,
+              152.0,
+              324.3,
+              0.526
+            ],
+            [
+              11,
+              265.9,
+              272.4,
+              0.31
+            ],
+            [
+              12,
+              145.2,
+              267.9,
+              0.333
+            ],
+            [
+              13,
+              353.9,
+              403.2,
+              0.527
+            ],
+            [
+              14,
+              156.5,
+              371.7,
+              0.349
+            ],
+            [
+              15,
+              199.4,
+              470.9,
+              0.542
+            ],
+            [
+              16,
+              172.3,
+              513.8,
+              0.589
+            ],
+            [
+              17,
+              138.5,
+              183.3,
+              0.309
+            ],
+            [
+              18,
+              176.8,
+              342.3,
+              0.634
+            ]
+          ]
+        },
+        "cenital": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              215.4,
+              154.9,
+              0.892
+            ],
+            [
+              1,
+              223.5,
+              144.4,
+              0.939
+            ],
+            [
+              2,
+              197.9,
+              142.1,
+              0.928
+            ],
+            [
+              3,
+              228.2,
+              154.9,
+              0.678
+            ],
+            [
+              4,
+              160.7,
+              150.3,
+              0.887
+            ],
+            [
+              5,
+              243.3,
+              215.4,
+              0.715
+            ],
+            [
+              6,
+              115.4,
+              227.0,
+              0.75
+            ],
+            [
+              7,
+              287.5,
+              299.1,
+              0.753
+            ],
+            [
+              8,
+              195.6,
+              299.1,
+              0.727
+            ],
+            [
+              9,
+              217.7,
+              308.4,
+              0.536
+            ],
+            [
+              10,
+              263.1,
+              282.8,
+              0.745
+            ],
+            [
+              11,
+              228.2,
+              378.2,
+              0.522
+            ],
+            [
+              12,
+              157.2,
+              388.6,
+              0.562
+            ],
+            [
+              13,
+              241.0,
+              360.7,
+              0.429
+            ],
+            [
+              14,
+              159.6,
+              346.8,
+              0.403
+            ],
+            [
+              15,
+              274.7,
+              518.9,
+              0.678
+            ],
+            [
+              16,
+              141.0,
+              517.7,
+              0.692
+            ],
+            [
+              17,
+              207.2,
+              314.2,
+              0.403
+            ],
+            [
+              18,
+              279.3,
+              278.2,
+              0.619
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id_caso": "C-006",
+      "estacion": "Línea 2 · Celda Multi-Persona 02",
+      "tipo_tarea": "postura",
+      "fecha": "2026-11-06T13:00:00-06:00",
+      "fotos": {
+        "lateral": "sr_01_recuadro_negro_operarioA.jpg",
+        "frontal": "sr_01_recuadro_negro_operarioA.jpg",
+        "cenital": "cen_01_vista_picado_frontal.jpg"
+      },
+      "contexto": {
+        "carga_kg": 6.0,
+        "carga_brusca": false,
+        "agarre": "bueno",
+        "actividad": 1,
+        "altura_trabajo_cm": 110,
+        "modificadores": {
+          "cuello_torsion_o_inclinacion": true
+        }
+      },
+      "evaluacion_previa": {
+        "segmentos": {
+          "tronco": 2,
+          "cuello": 1,
+          "piernas": 1,
+          "brazo": 2,
+          "antebrazo": 1,
+          "muneca": 1
+        },
+        "reba_final": 4
+      },
+      "nom036": null,
+      "hallazgos_vision": [
+        {
+          "id": "V1",
+          "origen": "vision",
+          "severidad": "info",
+          "mensaje": "Separación inter-operador medida: 82.5 cm (Conforme con Regla F2 >= 80 cm)",
+          "vista": "frontal",
+          "caja": [
+            80,
+            160,
+            220,
+            240
+          ]
+        }
+      ],
+      "recomendaciones": [
+        {
+          "id": "R1",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Soporte de monitor visual a 40 cm y altura de ojos",
+          "texto": "Elevar la ayuda visual a 1400–1600 mm del piso para mantener el cuello en ángulo neutro (< 20°).",
+          "referencia": "16-PE80-6500-00014-H Sección F (Visual); 16-PE30-6500-00023",
+          "efecto": {
+            "angulos": {
+              "cuello": 10
+            },
+            "modificadores": {
+              "cuello_torsion_o_inclinacion": false
+            }
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 7.2.3 y 7.3.3 (Pág. 21)]: La altura estándar del plano de trabajo en Jabil Chihuahua debe calibrarse entre 95 cm y 125 cm según la tarea (Precisión: 105-125 cm, Ligero: 95-105 cm, Pesado: 85-95 cm). El espesor del borde frontal de la mesa no debe exceder 10 cm. Se debe proveer espacio libre para piernas sentado (mínimo 55 cm de profundidad x 60 cm de ancho), espacio para pies de pie (mínimo 15 cm de profundidad) y reposapiés regulable (altura 21 a 37 cm, retrasado 15 cm). Distancia mínima entre operadores adyacentes: 80 cm.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 (Posturas forzadas de tronco y cuello)",
+          "hoja_excel_jabil": "1 Mov - Sección B y E (Antropometría y Accesibilidad)",
+          "layer_autocad": "Mobiliario",
+          "tramite_moc": "16-FS80-8000-00010 Capacidad de Facilities",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 7.2.3 y 7.3.3"
+        },
+        {
+          "id": "R2",
+          "nivel_control": "ingenieria",
+          "tipo_cambio": "planta",
+          "titulo": "Instalación de reposapiés ajustable (21–37 cm)",
+          "texto": "Incorporar reposapiés de altura ajustable a 15 cm del borde para alternar apoyo de piernas.",
+          "referencia": "16-PE30-6500-00023 §7.3.3 geometría de estación",
+          "efecto": {
+            "angulos": {
+              "piernas": 0
+            }
+          },
+          "justificacion_rag": "[16-PE30-6500-00023 Sección 7.2.3 y 7.3.3 (Pág. 21)]: La altura estándar del plano de trabajo en Jabil Chihuahua debe calibrarse entre 95 cm y 125 cm según la tarea (Precisión: 105-125 cm, Ligero: 95-105 cm, Pesado: 85-95 cm). El espesor del borde frontal de la mesa no debe exceder 10 cm. Se debe proveer espacio libre para piernas sentado (mínimo 55 cm de profundidad x 60 cm de ancho), espacio para pies de pie (mínimo 15 cm de profundidad) y reposapiés regulable (altura 21 a 37 cm, retrasado 15 cm). Distancia mínima entre operadores adyacentes: 80 cm.",
+          "norma_vinculada": "NOM-036-1-STPS-2018 (Posturas forzadas de tronco y cuello)",
+          "hoja_excel_jabil": "1 Mov - Sección B y E (Antropometría y Accesibilidad)",
+          "layer_autocad": "Mobiliario",
+          "tramite_moc": "16-FS80-8000-00010 Capacidad de Facilities",
+          "codigo_jabil": "16-PE30-6500-00023 Sección 7.2.3 y 7.3.3"
+        }
+      ],
+      "esqueletos": {
+        "lateral": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              188.0,
+              124.6,
+              0.389
+            ],
+            [
+              1,
+              202.9,
+              111.0,
+              0.371
+            ],
+            [
+              2,
+              180.6,
+              103.5,
+              0.393
+            ],
+            [
+              3,
+              206.6,
+              102.3,
+              0.348
+            ],
+            [
+              4,
+              128.6,
+              99.8,
+              0.483
+            ],
+            [
+              5,
+              241.3,
+              163.0,
+              0.449
+            ],
+            [
+              6,
+              69.1,
+              159.3,
+              0.595
+            ],
+            [
+              7,
+              288.3,
+              206.3,
+              0.38
+            ],
+            [
+              8,
+              175.6,
+              232.3,
+              0.537
+            ],
+            [
+              9,
+              282.1,
+              208.8,
+              0.347
+            ],
+            [
+              10,
+              267.3,
+              213.8,
+              0.493
+            ],
+            [
+              11,
+              216.5,
+              317.8,
+              0.485
+            ],
+            [
+              12,
+              124.8,
+              317.8,
+              0.516
+            ],
+            [
+              13,
+              266.0,
+              434.2,
+              0.685
+            ],
+            [
+              14,
+              100.1,
+              441.7,
+              0.685
+            ],
+            [
+              15,
+              305.7,
+              556.9,
+              0.882
+            ],
+            [
+              16,
+              60.4,
+              555.6,
+              0.857
+            ],
+            [
+              17,
+              304.4,
+              211.3,
+              0.272
+            ],
+            [
+              18,
+              299.5,
+              208.8,
+              0.45
+            ]
+          ]
+        },
+        "frontal": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              188.0,
+              124.6,
+              0.389
+            ],
+            [
+              1,
+              202.9,
+              111.0,
+              0.371
+            ],
+            [
+              2,
+              180.6,
+              103.5,
+              0.393
+            ],
+            [
+              3,
+              206.6,
+              102.3,
+              0.348
+            ],
+            [
+              4,
+              128.6,
+              99.8,
+              0.483
+            ],
+            [
+              5,
+              241.3,
+              163.0,
+              0.449
+            ],
+            [
+              6,
+              69.1,
+              159.3,
+              0.595
+            ],
+            [
+              7,
+              288.3,
+              206.3,
+              0.38
+            ],
+            [
+              8,
+              175.6,
+              232.3,
+              0.537
+            ],
+            [
+              9,
+              282.1,
+              208.8,
+              0.347
+            ],
+            [
+              10,
+              267.3,
+              213.8,
+              0.493
+            ],
+            [
+              11,
+              216.5,
+              317.8,
+              0.485
+            ],
+            [
+              12,
+              124.8,
+              317.8,
+              0.516
+            ],
+            [
+              13,
+              266.0,
+              434.2,
+              0.685
+            ],
+            [
+              14,
+              100.1,
+              441.7,
+              0.685
+            ],
+            [
+              15,
+              305.7,
+              556.9,
+              0.882
+            ],
+            [
+              16,
+              60.4,
+              555.6,
+              0.857
+            ],
+            [
+              17,
+              304.4,
+              211.3,
+              0.272
+            ],
+            [
+              18,
+              299.5,
+              208.8,
+              0.45
+            ]
+          ]
+        },
+        "cenital": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              215.4,
+              154.9,
+              0.892
+            ],
+            [
+              1,
+              223.5,
+              144.4,
+              0.939
+            ],
+            [
+              2,
+              197.9,
+              142.1,
+              0.928
+            ],
+            [
+              3,
+              228.2,
+              154.9,
+              0.678
+            ],
+            [
+              4,
+              160.7,
+              150.3,
+              0.887
+            ],
+            [
+              5,
+              243.3,
+              215.4,
+              0.715
+            ],
+            [
+              6,
+              115.4,
+              227.0,
+              0.75
+            ],
+            [
+              7,
+              287.5,
+              299.1,
+              0.753
+            ],
+            [
+              8,
+              195.6,
+              299.1,
+              0.727
+            ],
+            [
+              9,
+              217.7,
+              308.4,
+              0.536
+            ],
+            [
+              10,
+              263.1,
+              282.8,
+              0.745
+            ],
+            [
+              11,
+              228.2,
+              378.2,
+              0.522
+            ],
+            [
+              12,
+              157.2,
+              388.6,
+              0.562
+            ],
+            [
+              13,
+              241.0,
+              360.7,
+              0.429
+            ],
+            [
+              14,
+              159.6,
+              346.8,
+              0.403
+            ],
+            [
+              15,
+              274.7,
+              518.9,
+              0.678
+            ],
+            [
+              16,
+              141.0,
+              517.7,
+              0.692
+            ],
+            [
+              17,
+              207.2,
+              314.2,
+              0.403
+            ],
+            [
+              18,
+              279.3,
+              278.2,
+              0.619
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id_caso": "C-007",
+      "estacion": "Línea 1 · Celda Ergonómica Certificada",
+      "tipo_tarea": "postura",
+      "fecha": "2026-11-06T13:30:00-06:00",
+      "fotos": {
+        "lateral": "sr_03_recorte_hombros_operarioC.jpg",
+        "frontal": "sr_03_recorte_hombros_operarioC.jpg",
+        "cenital": "cen_01_vista_picado_frontal.jpg"
+      },
+      "contexto": {
+        "carga_kg": 1.5,
+        "carga_brusca": false,
+        "agarre": "bueno",
+        "actividad": 0,
+        "altura_trabajo_cm": 105,
+        "modificadores": {}
+      },
+      "evaluacion_previa": {
+        "segmentos": {
+          "tronco": 1,
+          "cuello": 1,
+          "piernas": 1,
+          "brazo": 1,
+          "antebrazo": 1,
+          "muneca": 1
+        },
+        "reba_final": 2
+      },
+      "nom036": null,
+      "hallazgos_vision": [
+        {
+          "id": "V1",
+          "origen": "vision",
+          "severidad": "info",
+          "mensaje": "Postura óptima y conforme con NOM-036-1 y Jabil CUU (REBA <= 3)",
+          "vista": "lateral",
+          "caja": [
+            140,
+            180,
+            200,
+            260
+          ]
+        }
+      ],
+      "recomendaciones": [],
+      "esqueletos": {
+        "lateral": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              407.4,
+              0.0,
+              0.309
+            ],
+            [
+              1,
+              412.5,
+              0.0,
+              0.292
+            ],
+            [
+              2,
+              412.5,
+              0.0,
+              0.275
+            ],
+            [
+              3,
+              439.1,
+              0.0,
+              0.276
+            ],
+            [
+              4,
+              422.6,
+              0.0,
+              0.196
+            ],
+            [
+              5,
+              434.1,
+              7.2,
+              0.539
+            ],
+            [
+              6,
+              431.5,
+              3.4,
+              0.415
+            ],
+            [
+              7,
+              436.6,
+              94.6,
+              0.679
+            ],
+            [
+              8,
+              435.3,
+              88.3,
+              0.481
+            ],
+            [
+              9,
+              306.1,
+              76.9,
+              0.622
+            ],
+            [
+              10,
+              314.9,
+              76.9,
+              0.391
+            ],
+            [
+              11,
+              448.0,
+              230.2,
+              0.569
+            ],
+            [
+              12,
+              450.5,
+              215.0,
+              0.475
+            ],
+            [
+              13,
+              354.2,
+              344.2,
+              0.645
+            ],
+            [
+              14,
+              352.9,
+              344.2,
+              0.494
+            ],
+            [
+              15,
+              265.5,
+              479.8,
+              0.724
+            ],
+            [
+              16,
+              276.9,
+              477.3,
+              0.535
+            ],
+            [
+              17,
+              279.4,
+              64.2,
+              0.651
+            ],
+            [
+              18,
+              283.2,
+              62.9,
+              0.501
+            ]
+          ]
+        },
+        "frontal": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              407.4,
+              0.0,
+              0.309
+            ],
+            [
+              1,
+              412.5,
+              0.0,
+              0.292
+            ],
+            [
+              2,
+              412.5,
+              0.0,
+              0.275
+            ],
+            [
+              3,
+              439.1,
+              0.0,
+              0.276
+            ],
+            [
+              4,
+              422.6,
+              0.0,
+              0.196
+            ],
+            [
+              5,
+              434.1,
+              7.2,
+              0.539
+            ],
+            [
+              6,
+              431.5,
+              3.4,
+              0.415
+            ],
+            [
+              7,
+              436.6,
+              94.6,
+              0.679
+            ],
+            [
+              8,
+              435.3,
+              88.3,
+              0.481
+            ],
+            [
+              9,
+              306.1,
+              76.9,
+              0.622
+            ],
+            [
+              10,
+              314.9,
+              76.9,
+              0.391
+            ],
+            [
+              11,
+              448.0,
+              230.2,
+              0.569
+            ],
+            [
+              12,
+              450.5,
+              215.0,
+              0.475
+            ],
+            [
+              13,
+              354.2,
+              344.2,
+              0.645
+            ],
+            [
+              14,
+              352.9,
+              344.2,
+              0.494
+            ],
+            [
+              15,
+              265.5,
+              479.8,
+              0.724
+            ],
+            [
+              16,
+              276.9,
+              477.3,
+              0.535
+            ],
+            [
+              17,
+              279.4,
+              64.2,
+              0.651
+            ],
+            [
+              18,
+              283.2,
+              62.9,
+              0.501
+            ]
+          ]
+        },
+        "cenital": {
+          "ancho": 480,
+          "alto": 640,
+          "puntos": [
+            [
+              0,
+              215.4,
+              154.9,
+              0.892
+            ],
+            [
+              1,
+              223.5,
+              144.4,
+              0.939
+            ],
+            [
+              2,
+              197.9,
+              142.1,
+              0.928
+            ],
+            [
+              3,
+              228.2,
+              154.9,
+              0.678
+            ],
+            [
+              4,
+              160.7,
+              150.3,
+              0.887
+            ],
+            [
+              5,
+              243.3,
+              215.4,
+              0.715
+            ],
+            [
+              6,
+              115.4,
+              227.0,
+              0.75
+            ],
+            [
+              7,
+              287.5,
+              299.1,
+              0.753
+            ],
+            [
+              8,
+              195.6,
+              299.1,
+              0.727
+            ],
+            [
+              9,
+              217.7,
+              308.4,
+              0.536
+            ],
+            [
+              10,
+              263.1,
+              282.8,
+              0.745
+            ],
+            [
+              11,
+              228.2,
+              378.2,
+              0.522
+            ],
+            [
+              12,
+              157.2,
+              388.6,
+              0.562
+            ],
+            [
+              13,
+              241.0,
+              360.7,
+              0.429
+            ],
+            [
+              14,
+              159.6,
+              346.8,
+              0.403
+            ],
+            [
+              15,
+              274.7,
+              518.9,
+              0.678
+            ],
+            [
+              16,
+              141.0,
+              517.7,
+              0.692
+            ],
+            [
+              17,
+              207.2,
+              314.2,
+              0.403
+            ],
+            [
+              18,
+              279.3,
+              278.2,
+              0.619
+            ]
+          ]
+        }
+      }
     }
   ],
   "alertas": [
-    { "id_alerta": "DEMO-CAIDA-01", "id_operario": "OP-1042", "estacion": "Linea_2", "tipo_evento": "EMERGENCIA_CAIDA",
-      "nivel_urgencia": "ALTO", "detalles": "Simulación fase 2: persona desmayada o golpe con levantamiento rápido",
-      "timestamp": "2026-10-30T15:15:00-06:00", "id_caso": null, "estado": "nueva" }
+    {
+      "id_alerta": "DEMO-CAIDA-01",
+      "id_operario": "OP-1042",
+      "estacion": "Linea_2",
+      "tipo_evento": "EMERGENCIA_CAIDA",
+      "nivel_urgencia": "ALTO",
+      "detalles": "Simulación fase 2: persona desmayada o golpe con levantamiento rápido",
+      "timestamp": "2026-10-30T15:15:00-06:00",
+      "id_caso": null,
+      "estado": "nueva"
+    },
+    {
+      "id_alerta": "ALT-JABIL-001",
+      "id_operario": "OP-1042",
+      "estacion": "Línea 2 · Estación 04",
+      "tipo_evento": "RIESGO_ALTO_PENDIENTE",
+      "nivel_urgencia": "CRITICO",
+      "detalles": "C-001: REBA Inicial Alto (Puntaje >= 8) y Carga de 16.5 kg supera límite normativo Jabil B1 (14.0 kg)",
+      "timestamp": "2026-11-06T10:05:00-06:00",
+      "id_caso": "C-001",
+      "estado": "nueva"
+    },
+    {
+      "id_alerta": "ALT-JABIL-002",
+      "id_operario": "OP-1088",
+      "estacion": "Línea 5 · Empaque Final",
+      "tipo_evento": "RIESGO_ALTO_PENDIENTE",
+      "nivel_urgencia": "ALTO",
+      "detalles": "C-005: Acarreo manual forzado individual de 15.0 kg sin auxiliar",
+      "timestamp": "2026-11-06T12:20:00-06:00",
+      "id_caso": "C-005",
+      "estado": "nueva"
+    }
   ]
 }

@@ -29,10 +29,12 @@ class NormativeConfigLoader:
     def __init__(self, config_dir: Optional[Path] = None):
         self.config_dir = Path(config_dir or self.DEFAULT_CONFIG_DIR)
         self._jabil_standards: Optional[Dict[str, Any]] = None
+        self._jabil_reglas: Optional[list[Dict[str, Any]]] = None
         self._reba_tables: Optional[Dict[str, Any]] = None
         self._nom036_tables: Optional[Dict[str, Any]] = None
+        self._nom036_kb: Optional[str] = None
 
-    def _load_json_file(self, filename: str) -> Dict[str, Any]:
+    def _load_json_file(self, filename: str) -> Any:
         file_path = self.config_dir / filename
         if not file_path.exists():
             raise ConfigLoadError(f"Catálogo normativo no encontrado: {file_path}")
@@ -76,11 +78,34 @@ class NormativeConfigLoader:
             self._nom036_tables = data
         return self._nom036_tables
 
+    def get_nom036_kb(self, reload: bool = False) -> str:
+        """Obtiene el texto normativo de la base de conocimiento NOM-036-1-STPS-2018."""
+        if self._nom036_kb is None or reload:
+            kb_path = self.config_dir / "nom036_knowledge_base.md"
+            if not kb_path.exists():
+                raise ConfigLoadError(f"Base de conocimiento no encontrada: {kb_path}")
+            try:
+                self._nom036_kb = kb_path.read_text(encoding="utf-8")
+            except OSError as e:
+                raise ConfigLoadError(f"Error al leer base de conocimiento {kb_path}: {e}") from e
+        return self._nom036_kb
+
+    def get_jabil_reglas(self, reload: bool = False) -> list[Dict[str, Any]]:
+        """Obtiene el catálogo de reglas RAG con aislamiento por tipo_prueba (jabil_reglas.json)."""
+        if self._jabil_reglas is None or reload:
+            data = self._load_json_file("jabil_reglas.json")
+            if not isinstance(data, list) or not data:
+                raise ConfigLoadError("Estructura inválida en jabil_reglas.json: se esperaba una lista no vacía")
+            self._jabil_reglas = data
+        return self._jabil_reglas
+
     def validate_all(self) -> None:
         """Valida que todos los catálogos existan y cumplan sus contratos en tiempo de arranque."""
         self.get_jabil_standards(reload=True)
+        self.get_jabil_reglas(reload=True)
         self.get_reba_tables(reload=True)
         self.get_nom036_tables(reload=True)
+        self.get_nom036_kb(reload=True)
 
 
 # Instancia compartida por defecto (Singleton de lectura)

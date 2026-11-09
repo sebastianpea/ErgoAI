@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Mapping, Optional
 
+from backend.app.core_agent.in_memory_rag import InMemoryRAG
 from backend.app.core_ergonomics.modelos import ContextoTarea, Segmento
 
 TAREAS_CON_LEVANTAMIENTO = ("levantamiento", "transporte")
@@ -27,6 +28,7 @@ def generar(
     reba_final: int,
     reba_cfg: Mapping[str, Any],
     jabil: Mapping[str, Any],
+    rag: Optional[InMemoryRAG] = None,
 ) -> List[Dict[str, Any]]:
     seg = reba_cfg["segment_scoring_deg"]
     ref = jabil["references"]
@@ -93,22 +95,26 @@ def generar(
                 ref["footrest"], {"angulos": {"piernas": 0}, "apoyo_unilateral": False})
 
     # ---------- Método de trabajo y medidas administrativas ----------
+    reduccion_tecnica = float(seg["trunk"].get("posture_training_reduction_deg", 15.0))
     if tronco is not None and tronco > lim_tronco:
-        objetivo = round(max(tronco - 15, neutro_tronco), 1)
+        objetivo = round(max(tronco - reduccion_tecnica, neutro_tronco), 1)
         agregar("administrativo", "postura", "Corregir técnica de trabajo",
                 f"Capacitar al operador para flexionar rodillas y reducir la flexión de tronco de {_g(tronco)} a "
                 f"{_g(objetivo)} mientras se implementan los cambios en planta.",
                 "NOM-036-1-STPS-2018 capacitación", {"angulos": {"tronco": objetivo}})
 
-    if reba_final >= 4:
+    umbral_reba_medio = int(reba_cfg["risk_levels"]["3"]["score_range"][0])
+    if reba_final >= umbral_reba_medio:
         agregar("administrativo", "administrativo", "Rotación de puesto y pausas",
                 f"Rotar entre esta estación y una de bajo riesgo; no exceder {ley_silla['max_continuous_standing_hours']:g} h "
                 f"de pie continuas con pausas de {ley_silla['mandatory_break_minutes']:g} min.",
                 ref["chair_law"], {"actividad": max(ctx.actividad - 1, 0)} if ctx.actividad > 0 else {})
 
+    motor_rag = rag or InMemoryRAG(dict(jabil))
     for i, r in enumerate(recs, start=1):
         r["id"] = f"R{i}"
         r["efecto"] = _sin_cambios_nulos(r["efecto"], angulos, ctx)
+        motor_rag.enriquecer_recomendacion(r, angulos, ctx, tipo_tarea)
     return recs
 
 

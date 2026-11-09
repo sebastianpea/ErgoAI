@@ -1,5 +1,22 @@
+# ============================================================================
+# ErgoAI Backend - Dependencias Principales (API, Validación, RAG, Trazabilidad y Agente IA)
+# ============================================================================
+
+# --- Framework Web, Servidor ASGI y Validación de Esquemas ---
 fastapi==0.115.6
 uvicorn==0.32.1
 pydantic==2.10.4
-# Solo pruebas (fastapi.testclient)
+python-multipart>=0.0.20
+python-dotenv>=1.0.0
+
+# --- Orquestación Agente IA (LangChain + Proveedor Local Ollama) ---
+langchain-core>=0.3.0
+langchain-ollama>=0.2.0
+
+# --- Cliente HTTP y Suite de Pruebas Automatizadas (pytest + fastapi.testclient) ---
 httpx==0.28.1
+pytest>=8.0.0
+
+# --- Proveedores LLM Cloud Alternativos (Opcionales: si LLM_PROVIDER=GEMINI o OPENAI) ---
+# pip install langchain-google-genai>=2.0.0
+# pip install langchain-openai>=0.2.0

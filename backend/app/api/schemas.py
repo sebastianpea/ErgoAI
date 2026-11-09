@@ -10,8 +10,10 @@ from pydantic import BaseModel, Field, model_validator
 
 from backend.app.core_ergonomics.cambios import CambioPropuesto
 from backend.app.core_ergonomics.modelos import ContextoTarea, Efecto, NivelReba, Segmento
+from backend.app.settings import USUARIO_POR_DEFECTO
 
 Vista = Literal["lateral", "frontal", "cenital"]
+VISTAS: Tuple[Vista, ...] = ("lateral", "frontal", "cenital")
 TipoTarea = Literal["postura", "levantamiento", "transporte", "empuje_sin_auxiliar", "empuje_con_auxiliar"]
 ColorNom = Literal["verde", "amarillo", "naranja", "rojo", "morado"]
 NivelControl = Literal["ingenieria", "administrativo"]
@@ -43,6 +45,8 @@ class Angulo(BaseModel):
     puntaje_reba: int
     modificadores: List[str]
     estado: Literal["ok", "revisar", "sin_dato"]
+    motivo_estado: Optional[str] = None
+    confirmado: bool = False
     puntaje_previo: Optional[int] = None
 
 
@@ -114,6 +118,12 @@ class RecomendacionBase(BaseModel):
     nota_autorizacion: Optional[str] = None
     implementado_por: Optional[str] = None
     nota_implementacion: Optional[str] = None
+    justificacion_rag: Optional[str] = None
+    norma_vinculada: Optional[str] = None
+    codigo_jabil: Optional[str] = None
+    hoja_excel_jabil: Optional[str] = None
+    layer_autocad: Optional[str] = None
+    tramite_moc: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -212,6 +222,7 @@ class CasoAlmacenado(BaseModel):
     nom036: Optional[Nom036Captura] = None
     hallazgos_vision: List[Hallazgo] = Field(default_factory=list)
     hallazgos_descartados: Dict[str, Descarte] = Field(default_factory=dict)
+    angulos_confirmados: List[str] = Field(default_factory=list)
     recomendaciones: List[RecomendacionAlmacenada] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -227,7 +238,6 @@ class CasoAlmacenado(BaseModel):
 
 # ---------- Peticiones ----------
 
-USUARIO_POR_DEFECTO = "Ing. Ergonomía"  # sin login en el prototipo
 Usuario = Field(USUARIO_POR_DEFECTO, min_length=3, max_length=120)
 ValorCambio = Union[bool, float, str]
 
@@ -321,9 +331,42 @@ class AtenderAlerta(Actor):
 class NuevoCaso(Actor):
     """Datos que acompañan a las fotos al crear un caso (campo `datos` del formulario multipart)."""
     estacion: str = Field(min_length=3, max_length=120)
-    tipo_tarea: TipoTarea
+    tipo_tarea: TipoTarea = "postura"
+    tipo_operacion: Optional[str] = None
     contexto: ContextoTarea = Field(default_factory=ContextoTarea)
     evaluacion_previa: EvaluacionPrevia = Field(default_factory=EvaluacionPrevia)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalizar_tipo_operacion(cls, data: object) -> object:
+        if not isinstance(data, dict):
+            return data
+        op = data.get("tipo_operacion")
+        if op and not data.get("tipo_tarea"):
+            mapa = {
+                "levantamiento (1)": "levantamiento",
+                "levantamiento_1": "levantamiento",
+                "levantamiento": "levantamiento",
+                "transporte (2)": "transporte",
+                "transporte_2": "transporte",
+                "transporte": "transporte",
+                "equipo (3)": "levantamiento",
+                "equipo_3": "levantamiento",
+                "equipo": "levantamiento",
+                "sin auxiliar (4)": "empuje_sin_auxiliar",
+                "sin_auxiliar_4": "empuje_sin_auxiliar",
+                "sin_auxiliar": "empuje_sin_auxiliar",
+                "empuje_sin_auxiliar": "empuje_sin_auxiliar",
+                "con auxiliar (5)": "empuje_con_auxiliar",
+                "con_auxiliar_5": "empuje_con_auxiliar",
+                "con_auxiliar": "empuje_con_auxiliar",
+                "empuje_con_auxiliar": "empuje_con_auxiliar",
+                "postura": "postura",
+            }
+            normalizado = mapa.get(str(op).strip().lower())
+            if normalizado:
+                data = {**data, "tipo_tarea": normalizado}
+        return data
 
 
 class EstadoVision(BaseModel):
@@ -362,3 +405,35 @@ class ResultadoIntegridad(BaseModel):
     total: int
     primera_falla: Optional[int]
     detalle: Optional[str] = None
+
+
+# ---------- RAG Normativo en Memoria ----------
+
+class ConsultaRAGRequest(BaseModel):
+    consulta: str = Field(..., min_length=2, description="Texto de búsqueda o palabra clave normativa")
+    top_k: int = Field(default=3, ge=1, le=10)
+
+
+class FragmentoNormativo(BaseModel):
+    id: str
+    condicion: str
+    titulo: str
+    documento: str
+    seccion: str
+    pagina: int
+    norma_vinculada: str
+    hoja_excel_jabil: str
+    layer_autocad: str
+    tramite_moc: str
+    texto_oficial: str
+    control_ingenieria: str
+    score: float
+    terminos_coincidentes: List[str] = Field(default_factory=list)
+
+
+class RespuestaRAG(BaseModel):
+    consulta: str
+    total_coincidencias: int
+    resultados: List[FragmentoNormativo]
+    tiempo_ms: float
+

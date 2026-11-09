@@ -62,7 +62,9 @@ export function Informe() {
         {c.imagenes.map(img => (
           <figure key={img.vista}>
             <SkeletonEditor imagen={img} editable={false}
-              colorSegmento={s => COLOR_SEMAFORO[semaforoSegmento(puntaje.get(s))]}
+              colorSegmento={s => COLOR_SEMAFORO[semaforoSegmento(
+                c.angulos.find(a => a.vista === img.vista && a.segmento === s)?.puntaje_reba ?? puntaje.get(s)
+              )]}
               cajas={vigentes.filter(h => h.vista === img.vista)} />
             <figcaption>Vista {img.vista}</figcaption>
           </figure>
@@ -90,18 +92,73 @@ export function Informe() {
       <h2>5. Plan de acción aprobado</h2>
       <div className="tabla-scroll">
         <table>
-          <thead><tr><th>#</th><th>Control</th><th>Acción</th><th>Ajustes</th><th>Referencia</th><th>Responsable</th><th>Compromiso</th><th>Estado</th></tr></thead>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Control</th>
+              <th>Acción y Cita Normativa RAG</th>
+              <th>Ajustes</th>
+              <th>Responsable</th>
+              <th>Compromiso</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
           <tbody>
             {aprobadas.map((r, i) => (
               <tr key={r.id}>
                 <td>{i + 1}</td>
-                <td>{r.nivel_control === "ingenieria" ? "Ingeniería" : "Administrativo"}<br />
-                  <span className="sutil">{ETIQUETA_TIPO_CAMBIO[r.tipo_cambio]}</span></td>
-                <td><strong>{r.titulo}.</strong> {r.texto}</td>
+                <td>
+                  <strong>{r.nivel_control === "ingenieria" ? "Ingeniería" : "Administrativo"}</strong>
+                  <br />
+                  <span className="sutil">{ETIQUETA_TIPO_CAMBIO[r.tipo_cambio]}</span>
+                </td>
+                <td>
+                  <div style={{ marginBottom: "6px" }}>
+                    <strong>{r.titulo}.</strong> {r.texto}
+                  </div>
+                  {(r.layer_autocad || r.hoja_excel_jabil || r.tramite_moc) && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", margin: "6px 0" }}>
+                      {r.layer_autocad && (
+                        <span style={{ fontSize: "0.72rem", padding: "2px 6px", borderRadius: "3px", background: "#e0f2fe", color: "#0369a1", fontWeight: 600 }}>
+                          📐 AutoCAD: Layer {r.layer_autocad}
+                        </span>
+                      )}
+                      {r.hoja_excel_jabil && (
+                        <span style={{ fontSize: "0.72rem", padding: "2px 6px", borderRadius: "3px", background: "#dcfce7", color: "#15803d", fontWeight: 600 }}>
+                          📊 Excel: {r.hoja_excel_jabil}
+                        </span>
+                      )}
+                      {r.tramite_moc && (
+                        <span style={{ fontSize: "0.72rem", padding: "2px 6px", borderRadius: "3px", background: "#fef3c7", color: "#b45309", fontWeight: 600 }}>
+                          🛡️ {r.tramite_moc}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div
+                    className="informe-justificacion-rag"
+                    style={{
+                      marginTop: "8px",
+                      padding: "8px 10px",
+                      background: "#f0f9ff",
+                      borderLeft: "3.5px solid #0284c7",
+                      borderRadius: "4px",
+                      fontSize: "0.82rem",
+                      lineHeight: "1.45",
+                      color: "#0f172a",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, color: "#0369a1", marginBottom: "3px", fontSize: "0.8rem" }}>
+                      📑 Justificación RAG (16-PE30-6500-00023 / NOM-036) · Párrafo Completo Citado:
+                    </div>
+                    <div>
+                      {r.justificacion_rag || `Referencia: ${r.referencia}`}
+                    </div>
+                  </div>
+                </td>
                 <td>{r.cambios.length ? r.cambios.map(cb => (
                   <div key={cb.parametro}>{cb.etiqueta}: {valorCambio(cb.actual, cb.unidad)} → <strong>{valorCambio(cb.objetivo, cb.unidad)}</strong></div>
                 )) : "—"}</td>
-                <td>{r.referencia}</td>
                 <td>{r.responsable ?? "—"}</td>
                 <td>{r.fecha_compromiso ?? "—"}</td>
                 <td>{r.implementacion ? ETIQUETA_IMPLEMENTACION[r.implementacion] : "—"}

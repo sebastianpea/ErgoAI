@@ -36,7 +36,12 @@
   },
   "segment_scoring_deg": {
     "_nota": "Rangos de Hignett & McAtamney (2000). Flexión positiva, extensión negativa. 'max' es inclusivo.",
-    "trunk": { "upright_tolerance": 5, "flexion_limits": [20, 60], "extension_limit": 20 },
+    "trunk": {
+      "upright_tolerance": 5,
+      "flexion_limits": [20, 60],
+      "extension_limit": 20,
+      "posture_training_reduction_deg": 15
+    },
     "neck": { "flexion_limit": 20, "extension_tolerance": 5 },
     "legs": { "knee_limits": [30, 60] },
     "upper_arm": { "flexion_limits": [20, 45, 90], "extension_limit": 20 },
@@ -64,7 +69,7 @@
       [[7, 8, 8], [8, 9, 9]]
     ]
   },
-  "load_force_kg": { "lt_5": 0, "5_to_10": 1, "gt_10": 2, "shock_add": 1 },
+  "load_force_kg": { "thresholds": [5.0, 10.0], "lt_5": 0, "5_to_10": 1, "gt_10": 2, "shock_add": 1 },
   "coupling_scores": { "bueno": 0, "regular": 1, "malo": 2, "inaceptable": 3 },
   "table_c_matrix": [
     [1, 1, 1, 2, 3, 3, 4, 5, 6, 7, 7, 7],

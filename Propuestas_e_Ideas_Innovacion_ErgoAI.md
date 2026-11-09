@@ -1,4 +1,4 @@
-# Propuestas de Innovación y Diferenciación para ErgoAI (Track 4 - Jabil)
+en# Propuestas de Innovación y Diferenciación para ErgoAI (Track 4 - Jabil)
 
 Este documento reúne propuestas de alto impacto técnico y operativo diseñadas específicamente para maximizar el puntaje en los bloques de **Diseño e Innovación (Criterios 4 y 5 - 15 pts)**, **Viabilidad y Valor (Criterios 6, 7 y 8 - 15 pts)** y **Desempeño Técnico (Criterios 1, 2 y 3 - 50 pts)** de la rúbrica oficial de Jabil en X-RAIC 2026.
 

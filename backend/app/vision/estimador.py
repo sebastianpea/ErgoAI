@@ -21,15 +21,22 @@ try:  # el stack de visión es opcional: sin él, el resto del backend funciona 
 except ImportError:  # pragma: no cover
     np = None  # type: ignore[assignment]
 
-from backend.app.settings import VISION_CONFIANZA_KEYPOINT, VISION_DEVICE
+from backend.app.settings import (
+    VISION_CONFIANZA_KEYPOINT,
+    VISION_CONFIANZA_RESPALDO,
+    VISION_DEVICE,
+    VISION_LADO_MAXIMO_PX,
+    VISION_MIN_PUNTOS_RESPALDO,
+    VISION_STD_MINIMA_IMAGEN,
+)
 from backend.app.vision.modelos import MODELOS, faltantes, ruta_modelo
 
 log = logging.getLogger("ergoai.vision")
 
 MAPA_PUNTOS: dict[int, int] = {i: i for i in range(17)} | {17: 100, 18: 121}
 ROSTRO_WHOLEBODY = list(range(0, 5)) + list(range(23, 91))  # nariz, ojos, orejas + 68 puntos faciales
-LADO_MAXIMO_PX = 1600  # se reduce la foto antes de inferir y guardar (coordenadas en ese tamaño)
-MIN_PUNTOS_RESPALDO = 8  # de los 17 del cuerpo, fiables, para aceptar la estimación sin detección
+LADO_MAXIMO_PX = VISION_LADO_MAXIMO_PX  # se reduce la foto antes de inferir y guardar (coordenadas en ese tamaño)
+MIN_PUNTOS_RESPALDO = VISION_MIN_PUNTOS_RESPALDO  # de los 17 del cuerpo, detectables en oclusión severa
 
 
 class VisionNoDisponible(RuntimeError):
@@ -127,6 +134,8 @@ class EstimadorPose:
         with self._lock:  # ONNX Runtime admite concurrencia, pero en CPU no gana nada y duplica memoria
             self._cargar()
             img = reducir(img_bgr).copy()
+            if float(img.std()) < VISION_STD_MINIMA_IMAGEN:
+                return ResultadoFoto(imagen_bgr=img, personas=0)
             cajas = self._detector(img)
             cajas = np.atleast_2d(np.asarray(cajas, dtype=np.float32)) if cajas is not None else np.zeros((0, 4))
             respaldo = cajas.size == 0
@@ -137,7 +146,7 @@ class EstimadorPose:
                 cajas = np.array([[0, 0, w, h]], dtype=np.float32)
             cajas = cajas[:, :4]
             kpts, scores = self._pose(img, bboxes=cajas.tolist())
-            if respaldo and int((scores[0, :17] >= VISION_CONFIANZA_KEYPOINT).sum()) < MIN_PUNTOS_RESPALDO:
+            if respaldo and int((scores[0, :17] >= VISION_CONFIANZA_RESPALDO).sum()) < MIN_PUNTOS_RESPALDO:
                 return ResultadoFoto(imagen_bgr=img, personas=0)
 
         anonimo = anonimizar_rostro(img, kpts, scores, VISION_CONFIANZA_KEYPOINT)

@@ -17,7 +17,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Tuple
 
-from backend.app.settings import MODELS_DIR
+from backend.app.settings import (
+    MODELS_DIR,
+    RTMPOSE_MODEL_URL,
+    VISION_DOWNLOAD_TIMEOUT_SEC,
+    YOLOX_MODEL_URL,
+)
 
 
 @dataclass(frozen=True)
@@ -32,15 +37,13 @@ MODELOS: Dict[str, ModeloOnnx] = {
     "detector": ModeloOnnx(
         nombre="YOLOX-tiny (detección de personas, HumanArt)",
         archivo="yolox_tiny_8xb8-300e_humanart-6f3252f9.onnx",
-        url="https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/"
-            "yolox_tiny_8xb8-300e_humanart-6f3252f9.zip",
+        url=YOLOX_MODEL_URL,
         entrada=(416, 416),
     ),
     "pose": ModeloOnnx(
         nombre="RTMW-L WholeBody-133 (cuerpo, pies, rostro y manos)",
         archivo="rtmw-dw-l-m_simcc-cocktail14_270e-256x192_20231122.onnx",
-        url="https://download.openmmlab.com/mmpose/v1/projects/rtmw/onnx_sdk/"
-            "rtmw-dw-l-m_simcc-cocktail14_270e-256x192_20231122.zip",
+        url=RTMPOSE_MODEL_URL,
         entrada=(192, 256),
     ),
 }
@@ -65,7 +68,7 @@ def descargar(clave: str) -> Path:
         zip_path = Path(tmp) / "modelo.zip"
         print(f"Descargando {m.nombre}…")
         peticion = urllib.request.Request(m.url, headers={"User-Agent": "ergoai-model-fetch"})
-        with urllib.request.urlopen(peticion, timeout=120) as resp, open(zip_path, "wb") as f:
+        with urllib.request.urlopen(peticion, timeout=VISION_DOWNLOAD_TIMEOUT_SEC) as resp, open(zip_path, "wb") as f:
             shutil.copyfileobj(resp, f)
         with zipfile.ZipFile(zip_path) as z:
             onnx = [n for n in z.namelist() if n.endswith(".onnx")]
