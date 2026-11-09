@@ -176,7 +176,66 @@ El sistema organiza sus dependencias de manera modular y unificada:
 
 ---
 
-## 6. Guía de Ejecución Paso a Paso
+## 6. Requerimientos para Ejecutar la IA Local y Descarga de Modelos
+
+Cualquier persona del equipo puede descargar y ejecutar tanto los modelos de Visión Artificial como el Modelo de Lenguaje Local (LLM) en su propia máquina.
+
+### Requerimientos de Hardware y Software
+
+| Componente | Requerimiento Mínimo | Recomendado | Notas |
+| :--- | :--- | :--- | :--- |
+| **Procesador (CPU)** | 4 núcleos (Intel Core i5 / AMD Ryzen 5) | 8 núcleos o superior | Los modelos ONNX de visión y Ollama corren fluidos en CPU. |
+| **Memoria RAM** | 8 GB RAM | 16 GB RAM | Con 8 GB corre perfectamente `qwen2.5:latest` (~2.0 GB de RAM) y ONNX Runtime (~400 MB). |
+| **Tarjeta Gráfica (GPU)** | Opcional (Integrada / CPU) | NVIDIA con 4 GB+ VRAM (CUDA 12+) | En CPU la inferencia del LLM toma 1-3 segundos; con GPU NVIDIA toma < 0.5s. |
+| **Almacenamiento** | 5 GB libres en disco | 10 GB libres en disco SSD | Modelos ONNX de visión: ~150 MB. Modelo LLM Ollama: ~2.5 GB. |
+| **Sistema Operativo** | Linux (Ubuntu 20.04+), Windows 10/11 con WSL2, o macOS | Linux / WSL2 | 100% multiplataforma. |
+| **Software Adicional** | Ollama (v0.1.30+) o Docker | Ollama con soporte GPU | Para descargar y servir el LLM local. |
+
+---
+
+### Descarga de Modelos para el Equipo (Script Automático de 1 Clic)
+
+Se preparó el script [`scripts/preparar_entorno_ia.py`](../scripts/preparar_entorno_ia.py) para que cualquier persona del equipo configure todo el entorno de IA con un solo comando:
+
+```bash
+# Desde la raíz del repositorio ErgoAI:
+python scripts/preparar_entorno_ia.py
+```
+
+Este script ejecuta automáticamente:
+1. **Descarga de Modelos de Visión**: Descarga los archivos ONNX oficiales (`yolox_tiny` y `rtmw_dw_l_m`) a la carpeta `models/` (~150 MB) si aún no existen.
+2. **Descarga y Verificación de Ollama**: Detecta si Ollama está en ejecución, verifica el modelo `qwen2.5` y lo descarga automáticamente (`ollama pull qwen2.5`) si falta.
+3. **Prueba de Inferencia End-to-End**: Corre una evaluación sintética para certificar que el LLM y el RAG responden adecuadamente.
+
+---
+
+### Descarga Manual Paso a Paso (Alternativa)
+
+Si un miembro del equipo prefiere descargar los modelos de forma manual:
+
+#### 1. Modelos de Visión 2D (ONNX Runtime):
+```bash
+python -m backend.app.vision.modelos
+```
+*(Crea la carpeta `models/` y descarga los modelos ONNX oficiales de OpenMMLab).*
+
+#### 2. Modelo LLM Local (Ollama):
+1. Instalar Ollama:
+   - **Linux / WSL2**: `curl -fsSL https://ollama.com/install.sh | sh`
+   - **Windows / Mac**: Descargar instalador gráfico desde [ollama.com](https://ollama.com)
+2. Iniciar el servicio y descargar el modelo:
+   ```bash
+   ollama serve
+   ollama pull qwen2.5
+   ```
+3. Probar la inferencia del agente:
+   ```bash
+   python test_agent.py
+   ```
+
+---
+
+## 7. Guía de Ejecución Paso a Paso
 
 ### Preparación del Entorno (Primera Vez)
 

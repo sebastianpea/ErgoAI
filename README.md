@@ -94,11 +94,14 @@ cd ..
    cp .env.example .env
    ```
 
-2. **(Opcional) Descargar modelos ONNX para evaluar fotografías nuevas con Visión 2D**:
-   *(Los 7 casos semilla pre-cargados funcionan de inmediato sin descargar modelos. Si desea subir fotografías reales para inferencia de esqueleto 2D, ejecute:)*
+2. **Descargar modelos locales (Visión 2D + Ollama LLM)**:
+   *(Cualquier miembro del equipo puede descargar y verificar todos los modelos locales ejecutando un solo comando:)*
    ```bash
-   .venv/bin/python -m backend.app.vision.modelos
+   .venv/bin/python scripts/preparar_entorno_ia.py
    ```
+   *O de forma manual:*
+   - Visión ONNX: `.venv/bin/python -m backend.app.vision.modelos`
+   - LLM Local: `ollama pull qwen2.5`
 
 3. **Iniciar el Backend (FastAPI en puerto configurable `8000`)**:
    ```bash
