@@ -1,53 +1,43 @@
+"""Optional real inference accuracy check; synthetic mocks do not establish accuracy."""
+import json
 from pathlib import Path
 
-from backend.app.vision.estimador import estimador, VisionNoDisponible
+import cv2
+import pytest
 
+from backend.app.core_ergonomics.angle_geometry import extraer_angulos_laterales
+from backend.app.vision.estimador import estimador
 
-DATASET_DIR = Path("backend/app/seed/dataset_jabil")
-
-EXPECTED = {
-    "aux_01_carrito_tapa_rodillas_A.jpg": {"tronco": 25, "brazo": 45},
-    "aux_02_carrito_tapa_rodillas_B.jpg": {"tronco": 30, "brazo": 50},
-    "aux_03_mesa_transporte_cadera_C.jpg": {"tronco": 20, "brazo": 40},
-    "cen_01_vista_picado_frontal.jpg": {"tronco": 15, "brazo": 35},
-    "cen_02_vista_cenital_oblicua_25deg.jpg": {"tronco": 10, "brazo": 30},
-    "cen_03_vista_cenital_rotada_neg30deg.jpg": {"tronco": 20, "brazo": 40},
-    "lev_01_caja_pecho_munecas_A.jpg": {"tronco": 35, "brazo": 55},
-    "lev_02_caja_pecho_munecas_B.jpg": {"tronco": 40, "brazo": 60},
-    "lev_03_caja_lateral_perfil_C.jpg": {"tronco": 30, "brazo": 50},
-    "sr_01_recuadro_negro_operarioA.jpg": {"tronco": 15, "brazo": 30},
-    "sr_02_recuadro_negro_operarioB.jpg": {"tronco": 20, "brazo": 35},
-    "sr_03_recorte_hombros_operarioC.jpg": {"tronco": 25, "brazo": 45},
-}
-
+DATASET_DIR = Path(__file__).resolve().parents[1] / "backend/app/seed/dataset_jabil"
+REFERENCE = DATASET_DIR / "angulos_referencia.json"
 TOLERANCE_DEG = 5.0
 
 
 def test_dataset_images_exist():
-    assert DATASET_DIR.is_dir(), f"Dataset directory not found: {DATASET_DIR}"
-    images = list(DATASET_DIR.glob("*.jpg"))
-    assert len(images) > 0, "No JPG images in dataset"
+    assert DATASET_DIR.is_dir()
+    assert any(DATASET_DIR.glob("*.jpg"))
 
 
 def test_vision_precision_within_reba_range():
-    ok = 0
-    total = 0
-    for img_name, expected in EXPECTED.items():
-        img_path = DATASET_DIR / img_name
-        if not img_path.exists():
-            continue
-        total += 1
-        try:
-            result = estimador.analizar(str(img_path))
-        except VisionNoDisponible:
-            # Modelos ONNX no descargados aún: cuenta como revisar (aceptable per spec)
-            ok += 1
-            continue
-        # Cada imagen procesable cuenta como dentro de rango o marcada para revisar
-        ok += 1
-
-    if total == 0:
-        assert True, "No images to test (dataset missing or empty)"
-    else:
-        ratio = ok / total
-        assert ratio >= 0.90, f"Vision precision {ratio:.2%} below 90% threshold"
+    # The former EXPECTED values had no annotated provenance and were never measured.
+    # Reference format: {filename: {segment: degrees}}, validated by a specialist.
+    if not REFERENCE.is_file():
+        pytest.skip("Faltan ángulos de referencia anotados y validados; no se puede acreditar precisión >=90%")
+    available, reason = estimador.estado()
+    if not available:
+        pytest.skip(reason)
+    expected = json.loads(REFERENCE.read_text(encoding="utf-8"))
+    assert expected, "La referencia validada no puede estar vacía"
+    correct = total = 0
+    for filename, angles in expected.items():
+        image = cv2.imread(str(DATASET_DIR / filename))
+        assert image is not None, f"Falta imagen de referencia: {filename}"
+        result = estimador.analizar(image)
+        measured = extraer_angulos_laterales(result.puntos)
+        for segment, degrees in angles.items():
+            total += 1
+            angle = measured[segment]
+            if angle.grados is not None and angle.confianza >= .5 and abs(angle.grados - degrees) <= TOLERANCE_DEG:
+                correct += 1
+    assert total > 0
+    assert correct / total >= .90, f"Precisión real {correct}/{total} inferior a 90%"

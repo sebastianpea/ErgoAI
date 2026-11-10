@@ -4,13 +4,15 @@ propuestos, autorización de ingeniería para cambios en planta e implementació
 """
 
 import json
-import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from backend.app.api.schemas import Hallazgo
+from backend.app.settings import SEED_DIR
 from backend.main import create_app
 
 ERGO = {"usuario": "Ing. Ergonomía", "rol": "ergonomia"}
@@ -19,13 +21,25 @@ IE = {"usuario": "Ing. Procesos", "rol": "ingenieria"}
 
 class TestFlujoEspecialista(unittest.TestCase):
     def setUp(self):
-        self.ws = Path(tempfile.mkdtemp(prefix="ergoai_flujo_"))
-        self.c = TestClient(create_app(workspace_dir=self.ws))
-        self.c.__enter__()
-
-    def tearDown(self):
-        self.c.__exit__(None, None, None)
-        shutil.rmtree(self.ws, ignore_errors=True)
+        self.ws = Path(self.enterContext(tempfile.TemporaryDirectory(prefix="ergoai_flujo_")))
+        semilla = json.loads((SEED_DIR / "casos_demo.json").read_text(encoding="utf-8"))
+        # El flujo del especialista usa plantillas generadas, no inferencia sobre fotos reales.
+        for caso in semilla["casos"]:
+            caso["fotos"] = {}
+        ruta = self.ws / "semilla.json"
+        ruta.write_text(json.dumps(semilla), encoding="utf-8")
+        inferencia = self.enterContext(patch("backend.app.services.casos.estimador.analizar"))
+        self.addCleanup(inferencia.assert_not_called)
+        self.c = self.enterContext(TestClient(create_app(workspace_dir=self.ws / "casos", sembrar=False)))
+        servicio = self.c.app.state.servicio
+        self.assertEqual(servicio.sembrar_si_vacio(ruta), len(semilla["casos"]))
+        # La siembra no infiere objetos: conservar los hallazgos sintéticos de esta fixture.
+        for datos in semilla["casos"]:
+            caso = servicio._cargar(datos["id_caso"])
+            caso.hallazgos_vision.extend(Hallazgo.model_validate(h) for h in datos.get("hallazgos_vision", []))
+            servicio._guardar(caso)
+            servicio._sincronizar(caso, servicio._evaluar(caso))
+        self.ws = self.ws / "casos"
 
     # ---------- utilidades ----------
 

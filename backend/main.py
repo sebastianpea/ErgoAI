@@ -17,7 +17,7 @@ from typing import List, Optional
 from fastapi import FastAPI, File, Form, Path as RutaParam, Query, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import ValidationError
 
 from backend.app.api.schemas import (
@@ -97,7 +97,12 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
     @app.get("/media/{id_caso}/{archivo}")
     def media(request: Request, id_caso: str = RutaParam(pattern=r"^[A-Za-z0-9_.-]{1,128}$"),
               archivo: str = RutaParam(pattern=r"^[A-Za-z0-9_.-]{1,128}$")):
-        return FileResponse(svc(request).ruta_media(id_caso, archivo))
+        import cv2
+        imagen = svc(request).imagen_media_protegida(id_caso, archivo)
+        ok, contenido = cv2.imencode(".png", imagen)
+        if not ok:
+            raise DatosInvalidos("No se pudo proteger la imagen")
+        return Response(contenido.tobytes(), media_type="image/png", headers={"Cache-Control": "no-store"})
 
     @app.post("/rag/consultar", response_model=RespuestaRAG)
     def consultar_rag(request: Request, cuerpo: ConsultaRAGRequest):

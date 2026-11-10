@@ -30,6 +30,7 @@ from backend.app.settings import (
     VISION_STD_MINIMA_IMAGEN,
 )
 from backend.app.vision.modelos import MODELOS, faltantes, ruta_modelo
+from backend.app.vision.privacidad import localizar_cabezas, proteger_imagen
 
 log = logging.getLogger("ergoai.vision")
 
@@ -53,12 +54,13 @@ class PuntoDetectado:
 
 @dataclass
 class ResultadoFoto:
-    imagen_bgr: np.ndarray          # ya reducida y con el rostro difuminado
+    imagen_bgr: np.ndarray          # ya reducida y protegida por máscara sólida
     personas: int
     puntos: List[PuntoDetectado] = field(default_factory=list)
     caja: Optional[Tuple[float, float, float, float]] = None
     rostro_anonimizado: bool = False
     por_respaldo: bool = False  # el detector no vio a la persona; se estimó sobre la imagen completa
+    regiones_privacidad: Optional[List[Tuple[int, int, int, int]]] = None  # [] indica cierre completo
 
 
 def reducir(img: np.ndarray) -> np.ndarray:
@@ -72,26 +74,10 @@ def reducir(img: np.ndarray) -> np.ndarray:
 
 
 def anonimizar_rostro(img: np.ndarray, kpts: np.ndarray, scores: np.ndarray, umbral: float) -> bool:
-    """Difumina la región del rostro de cada persona. Devuelve True si difuminó algo."""
-    import cv2
-    h, w = img.shape[:2]
-    hecho = False
-    for persona in range(kpts.shape[0]):
-        sel = [i for i in ROSTRO_WHOLEBODY if scores[persona, i] >= umbral]
-        if len(sel) < 2:
-            continue
-        xs, ys = kpts[persona, sel, 0], kpts[persona, sel, 1]
-        x1, x2, y1, y2 = xs.min(), xs.max(), ys.min(), ys.max()
-        margen = max(x2 - x1, y2 - y1) * 0.6 + 12
-        x1, y1 = int(max(0, x1 - margen)), int(max(0, y1 - margen))
-        x2, y2 = int(min(w, x2 + margen)), int(min(h, y2 + margen))
-        if x2 - x1 < 4 or y2 - y1 < 4:
-            continue
-        roi = img[y1:y2, x1:x2]
-        k = max(15, (min(roi.shape[:2]) // 2) | 1)  # kernel impar proporcional
-        img[y1:y2, x1:x2] = cv2.GaussianBlur(roi, (k, k), 0)
-        hecho = True
-    return hecho
+    """Compatibilidad: combina detección OpenCV con evidencia de pose, sin prometer cobertura total."""
+    regiones = localizar_cabezas(img, puntos=kpts, confianzas=scores, umbral=umbral)
+    img[:] = proteger_imagen(img, regiones or [])
+    return True
 
 
 class EstimadorPose:
@@ -135,7 +121,8 @@ class EstimadorPose:
             self._cargar()
             img = reducir(img_bgr).copy()
             if float(img.std()) < VISION_STD_MINIMA_IMAGEN:
-                return ResultadoFoto(imagen_bgr=img, personas=0)
+                return ResultadoFoto(imagen_bgr=proteger_imagen(img, []), personas=0,
+                                     rostro_anonimizado=True, regiones_privacidad=[])
             cajas = self._detector(img)
             cajas = np.atleast_2d(np.asarray(cajas, dtype=np.float32)) if cajas is not None else np.zeros((0, 4))
             respaldo = cajas.size == 0
@@ -147,9 +134,11 @@ class EstimadorPose:
             cajas = cajas[:, :4]
             kpts, scores = self._pose(img, bboxes=cajas.tolist())
             if respaldo and int((scores[0, :17] >= VISION_CONFIANZA_RESPALDO).sum()) < MIN_PUNTOS_RESPALDO:
-                return ResultadoFoto(imagen_bgr=img, personas=0)
+                return ResultadoFoto(imagen_bgr=proteger_imagen(img, []), personas=0,
+                                     rostro_anonimizado=True, regiones_privacidad=[])
 
-        anonimo = anonimizar_rostro(img, kpts, scores, VISION_CONFIANZA_KEYPOINT)
+        regiones = localizar_cabezas(img, cajas, kpts, scores, VISION_CONFIANZA_KEYPOINT) or []
+        img = proteger_imagen(img, regiones)
         areas = (cajas[:, 2] - cajas[:, 0]) * (cajas[:, 3] - cajas[:, 1])
         p = int(np.argmax(areas))
         h, w = img.shape[:2]
@@ -164,7 +153,7 @@ class EstimadorPose:
         x1, y1, x2, y2 = (float(v) for v in cajas[p])
         return ResultadoFoto(imagen_bgr=img, personas=len(cajas), puntos=puntos,
                              caja=None if respaldo else (x1, y1, x2 - x1, y2 - y1),
-                             rostro_anonimizado=anonimo, por_respaldo=respaldo)
+                             rostro_anonimizado=True, por_respaldo=respaldo, regiones_privacidad=regiones)
 
 
 estimador = EstimadorPose()
