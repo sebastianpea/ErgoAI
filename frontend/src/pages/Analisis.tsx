@@ -106,8 +106,9 @@ export function Analisis() {
           )}
           <p className="leyenda">
             {esErgonomia
-              ? "Si un punto está mal colocado, arrástralo a su lugar. Punteado naranja = baja confianza; azul marino = corregido."
+              ? "Corrige un punto arrastrándolo o con Tab y flechas (Mayús: 10 píxeles). Punteado naranja = confianza baja o desconocida; azul marino = corregido."
               : "Solo Ergonomía puede corregir el esqueleto."}
+            {" Las conexiones solo se muestran entre puntos fiables o corregidos dentro de la imagen. Los puntos ausentes o fuera de la imagen no permiten inferir una postura."}
             {corregir.isPending && " Guardando…"}
           </p>
           {corregir.isError && <p className="aviso error">No se guardó la corrección: {corregir.error.message}</p>}
@@ -187,7 +188,7 @@ export function Analisis() {
           Paso 2: Generar Plan de Mitigación con ErgoAI
         </h3>
         <p style={{ margin: "0 0 16px 0", color: "#475569", maxWidth: "680px", marginLeft: "auto", marginRight: "auto", fontSize: "0.95rem" }}>
-          El análisis biomecánico se ha completado con exactitud matemática (REBA {caso.reba?.final ?? "—"}).
+          REBA calculado: {caso.reba?.final ?? "—"}. Revisa los puntos y los ángulos pendientes antes de usar el resultado.
           Continúa al plan de acción para que el Agente consulte la NOM-036-1-STPS-2018 y los estándares de Jabil y redacte las recomendaciones técnicas.
         </p>
         <Link className="boton primario" style={{ fontSize: "1rem", padding: "12px 28px", display: "inline-block" }} to={`/casos/${id}/plan`}>
