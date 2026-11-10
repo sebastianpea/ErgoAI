@@ -16,7 +16,7 @@ from typing import List, Optional
 from fastapi import FastAPI, File, Form, Path as RutaParam, Query, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import ValidationError
 
 from backend.app.api.schemas import (
@@ -242,6 +242,26 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
     async def generar_plan_ia(request: Request, cuerpo: Optional[Actor] = None, id_caso: str = IdCaso):
         actor = cuerpo or Actor()
         return await run_in_threadpool(svc(request).generar_plan_ergoai, id_caso, actor.usuario)
+
+    @app.get("/casos/{id_caso}/exportar/excel")
+    def exportar_excel(request: Request, id_caso: str = IdCaso):
+        contenido = svc(request).exportar_excel(id_caso)
+        nombre = f"Informe_Ergonomico_{id_caso}.xlsx"
+        return StreamingResponse(
+            contenido,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={nombre}"},
+        )
+
+    @app.get("/casos/{id_caso}/exportar/pdf")
+    def exportar_pdf(request: Request, id_caso: str = IdCaso):
+        contenido = svc(request).exportar_pdf(id_caso)
+        nombre = f"Informe_Ergonomico_{id_caso}.pdf"
+        return StreamingResponse(
+            contenido,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={nombre}"},
+        )
 
     @app.post("/casos/{id_caso}/recomendaciones/{id_recomendacion}/decision", response_model=Ok)
     def decidir(request: Request, d: Decision, id_caso: str = IdCaso, id_recomendacion: str = IdRec):

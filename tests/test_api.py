@@ -176,6 +176,57 @@ class TestApi(unittest.TestCase):
         self.assertEqual(d["recomendaciones"][0]["estado"], "aprobada")
         self.assertEqual(len(self.cliente.get("/casos").json()), 7)  # no se vuelve a sembrar
 
+    def test_exportacion_bloqueada_si_no_esta_implementado(self):
+        # C-002 tiene recomendaciones pendientes: la exportación debe rebotar con 422
+        res_excel = self.cliente.get("/casos/C-002/exportar/excel")
+        self.assertEqual(res_excel.status_code, 422)
+        self.assertIn("aprobadas e implementadas", res_excel.text)
+
+        res_pdf = self.cliente.get("/casos/C-002/exportar/pdf")
+        self.assertEqual(res_pdf.status_code, 422)
+        self.assertIn("aprobadas e implementadas", res_pdf.text)
+
+    def test_exportacion_exitosa_excel_y_pdf(self):
+        # Caso C-001: aprobar, rechazar e implementar recomendaciones para completar el flujo
+        self.decidir("C-001", "R1", "aprobar")
+        self.decidir("C-001", "R2", "rechazar", motivo="No requerida")
+        self.decidir("C-001", "R3", "rechazar", motivo="No requerida")
+        self.decidir("C-001", "R4", "rechazar", motivo="No requerida")
+
+        # R1 de C-001 es tipo cambio en planta, requiere autorización de Ingeniería antes de implementar:
+        res_aut = self.cliente.post(
+            "/casos/C-001/recomendaciones/R1/autorizacion",
+            json={"usuario": "ing_manufactura", "rol": "ingenieria", "accion": "autorizar"},
+        )
+        self.assertEqual(res_aut.status_code, 200)
+
+        # Ahora que está autorizada, implementarla en planta:
+        res_imp = self.cliente.post(
+            "/casos/C-001/recomendaciones/R1/implementacion",
+            json={"usuario": "op_l2", "nota": "Ajuste físico completado"},
+        )
+        self.assertEqual(res_imp.status_code, 200)
+
+        # Ahora el caso está 100% aprobado e implementado:
+        d = self.cliente.get("/casos/C-001").json()
+        self.assertTrue(d["validacion"]["aprobado_e_implementado"])
+
+        # Probar exportación a Excel (.xlsx)
+        res_excel = self.cliente.get("/casos/C-001/exportar/excel")
+        self.assertEqual(res_excel.status_code, 200)
+        self.assertEqual(
+            res_excel.headers["content-type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        self.assertGreater(len(res_excel.content), 2000)
+
+        # Probar exportación a PDF (.pdf)
+        res_pdf = self.cliente.get("/casos/C-001/exportar/pdf")
+        self.assertEqual(res_pdf.status_code, 200)
+        self.assertEqual(res_pdf.headers["content-type"], "application/pdf")
+        self.assertTrue(res_pdf.content.startswith(b"%PDF"))
+        self.assertGreater(len(res_pdf.content), 1000)
+
 
 if __name__ == "__main__":
     unittest.main()

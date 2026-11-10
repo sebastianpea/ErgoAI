@@ -135,6 +135,42 @@ const real = {
   bitacora: (idCaso?: string) =>
     http<EntradaBitacora[]>(idCaso ? `/bitacora?id_caso=${seg(idCaso)}` : "/bitacora"),
   verificarIntegridad: () => http<ResultadoIntegridad>("/bitacora/verificar"),
+  descargarExcel: async (idCaso: string) => {
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/casos/${seg(idCaso)}/exportar/excel`);
+    } catch {
+      throw new Error(`No se pudo conectar con el backend (${API_URL}). ¿Está en ejecución?`);
+    }
+    if (!res.ok) throw new Error(mensajeError(res.status, await res.text()));
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Informe_Ergonomico_${idCaso}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+  descargarPdf: async (idCaso: string) => {
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/casos/${seg(idCaso)}/exportar/pdf`);
+    } catch {
+      throw new Error(`No se pudo conectar con el backend (${API_URL}). ¿Está en ejecución?`);
+    }
+    if (!res.ok) throw new Error(mensajeError(res.status, await res.text()));
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Informe_Ergonomico_${idCaso}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
 };
 
 // ---------- Simulación en memoria (no recalcula REBA; eso solo lo hace el backend) ----------
@@ -186,11 +222,25 @@ function validacion(c: CasoMock): Validacion {
     r.nivel_control === "ingenieria" && (r.estado === "aprobada" || r.estado === "editada_aprobada")
     && r.implementacion !== "denegada");
   const falta_ingenieria = riesgoAlto && !ingenieria;
+  const por_autorizar = recs.filter(r => r.implementacion === "pendiente_autorizacion").length;
+  const por_implementar = recs.filter(r => r.implementacion === "por_implementar").length;
+  const implementadas = recs.filter(r => r.implementacion === "implementada").length;
+  const aprobadas = recs.filter(r => (r.estado === "aprobada" || r.estado === "editada_aprobada") && r.implementacion !== "denegada").length;
+
+  const aprobado_e_implementado = (
+    pendientes === 0
+    && !falta_ingenieria
+    && por_autorizar === 0
+    && por_implementar === 0
+    && (implementadas > 0 || aprobadas === 0)
+  );
+
   return {
     pendientes, falta_ingenieria, completa: pendientes === 0 && !falta_ingenieria,
-    por_autorizar: recs.filter(r => r.implementacion === "pendiente_autorizacion").length,
-    por_implementar: recs.filter(r => r.implementacion === "por_implementar").length,
-    implementadas: recs.filter(r => r.implementacion === "implementada").length,
+    por_autorizar,
+    por_implementar,
+    implementadas,
+    aprobado_e_implementado,
   };
 }
 
@@ -409,6 +459,30 @@ const mock: typeof real = {
       anterior = hash;
     }
     return copia({ ok: true, total: store.bitacora.length, primera_falla: null });
+  },
+
+  descargarExcel: async (idCaso: string) => {
+    const blob = new Blob([`Informe Simulador ErgoAI - Caso ${idCaso}`], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Informe_Ergonomico_${idCaso}_simulado.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  descargarPdf: async (idCaso: string) => {
+    const blob = new Blob([`Informe PDF Simulador ErgoAI - Caso ${idCaso}`], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Informe_Ergonomico_${idCaso}_simulado.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },
 };
 

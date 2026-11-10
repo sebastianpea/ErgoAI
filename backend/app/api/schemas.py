@@ -163,6 +163,7 @@ class Validacion(BaseModel):
     por_autorizar: int = 0
     por_implementar: int = 0
     implementadas: int = 0
+    aprobado_e_implementado: bool = False
 
 
 class CasoResumen(BaseModel):

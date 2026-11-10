@@ -67,18 +67,52 @@ export function Plan() {
   const v = caso.validacion;
   const ocupado = accion.isPending;
 
+  // El informe formal solo se permite si TODO está aprobado por Ergonomía, autorizado por Ingeniería e implementado
+  const todoListo = Boolean(
+    v.aprobado_e_implementado ?? (
+      v.pendientes === 0 &&
+      v.por_autorizar === 0 &&
+      v.por_implementar === 0 &&
+      !v.falta_ingenieria
+    )
+  );
+
   return (
     <section>
       <Encabezado
         eyebrow="Recomendaciones y validación"
         titulo={<>Plan de acción <span className="ligero">· {caso.id_caso}</span></>}
-        subtitulo="El agente propone, el especialista decide. Los cambios en planta requieren además autorización de Ingeniería."
+        subtitulo="El agente propone, el especialista decide. Los cambios en planta requieren además autorización de Ingeniería e implementación en piso."
         acciones={<>
           <Link className="boton claro" to={`/casos/${id}`}>← Análisis</Link>
-          {v.completa ? (
-            <Link className="boton primario" to={`/casos/${id}/informe`}>Generar informe</Link>
+          {todoListo ? (
+            <>
+              <Link className="boton primario" to={`/casos/${id}/informe`}>📄 Ver informe</Link>
+              <button
+                type="button"
+                className="boton"
+                onClick={() => api.descargarPdf(id)}
+                title="Descargar informe oficial en formato PDF"
+              >
+                📥 PDF
+              </button>
+              <button
+                type="button"
+                className="boton"
+                onClick={() => api.descargarExcel(id)}
+                title="Exportar expediente en formato Excel (.xlsx)"
+              >
+                📊 Excel
+              </button>
+            </>
           ) : (
-            <button className="primario" disabled title="Completa la validación del plan primero">Generar informe</button>
+            <button
+              className="primario"
+              disabled
+              title="Para generar el informe, todas las recomendaciones deben estar aprobadas e implementadas en piso."
+            >
+              Generar informe
+            </button>
           )}
         </>}
       />
@@ -97,7 +131,9 @@ export function Plan() {
           {v.por_autorizar === 0 && " En este caso no hay ninguno pendiente."}
         </p>
       )}
-      {v.pendientes > 0 && <p className="aviso">Faltan {v.pendientes} recomendación(es) por validar.</p>}
+      {v.pendientes > 0 && <p className="aviso">Faltan {v.pendientes} recomendación(es) por validar (Ergonomía).</p>}
+      {v.por_autorizar > 0 && <p className="aviso">Faltan {v.por_autorizar} recomendación(es) por autorizar (Ingeniería).</p>}
+      {v.por_implementar > 0 && <p className="aviso">Faltan {v.por_implementar} recomendación(es) por marcar como implementadas en piso.</p>}
       {v.falta_ingenieria && v.pendientes === 0 && (
         <p className="aviso error">
           Riesgo alto o muy alto: se requiere al menos un control de ingeniería aprobado y no denegado (NOM-036-1-STPS-2018).

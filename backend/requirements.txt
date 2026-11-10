@@ -17,6 +17,10 @@ langchain-ollama>=0.2.0
 httpx==0.28.1
 pytest>=8.0.0
 
+# --- Exportación Formal de Informes (Microsoft Excel .xlsx y Adobe PDF .pdf) ---
+openpyxl>=3.1.5
+reportlab>=5.0.0
+
 # --- Proveedores LLM Cloud Alternativos (Opcionales: si LLM_PROVIDER=GEMINI o OPENAI) ---
 # pip install langchain-google-genai>=2.0.0
 # pip install langchain-openai>=0.2.0

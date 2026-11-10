@@ -20,14 +20,33 @@ export function Informe() {
   if (caso.error || !caso.data) return <p className="aviso error">{(caso.error as Error)?.message ?? "Caso no encontrado"}</p>;
   const c = caso.data;
 
-  // Invariante 1: nada sale al informe sin validación del especialista (también si se entra por URL).
-  if (!c.validacion.completa) {
+  // Invariante 1: nada sale al informe sin validación total e implementación (también si se entra por URL).
+  const v = c.validacion;
+  const todoListo = Boolean(
+    v.aprobado_e_implementado ?? (
+      v.pendientes === 0 &&
+      v.por_autorizar === 0 &&
+      v.por_implementar === 0 &&
+      !v.falta_ingenieria
+    )
+  );
+
+  if (!todoListo) {
     return (
       <section>
-        <p className="aviso error">
-          El informe de {c.id_caso} no está disponible: el plan de acción aún no está validado por el especialista.
-        </p>
-        <Link className="boton primario" to={`/casos/${id}/plan`}>Ir a plan y validación</Link>
+        <div className="tarjeta corte">
+          <h2>Informe no disponible</h2>
+          <p className="aviso error">
+            El informe oficial de <strong>{c.id_caso}</strong> no puede generarse hasta que todas las recomendaciones estén <strong>aprobadas por Ergonomía, autorizadas por Ingeniería e implementadas en piso</strong>.
+          </p>
+          <div className="resumen-plan" style={{ margin: "1.25rem 0" }}>
+            <div><span className="cifra-valor">{v.pendientes}</span><span className="cifra-texto">Por validar (ergonomía)</span></div>
+            <div><span className="cifra-valor">{v.por_autorizar}</span><span className="cifra-texto">Por autorizar (ingeniería)</span></div>
+            <div><span className="cifra-valor">{v.por_implementar}</span><span className="cifra-texto">Por implementar</span></div>
+            <div><span className="cifra-valor">{v.implementadas}</span><span className="cifra-texto">Implementadas</span></div>
+          </div>
+          <Link className="boton primario" to={`/casos/${id}/plan`}>← Ir al Plan para completar aprobaciones e implementación</Link>
+        </div>
       </section>
     );
   }
@@ -40,9 +59,32 @@ export function Informe() {
 
   return (
     <article className="informe">
-      <div className="no-imprimir acciones">
+      <div className="no-imprimir acciones" style={{ marginBottom: "1.25rem" }}>
         <Link className="boton" to={`/casos/${id}/plan`}>← Plan</Link>
-        <button className="primario" onClick={() => window.print()}>Imprimir / Guardar PDF</button>
+        <button
+          type="button"
+          className="boton primario"
+          onClick={() => api.descargarPdf(id)}
+          title="Descargar informe oficial en formato PDF"
+        >
+          📥 Descargar PDF (.pdf)
+        </button>
+        <button
+          type="button"
+          className="boton"
+          onClick={() => api.descargarExcel(id)}
+          title="Exportar expediente en formato Excel (.xlsx)"
+        >
+          📊 Exportar a Excel (.xlsx)
+        </button>
+        <button
+          type="button"
+          className="boton"
+          onClick={() => window.print()}
+          title="Abrir cuadro de diálogo de impresión del navegador"
+        >
+          🖨️ Imprimir
+        </button>
       </div>
 
       <header className="informe-cabecera">

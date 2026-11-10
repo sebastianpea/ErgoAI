@@ -440,11 +440,25 @@ class ServicioCasos:
             and r.implementacion != "denegada"
             for r in recs)
         falta = riesgo_alto and not ing_aprobada
+        por_autorizar = sum(r.implementacion == "pendiente_autorizacion" for r in recs)
+        por_implementar = sum(r.implementacion == "por_implementar" for r in recs)
+        implementadas = sum(r.implementacion == "implementada" for r in recs)
+        aprobadas = sum(r.estado in ("aprobada", "editada_aprobada") and r.implementacion != "denegada" for r in recs)
+
+        aprobado_e_implementado = (
+            pendientes == 0
+            and not falta
+            and por_autorizar == 0
+            and por_implementar == 0
+            and (implementadas > 0 or not aprobadas)
+        )
+
         return Validacion(
             pendientes=pendientes, falta_ingenieria=falta, completa=pendientes == 0 and not falta,
-            por_autorizar=sum(r.implementacion == "pendiente_autorizacion" for r in recs),
-            por_implementar=sum(r.implementacion == "por_implementar" for r in recs),
-            implementadas=sum(r.implementacion == "implementada" for r in recs),
+            por_autorizar=por_autorizar,
+            por_implementar=por_implementar,
+            implementadas=implementadas,
+            aprobado_e_implementado=aprobado_e_implementado,
         )
 
     # ================= Estado de sesión y alertas =================
@@ -1261,3 +1275,33 @@ class ServicioCasos:
         """Consulta el motor RAG léxico en memoria RAM sin bases de datos."""
         with self._lock:
             return self.rag.buscar(consulta, top_k=top_k)
+
+    def exportar_excel(self, id_caso: str) -> io.BytesIO:
+        """Exporta el expediente completo a formato Microsoft Excel (.xlsx)."""
+        from backend.app.services.exportador_excel import generar_excel_caso
+
+        with self._lock:
+            caso = self.obtener(id_caso)
+            if not caso.validacion.aprobado_e_implementado:
+                raise DatosInvalidos(
+                    f"El informe de {id_caso} no puede generarse hasta que todas las recomendaciones "
+                    "estén aprobadas e implementadas en piso de producción."
+                )
+            entradas = self.ledger.listar(id_caso)
+            bitacora_hash = entradas[-1].hash if entradas else None
+            return generar_excel_caso(caso, bitacora_hash)
+
+    def exportar_pdf(self, id_caso: str) -> io.BytesIO:
+        """Exporta el informe oficial a formato Adobe PDF (.pdf)."""
+        from backend.app.services.exportador_pdf import generar_pdf_caso
+
+        with self._lock:
+            caso = self.obtener(id_caso)
+            if not caso.validacion.aprobado_e_implementado:
+                raise DatosInvalidos(
+                    f"El informe de {id_caso} no puede generarse hasta que todas las recomendaciones "
+                    "estén aprobadas e implementadas en piso de producción."
+                )
+            entradas = self.ledger.listar(id_caso)
+            bitacora_hash = entradas[-1].hash if entradas else None
+            return generar_pdf_caso(caso, bitacora_hash)
