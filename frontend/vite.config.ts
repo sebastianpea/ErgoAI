@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const backendPort = env.VITE_BACKEND_PORT || env.BACKEND_PORT || "8000";
   const defaultProxyTarget = `http://localhost:${backendPort}`;
   const proxyTarget = env.VITE_BACKEND_PROXY_TARGET || defaultProxyTarget;
-  const rutasProxy = ["/casos", "/alertas", "/bitacora", "/rag", "/media", "/vision", "/catalogo", "/salud"];
+  const rutasProxy = ["/casos", "/alertas", "/bitacora", "/rag", "/media", "/vision", "/catalogo", "/salud", "/metricas"];
 
   return {
     plugins: [react()],
