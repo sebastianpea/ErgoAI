@@ -69,14 +69,14 @@ export function TablaAngulos({ angulos, editable = false, ocupado = false, onCon
                           onClick={() => onConfirmar(a.vista, a.segmento)}
                           title="Confirmar que el ángulo es correcto y pasar a OK"
                         >
-                          ✓ Confirmar
+                          Confirmar
                         </button>
                       )}
                     </div>
                     {a.motivo_estado && <div className="motivo-estado">{a.motivo_estado}</div>}
                   </td>
                   <td className={discrepa ? "discrepancia" : ""}>
-                    {a.puntaje_previo ?? "—"}{discrepa ? " ⚠ no coincide" : ""}
+                    {a.puntaje_previo ?? "—"}{discrepa ? " (no coincide)" : ""}
                   </td>
                 </tr>
               );

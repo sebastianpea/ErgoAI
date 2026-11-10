@@ -166,7 +166,7 @@ export function Plan() {
         <div className="tarjeta corte" style={{ borderLeft: "4px solid #2E9E5B", marginBottom: "1.25rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
             <div>
-              <p className="eyebrow" style={{ color: "#2E9E5B" }}>✓ Plan de acción completado e implementado</p>
+              <p className="eyebrow" style={{ color: "#2E9E5B" }}>Plan de acción completado e implementado</p>
               <h3 style={{ margin: "0.2rem 0" }}>Todas las recomendaciones fueron aprobadas e implementadas en planta</h3>
               <p className="sutil" style={{ margin: 0 }}>
                 El caso cumple con todos los requisitos legales de la NOM-036-1-STPS-2018 y el estándar global Jabil.
@@ -231,7 +231,7 @@ export function Plan() {
         }}>
           <div>
             <h3 style={{ margin: "0 0 4px 0", color: "#1e3a8a", display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>✨</span> Generador Inteligente ErgoAI (NOM-036 + Jabil)
+              Generador Inteligente ErgoAI (NOM-036 + Jabil)
             </h3>
             <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155" }}>
               Consulta el corpus normativo en RAM y genera una recomendación estructurada de control con LLM local.
@@ -253,9 +253,9 @@ export function Plan() {
             onClick={() => generarIA.mutate()}
           >
             {generarIA.isPending
-              ? "⏳ Consultando normativa..."
+              ? "Consultando normativa…"
               : v.pendientes === 0
-                ? "🔄 Actualizar fundamentación con ErgoAI"
+                ? "Actualizar fundamentación con ErgoAI"
                 : "Generar Plan de Mitigación con ErgoAI"}
           </button>
         </div>
@@ -271,7 +271,6 @@ export function Plan() {
           alignItems: "center",
           gap: "12px"
         }}>
-          <span style={{ fontSize: "1.4rem" }}>🔄</span>
           <span>ErgoAI está consultando la NOM-036 y estándares Jabil...</span>
         </div>
       )}

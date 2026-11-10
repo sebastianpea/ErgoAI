@@ -160,7 +160,7 @@ export function Analisis() {
           Continúa al plan de acción para que el Agente consulte la NOM-036-1-STPS-2018 y los estándares de Jabil y redacte las recomendaciones técnicas.
         </p>
         <Link className="boton primario" style={{ fontSize: "1rem", padding: "12px 28px", display: "inline-block" }} to={`/casos/${id}/plan`}>
-          ✨ Generar Plan de Mitigación con ErgoAI →
+          Generar Plan de Mitigación con ErgoAI →
         </Link>
       </div>
     </section>

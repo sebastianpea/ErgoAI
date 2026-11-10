@@ -131,17 +131,17 @@ export function TarjetaRecomendacion({ rec, rebaActual, ocupado, onDecidir, onAu
         <div className="rec-rag-badges" style={{ display: "flex", flexWrap: "wrap", gap: "6px", margin: "8px 0" }}>
           {rec.layer_autocad && (
             <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "4px", background: "#e0f2fe", color: "#0369a1", fontWeight: 600, border: "1px solid #bae6fd" }}>
-              📐 AutoCAD: Layer {rec.layer_autocad}
+              AutoCAD: Layer {rec.layer_autocad}
             </span>
           )}
           {rec.hoja_excel_jabil && (
             <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "4px", background: "#dcfce7", color: "#15803d", fontWeight: 600, border: "1px solid #bbf7d0" }}>
-              📊 Excel Jabil: {rec.hoja_excel_jabil}
+              Excel Jabil: {rec.hoja_excel_jabil}
             </span>
           )}
           {rec.tramite_moc && (
             <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "4px", background: "#fef3c7", color: "#b45309", fontWeight: 600, border: "1px solid #fde68a" }}>
-              🛡️ {rec.tramite_moc}
+              {rec.tramite_moc}
             </span>
           )}
         </div>
@@ -172,7 +172,6 @@ export function TarjetaRecomendacion({ rec, rebaActual, ocupado, onDecidir, onAu
               letterSpacing: "0.2px",
             }}
           >
-            <span style={{ fontSize: "1.15rem" }}>📑</span>
             <span>Justificación RAG (16-PE30-6500-00023 / NOM-036) · Párrafo Oficial Citado:</span>
           </div>
           <div

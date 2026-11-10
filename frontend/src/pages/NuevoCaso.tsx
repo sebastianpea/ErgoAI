@@ -76,11 +76,11 @@ function TarjetaSelectorFoto({
           onClick={onAbrirCamara}
           title={`Tomar fotografía en vivo con la cámara para vista ${vista}`}
         >
-          📷 {archivo ? "Retomar con cámara" : "Tomar con cámara"}
+          {archivo ? "Retomar con cámara" : "Tomar con cámara"}
         </button>
 
         <label className="boton boton-accion-archivo" title="Seleccionar fotografía desde disco">
-          📁 {archivo ? "Cambiar archivo" : "Subir archivo"}
+          {archivo ? "Cambiar archivo" : "Subir archivo"}
           <input
             type="file"
             accept="image/jpeg,image/png"
@@ -157,7 +157,7 @@ export function NuevoCaso() {
             onClick={() => setModalCamara({ abierto: true, vista: "lateral", modo: "diagnostico_rapido" })}
             title="Abre la cámara web para un diagnóstico ergonómico instantáneo"
           >
-            ⚡ Diagnóstico Rápido con Cámara
+            Diagnóstico Rápido con Cámara
           </button>
         }
       />

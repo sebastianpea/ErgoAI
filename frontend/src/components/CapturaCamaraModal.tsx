@@ -333,7 +333,7 @@ export function CapturaCamaraModal({
                   onClick={handleCapturarParaFormulario}
                   disabled={iniciandoCamara || analizando || !!errorCamara}
                 >
-                  📸 Capturar Fotografía
+                  Capturar fotografía
                 </button>
               ) : (
                 <button
@@ -342,7 +342,7 @@ export function CapturaCamaraModal({
                   onClick={handleCapturarYDiagnosticar}
                   disabled={iniciandoCamara || analizando || !!errorCamara}
                 >
-                  ⚡ Capturar y Analizar REBA
+                  Capturar y analizar REBA
                 </button>
               )}
             </div>
@@ -427,7 +427,7 @@ export function CapturaCamaraModal({
                       className="boton primario"
                       onClick={handleUsarEnNuevoCaso}
                     >
-                      ✓ Usar esta fotografía para el nuevo caso
+                      Usar esta fotografía para el nuevo caso
                     </button>
                   )}
                   <button
@@ -435,7 +435,7 @@ export function CapturaCamaraModal({
                     className="boton"
                     onClick={handleRepetirFoto}
                   >
-                    🔄 Tomar otra fotografía
+                    Tomar otra fotografía
                   </button>
                 </div>
               </div>
