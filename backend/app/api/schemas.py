@@ -176,6 +176,31 @@ class CasoResumen(BaseModel):
     por_autorizar: int = 0
 
 
+class PaginaCasos(BaseModel):
+    items: List[CasoResumen]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class NivelesDashboard(BaseModel):
+    sin_evaluar: int = 0
+    inapreciable: int = 0
+    bajo: int = 0
+    medio: int = 0
+    alto: int = 0
+    muy_alto: int = 0
+
+
+class MetricasDashboard(BaseModel):
+    total_casos: int
+    niveles: NivelesDashboard = Field(default_factory=NivelesDashboard)
+    tipos_tarea: Dict[str, int] = Field(default_factory=dict)
+    decisiones_pendientes: int = 0
+    por_autorizar: int = 0
+
+
 class EvaluacionPrevia(BaseModel):
     """Estudio de referencia de Jabil (capturado en piso), contra el que se audita el análisis."""
     segmentos: Dict[Segmento, int] = Field(default_factory=dict)

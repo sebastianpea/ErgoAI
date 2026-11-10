@@ -188,6 +188,24 @@ export interface CasoResumen {
   por_autorizar: number;
 }
 
+/** Página del servidor, ordenada por id_caso ascendente. */
+export interface PaginaCasos {
+  items: CasoResumen[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+/** Agregados de todos los casos, independientes de la página consultada. */
+export interface MetricasDashboard {
+  total_casos: number;
+  niveles: Record<NivelReba | "sin_evaluar", number>;
+  tipos_tarea: Record<string, number>;
+  decisiones_pendientes: number;
+  por_autorizar: number;
+}
+
 /** Calculado por el backend: el informe solo se habilita cuando `completa` es true. */
 export interface Validacion {
   pendientes: number;

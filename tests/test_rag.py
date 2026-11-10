@@ -171,11 +171,20 @@ class TestErgoAgentCleanArchitecture(unittest.TestCase):
                 "MODEL_NAME": "qwen2.5",
                 "OLLAMA_BASE_URL": "http://llm_engine:11434",
             },
-        ):
+        ), patch("backend.app.core_agent.llm_factory.socket.gethostbyname", return_value="127.0.0.1"), patch(
+            "backend.app.core_agent.llm_factory.urllib.request.urlopen"
+        ) as transporte:
+            transporte.return_value.__enter__.return_value.read.return_value = (
+                b'{"models": [{"name": "llama3.2:latest"}, {"name": "qwen2.5:7b"}]}'
+            )
             llm = LLMFactory.get_llm()
             self.assertEqual(llm.__class__.__name__, "ChatOllama")
             self.assertTrue(llm.model.startswith("qwen2.5"))
+            self.assertEqual(llm.model, "qwen2.5:7b")
             self.assertIn("11434", llm.base_url)
+            self.assertEqual(llm.base_url, "http://llm_engine:11434")
+            transporte.assert_called_once()
+            self.assertEqual(transporte.call_args.args[0].full_url, "http://llm_engine:11434/api/tags")
 
         with self.assertRaises(ValueError):
             with patch.dict(os.environ, {"LLM_PROVIDER": "PROVEEDOR_INEXISTENTE"}):

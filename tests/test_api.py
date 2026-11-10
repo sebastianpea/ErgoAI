@@ -92,6 +92,20 @@ class TestApi(unittest.TestCase):
         self.assertFalse(v["completa"])
 
     def test_correccion_de_puntos_recalcula(self):
+        from unittest import mock
+        from backend.app.vision.estimador import estimador
+        from tests.test_vision import _foto_jpg, _resultado
+
+        # Esta prueba mide edición y persistencia, no el resultado variable de ONNX.
+        self.cliente.__exit__(None, None, None)
+        self.cliente = TestClient(create_app(workspace_dir=self.ws / "correccion", sembrar=False))
+        self.cliente.__enter__()
+        with mock.patch.object(estimador, "estado", return_value=(True, "simulado")), \
+             mock.patch.object(estimador, "analizar", side_effect=_resultado):
+            creado = self.cliente.post("/casos", data={"datos": json.dumps({"usuario": USUARIO, "estacion": "Corrección"})},
+                                       files={"lateral": ("lateral.jpg", _foto_jpg(), "image/jpeg")})
+        self.assertEqual(creado.status_code, 200, creado.text)
+        self.assertEqual(creado.json()["id"], "C-001")
         d = self.cliente.get("/casos/C-001").json()
         lateral = next(i for i in d["imagenes"] if i["vista"] == "lateral")
         puntos = lateral["puntos"]
@@ -105,13 +119,20 @@ class TestApi(unittest.TestCase):
         nuevo = r.json()
         tronco = next(a for a in nuevo["angulos"] if a["segmento"] == "tronco")
         self.assertAlmostEqual(tronco["angulo_grados"], 0.0, places=1)
-        self.assertLess(nuevo["reba"]["final"], d["reba"]["final"])
+        previo = next(a for a in d["angulos"] if a["segmento"] == "tronco" and a["vista"] == "lateral")
+        self.assertNotAlmostEqual(previo["angulo_grados"], tronco["angulo_grados"], places=1)
+        # REBA es tabular: corregir un segmento no garantiza reducir el total.
+        self.assertLessEqual(tronco["puntaje_reba"], previo["puntaje_reba"])
+        persistido = self.cliente.get("/casos/C-001").json()
+        self.assertEqual(persistido["angulos"], nuevo["angulos"])
+        self.assertEqual(persistido["imagenes"], nuevo["imagenes"])
         p5 = next(p for p in next(i for i in nuevo["imagenes"] if i["vista"] == "lateral")["puntos"] if p["id"] == 5)
         self.assertTrue(p5["corregido"])
         entradas = self.cliente.get("/bitacora?id_caso=C-001").json()
         correccion = next(e for e in entradas if e["accion"] == "puntos_corregidos")
         self.assertEqual(correccion["usuario"], USUARIO)
         self.assertIn("1 punto(s) movido(s)", correccion["despues"])
+        self.assertTrue(self.cliente.get("/bitacora/verificar").json()["ok"])
 
     def test_correccion_de_puntos_invalida(self):
         puntos = self.cliente.get("/casos/C-001").json()["imagenes"][0]["puntos"]

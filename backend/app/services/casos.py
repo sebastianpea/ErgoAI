@@ -12,21 +12,23 @@ Flujo de una recomendación:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
-import shutil
 import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from pydantic import ValidationError
+
 from backend.app.api.schemas import (
     Actor, Alerta, Angulo, Autorizacion, CasoAlmacenado, CasoDetalle, CasoImpacto, CasoResumen, CorreccionContexto,
     CorreccionNom036, CorreccionReferencia, Decision, Descarte, Hallazgo, Imagen, Implementacion, Impacto,
     NuevaRecomendacion, Nom036Captura, NuevoCaso, Punto, Recomendacion, RecomendacionAlmacenada, Residual,
     ResultadoIntegridad, ResultadoNom036, ResultadoReba, RevisionHallazgo, SegmentoResidual, Validacion, VISTAS,
-    Vista,
+    MetricasDashboard, PaginaCasos, Vista,
 )
 from backend.app.core_ergonomics.angle_geometry import (
     extraer_angulos_laterales, extraer_angulos_vista, medir_vista_frontal, segmentos_de_punto,
@@ -50,7 +52,8 @@ from backend.app.settings import (
     CALIDAD_JPEG, CONFIANZA_MINIMA, FUENTE_EVALUACION_MANUAL, MAX_FOTO_MB, MINUTOS_EVALUACION_MANUAL,
     TOLERANCIA_UMBRAL_GRADOS, USUARIO_SISTEMA,
 )
-from backend.app.vision.estimador import VisionNoDisponible, estimador
+from backend.app.vision.estimador import VisionNoDisponible, estimador, reducir
+from backend.app.vision.privacidad import AVISO_PRIVACIDAD, localizar_cabezas, proteger_imagen
 
 log = logging.getLogger("ergoai.casos")
 
@@ -113,6 +116,8 @@ def _describir_efecto(e: Efecto) -> str:
 class ServicioCasos:
     ARCHIVO_CASO = "caso.json"
     ARCHIVO_ALERTAS = "alertas.json"
+    ARCHIVO_RESUMEN = "resumen_consulta.json"
+    VERSION_RESUMEN = 1
 
     def __init__(self, mgr: AuditFileManager, config: NormativeConfigLoader):
         self.mgr = mgr
@@ -121,6 +126,9 @@ class ServicioCasos:
         self.reba = RebaCalculator(config.get_reba_tables())
         self.rag = InMemoryRAG(config.get_jabil_standards(), config.get_nom036_kb())
         self._lock = threading.RLock()
+        self._firma_config = hashlib.sha256(json.dumps([
+            config.get_reba_tables(), config.get_nom036_tables(), config.get_jabil_standards(),
+        ], sort_keys=True).encode()).hexdigest()
 
     # ================= Persistencia =================
 
@@ -139,6 +147,86 @@ class ServicioCasos:
 
     def _guardar(self, caso: CasoAlmacenado) -> None:
         self.mgr.write_json_atomic(self._ruta_caso(caso.id_caso), caso.model_dump(mode="json"))
+
+    @staticmethod
+    def _resumen(d: CasoDetalle) -> CasoResumen:
+        return CasoResumen(
+            id_caso=d.id_caso, estacion=d.estacion, tipo_tarea=d.tipo_tarea, fecha=d.fecha,
+            reba_final=d.reba.final if d.reba else None, nivel=d.reba.nivel if d.reba else None,
+            decisiones_pendientes=d.validacion.pendientes, por_autorizar=d.validacion.por_autorizar,
+        )
+
+    def _firma_resumen(self, id_caso: str) -> str:
+        # Sólo metadatos: también invalidar geometría antigua si cambian los archivos de inputs.
+        ruta = self._ruta_caso(id_caso)
+        inputs = ruta.parent / "inputs"
+        archivos = [ruta] + (sorted(inputs.iterdir()) if inputs.exists() else [])
+        firma = [(p.name, s.st_mtime_ns, s.st_ctime_ns, s.st_size)
+                 for p in archivos if p.is_file() for s in [p.stat()]]
+        return hashlib.sha256(json.dumps([self._firma_config, firma]).encode()).hexdigest()
+
+    def _guardar_resumen(self, d: CasoDetalle, firma: str) -> CasoResumen:
+        resumen = self._resumen(d)
+        self.mgr.write_json_atomic(self.mgr.get_case_dir(d.id_caso) / self.ARCHIVO_RESUMEN, {
+            "version": self.VERSION_RESUMEN, "firma": firma, "resumen": resumen.model_dump(mode="json"),
+        })
+        return resumen
+
+    def _resumenes(self, ids: Optional[List[str]] = None) -> List[CasoResumen]:
+        """Materializa sólo los IDs pedidos; sin filtro, el agregado global."""
+        if ids is None:
+            ids = sorted(self._ids())
+        resumenes = []
+        for id_caso in ids:
+            firma = self._firma_resumen(id_caso)
+            ruta = self.mgr.get_case_dir(id_caso) / self.ARCHIVO_RESUMEN
+            try:
+                datos = json.loads(ruta.read_text(encoding="utf-8"))
+                if not isinstance(datos, dict) or datos.get("version") != self.VERSION_RESUMEN or datos.get("firma") != firma:
+                    raise ValueError("Resumen obsoleto")
+                resumen = CasoResumen.model_validate(datos["resumen"])
+                if resumen.id_caso != id_caso:
+                    raise ValueError("Identidad de resumen incompatible")
+            except (FileNotFoundError, ValueError, KeyError, TypeError, ValidationError):
+                # No capturar errores del caso original ni escribirlo durante la reconstrucción.
+                d = self._evaluar(self._cargar(id_caso))
+                resumen = self._guardar_resumen(d, firma)
+            resumenes.append(resumen)
+        return resumenes
+
+    def _guardar_foto_protegida(self, id_caso: str, archivo: str, imagen, regiones=None) -> None:
+        import cv2
+        regiones = localizar_cabezas(imagen) if regiones is None else regiones
+        regiones = regiones or []
+        segura = proteger_imagen(imagen, regiones)
+        ruta = self.mgr.get_case_dir(id_caso) / "inputs" / archivo
+        if not cv2.imwrite(str(ruta), segura, [cv2.IMWRITE_JPEG_QUALITY, CALIDAD_JPEG]):
+            raise RuntimeError(f"No se pudo guardar la foto {archivo}")
+        # Vincular sólo a los bytes protegidos: no confiar en marcas de privacidad de archivos antiguos.
+        self.mgr.write_json_atomic(ruta.with_name(ruta.name + ".privacidad.json"), {
+            "politica": 2, "sha256": hashlib.sha256(ruta.read_bytes()).hexdigest(), "regiones": regiones,
+        })
+
+    def imagen_media_protegida(self, id_caso: str, archivo: str):
+        import cv2
+        import numpy as np
+        ruta = self.ruta_media(id_caso, archivo)
+        contenido = ruta.read_bytes()
+        imagen = cv2.imdecode(np.frombuffer(contenido, np.uint8), cv2.IMREAD_COLOR)
+        if imagen is None:
+            raise DatosInvalidos("No se puede servir este archivo de forma segura como imagen")
+        regiones = None
+        metadata = ruta.with_name(ruta.name + ".privacidad.json")
+        if metadata.is_file():
+            try:
+                datos = json.loads(metadata.read_text(encoding="utf-8"))
+                if (isinstance(datos, dict) and datos.get("politica") == 2
+                        and datos.get("sha256") == hashlib.sha256(contenido).hexdigest()):
+                    regiones = datos.get("regiones", [])
+            except (ValueError, OSError):
+                pass
+        # Sin evidencia vinculada a estos bytes, volver a detectar; nunca devolver el original.
+        return proteger_imagen(imagen, regiones)
 
     def _ids(self) -> List[str]:
         return [i for i in self.mgr.list_cases() if self._ruta_caso(i).exists()]
@@ -179,7 +267,6 @@ class ServicioCasos:
                 return 0
             with open(ruta_semilla, "r", encoding="utf-8") as f:
                 semilla = json.load(f)
-            imagen_origen = ruta_semilla.parent / semilla["imagen_placeholder"]
 
             if not self._ruta_alertas.exists():
                 self._guardar_alertas([Alerta.model_validate(a) for a in semilla.get("alertas", [])])
@@ -187,7 +274,7 @@ class ServicioCasos:
             for datos in semilla["casos"]:
                 id_caso = datos["id_caso"]
                 case_dir = self.mgr.init_case_workspace(id_caso)
-                imagenes = []
+                imagenes, hallazgos = [], []
                 for vista in VISTAS:
                     esq = (datos.get("esqueletos") or {}).get(vista) or semilla.get("esqueletos", {}).get(vista) or semilla["esqueletos"]
                     foto_nombre = (datos.get("fotos") or {}).get(vista)
@@ -200,20 +287,46 @@ class ServicioCasos:
                         elif candidato_directo.exists():
                             foto_origen = candidato_directo
                     if foto_origen:
-                        destino = case_dir / "inputs" / foto_origen.name
-                        shutil.copyfile(foto_origen, destino)
+                        import cv2
+                        img = cv2.imread(str(foto_origen))
+                        if img is None:
+                            raise DatosInvalidos(f"No se pudo leer la foto semilla {foto_origen.name}")
+                        img = reducir(img)
+                        puntos, regiones = [], None
+                        try:
+                            resultado = estimador.analizar(img)
+                            img = resultado.imagen_bgr
+                            regiones = resultado.regiones_privacidad
+                            puntos = [vars(p) for p in resultado.puntos] if resultado.personas else []
+                        except VisionNoDisponible:
+                            log.warning("Semilla sin pose disponible: %s", foto_origen.name)
+                        h, w = img.shape[:2]
                         url_foto = foto_origen.name
+                        self._guardar_foto_protegida(id_caso, url_foto, img, regiones)
+                        hallazgos.append(Hallazgo(
+                            id=f"V-privacidad-{vista}", origen="vision", severidad="advertencia", vista=vista,
+                            mensaje=AVISO_PRIVACIDAD + (" Sin pose disponible: revisar; no se usa un esqueleto de plantilla." if not puntos else "")))
                     else:
-                        shutil.copyfile(imagen_origen, case_dir / "inputs" / imagen_origen.name)
-                        url_foto = imagen_origen.name
+                        # Los puntos de demostración sólo se usan con una imagen generada a partir de ellos.
+                        import cv2
+                        import numpy as np
+                        w, h = esq["ancho"], esq["alto"]
+                        img = np.full((h, w, 3), 235, np.uint8)
+                        puntos = [{"id": i, "x": x, "y": y, "confianza": c, "corregido": False}
+                                  for i, x, y, c in esq["puntos"]]
+                        for p in puntos:
+                            cv2.circle(img, (round(p["x"]), round(p["y"])), 5, (80, 80, 80), -1)
+                        url_foto = f"plantilla-{vista}.png"
+                        if not cv2.imwrite(str(case_dir / "inputs" / url_foto), img):
+                            raise RuntimeError(f"No se pudo guardar la plantilla {vista}")
+                        hallazgos.append(Hallazgo(
+                            id=f"V-plantilla-{vista}", origen="vision", severidad="info", vista=vista,
+                            mensaje="Demostración sintética: puntos de plantilla, no una evaluación de una persona real."))
 
-                    imagenes.append({
-                        "vista": vista, "url": url_foto, "ancho": esq["ancho"], "alto": esq["alto"],
-                        "puntos": [{"id": i, "x": x, "y": y, "confianza": c, "corregido": False}
-                                   for i, x, y, c in esq["puntos"]],
-                    })
+                    imagenes.append({"vista": vista, "url": url_foto, "ancho": w, "alto": h, "puntos": puntos})
                 recs = [{**r, "texto_ia": r["texto"]} for r in datos.get("recomendaciones", [])]
-                caso = CasoAlmacenado.model_validate({**datos, "imagenes": imagenes, "recomendaciones": recs})
+                caso = CasoAlmacenado.model_validate({**datos, "imagenes": imagenes, "recomendaciones": recs,
+                                                       "hallazgos_vision": hallazgos})
 
                 self._guardar(caso)
                 detalle = self._evaluar(caso)
@@ -397,6 +510,29 @@ class ServicioCasos:
         return recomendaciones
 
     def _evaluar(self, caso: CasoAlmacenado) -> CasoDetalle:
+        # Proyección solamente: no migrar ni sobrescribir geometría/auditorías antiguas al leer.
+        try:
+            import cv2
+        except ImportError:
+            cv2 = None
+        copia = None
+        for indice, imagen in enumerate(caso.imagenes):
+            pixeles = None
+            if cv2 is not None:
+                try:
+                    ruta = self.ruta_media(caso.id_caso, imagen.url)
+                    pixeles = cv2.imread(str(ruta))
+                except NoEncontrado:
+                    pass
+            w, h = (imagen.ancho, imagen.alto) if pixeles is None else pixeles.shape[1::-1]
+            if pixeles is None or (imagen.ancho, imagen.alto) != (w, h):
+                copia = copia or caso.model_copy(deep=True)
+                segura = copia.imagenes[indice]
+                segura.ancho, segura.alto, segura.puntos = w, h, []
+                copia.hallazgos_vision.append(Hallazgo(
+                    id=f"V-geometria-{imagen.vista}", origen="vision", severidad="advertencia", vista=imagen.vista,
+                    mensaje="Geometría incompatible o no verificable con los píxeles: puntos ocultos; requiere revisión, no se reescala la plantilla."))
+        caso = copia or caso
         ctx = caso.contexto
         angulos: List[Angulo] = []
         reba: Optional[ResultadoReba] = None
@@ -459,6 +595,7 @@ class ServicioCasos:
         self._registrar_hitos(caso, detalle)
         self._sincronizar_estado(caso, detalle, especialista)
         self._sincronizar_alertas(caso, detalle)
+        self._guardar_resumen(detalle, self._firma_resumen(caso.id_caso))
 
     def _registrar_hitos(self, caso: CasoAlmacenado, d: CasoDetalle) -> None:
         """Primera decisión y validación completa: base de la medición de tiempos de respuesta."""
@@ -590,12 +727,31 @@ class ServicioCasos:
             res = []
             for id_caso in self._ids():
                 d = self._evaluar(self._cargar(id_caso))
-                res.append(CasoResumen(
-                    id_caso=d.id_caso, estacion=d.estacion, tipo_tarea=d.tipo_tarea, fecha=d.fecha,
-                    reba_final=d.reba.final if d.reba else None, nivel=d.reba.nivel if d.reba else None,
-                    decisiones_pendientes=d.validacion.pendientes, por_autorizar=d.validacion.por_autorizar,
-                ))
+                res.append(self._resumen(d))
             return res
+
+    def pagina(self, page: int = 1, page_size: int = 10) -> PaginaCasos:
+        if page < 1 or not 1 <= page_size <= 100:
+            raise DatosInvalidos("Página o tamaño fuera de rango")
+        with self._lock:
+            ids = sorted(self._ids())
+            total = len(ids)
+            inicio = (page - 1) * page_size
+            resumenes = self._resumenes(ids[inicio:inicio + page_size])
+            return PaginaCasos(items=resumenes, total=total,
+                               page=page, page_size=page_size, total_pages=(total + page_size - 1) // page_size)
+
+    def dashboard(self) -> MetricasDashboard:
+        with self._lock:
+            resumenes = self._resumenes()
+            metricas = MetricasDashboard(total_casos=len(resumenes))
+            for r in resumenes:
+                nivel = r.nivel or "sin_evaluar"
+                setattr(metricas.niveles, nivel, getattr(metricas.niveles, nivel) + 1)
+                metricas.tipos_tarea[r.tipo_tarea] = metricas.tipos_tarea.get(r.tipo_tarea, 0) + 1
+                metricas.decisiones_pendientes += r.decisiones_pendientes
+                metricas.por_autorizar += r.por_autorizar
+            return metricas
 
     def obtener(self, id_caso: str) -> CasoDetalle:
         with self._lock:
@@ -1139,7 +1295,7 @@ class ServicioCasos:
     def crear_caso(self, datos: NuevoCaso, fotos: Dict[str, bytes]) -> str:
         """
         Crea un caso a partir de fotos reales: visión (YOLOX + RTMPose) → puntos → REBA → hallazgos →
-        recomendaciones propuestas. Las fotos se guardan con el rostro difuminado.
+        recomendaciones propuestas. Las fotos se guardan con máscaras sólidas de privacidad.
         """
         _exigir_rol(datos, "ergonomia", "crear casos")
         if "lateral" not in fotos:
@@ -1184,11 +1340,13 @@ class ServicioCasos:
                     continue
                 archivo = f"{vista}.jpg"
                 # Se re-codifica: elimina metadatos EXIF y conserva solo la versión anonimizada.
-                if not cv2.imwrite(str(case_dir / "inputs" / archivo), r.imagen_bgr, [cv2.IMWRITE_JPEG_QUALITY, CALIDAD_JPEG]):
-                    raise RuntimeError(f"No se pudo guardar la foto {vista}")
+                self._guardar_foto_protegida(id_caso, archivo, r.imagen_bgr, r.regiones_privacidad)
                 h, w = r.imagen_bgr.shape[:2]
                 imagenes.append(Imagen(vista=vista, url=archivo, ancho=w, alto=h, puntos=[
                     Punto(id=p.id, x=round(p.x, 1), y=round(p.y, 1), confianza=p.confianza) for p in r.puntos]))
+                hallazgos.append(Hallazgo(
+                    id=f"V-privacidad-{vista}", origen="vision", severidad="advertencia", vista=vista,
+                    mensaje=AVISO_PRIVACIDAD))
                 if r.personas > 1:
                     hallazgos.append(Hallazgo(
                         id=f"V-personas-{vista}", origen="vision", severidad="info", vista=vista,

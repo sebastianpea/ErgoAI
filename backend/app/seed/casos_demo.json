@@ -1,5 +1,5 @@
 {
-  "_nota": "Casos oficiales de prueba Track 4 (Jabil X-RAIC 2026). Integra 6 casos de evaluación (Levantamiento, Transporte c/auxiliar, Transporte s/auxiliar) y 1 caso de control conforme. Fotografías reales procesadas por YOLOX + RTMPose WholeBody-133 con anonimización facial automática.",
+  "_nota": "Casos de demostración Track 4 (Jabil X-RAIC 2026). Las fotos reales reciben puntos inferidos en sus dimensiones reales, o puntos vacíos con aviso de revisión si la visión no está disponible. Se guardan y sirven con máscaras sólidas en regiones de cabeza sustentadas por detección, o máscara completa si la evidencia es insuficiente; no se garantiza cobertura perfecta de rostros. Los esqueletos predefinidos sólo corresponden a imágenes sintéticas generadas, nunca a fotos reales; las evaluaciones capturadas son referencias, no garantía del resultado inferido.",
   "imagen_placeholder": "placeholder.svg",
   "esqueletos": {
     "lateral": {
