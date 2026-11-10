@@ -312,7 +312,41 @@ docker compose down
 
 ---
 
-### Opción 3: Modo Simulado (Frontend Sin Backend)
+### Opción 3: Captura de Fotos y Análisis en Vivo (Windows y Linux)
+
+El sistema incorpora un subsistema de captura fotográfica y diagnóstico biomecánico instantáneo diseñado con **cero dependencias privativas y 100% de compatibilidad multiplataforma**:
+
+#### A. Desde la Interfaz Web (React + WebRTC)
+- **Tecnología**: Implementado en [`CapturaCamaraModal.tsx`](../frontend/src/components/CapturaCamaraModal.tsx) mediante el estándar W3C `navigator.mediaDevices.getUserMedia`.
+- **Compatibilidad**: Funciona nativamente en navegadores Chrome, Edge, Firefox y Brave tanto sobre **Windows** (10/11) como sobre **Linux** (Ubuntu, Fedora, Arch, etc.).
+- **Capacidades**:
+  - Detección y alternancia en caliente entre múltiples cámaras (cámaras integradas de laptop y cámaras USB industriales).
+  - Guía visual superpuesta para encuadre ergonómico de perfil.
+  - Análisis rápido con un solo clic que envía la foto a `POST /vision/analizar-rapido` y despliega la imagen anotada con el esqueleto biomecánico (colores según nivel de riesgo REBA) y desglose de ángulos.
+  - Inserción directa de la fotografía capturada en las vistas lateral, frontal o cenital del nuevo caso.
+  - Liberación inmediata de descriptores de hardware en el sistema operativo al cerrar el visor para evitar bloqueos del dispositivo de captura.
+
+#### B. Desde la Línea de Comandos (CLI Script en Python)
+- **Script**: [`scripts/capturar_y_analizar.py`](../scripts/capturar_y_analizar.py).
+- **Compatibilidad de Backend en VideoCapture**:
+  - En **Windows**: Prioriza `cv2.CAP_DSHOW` (DirectShow) y `cv2.CAP_MSMF` (Media Foundation), resolviendo el problema conocido de latencia de inicialización de 5 a 10 segundos en Windows.
+  - En **Linux**: Prioriza `cv2.CAP_V4L2` (Video4Linux2), asegurando acceso directo al subsistema de captura de Linux sin dependencias X11 obligatorias.
+  - Si no están presentes, recurre con elegancia a `cv2.CAP_ANY`.
+- **Modos de Ejecución**:
+  ```bash
+  # 1. Modo interactivo con visor OpenCV (Presiona ESPACIO para capturar y analizar, Q para salir)
+  .venv/bin/python scripts/capturar_y_analizar.py
+
+  # 2. Modo desatendido con temporizador (útil para Docker, WSL2 o servidores SSH)
+  .venv/bin/python scripts/capturar_y_analizar.py --headless --timer 3 --output captura_linea.jpg
+
+  # 3. Modo análisis de imagen existente en disco
+  .venv/bin/python scripts/capturar_y_analizar.py --image backend/app/seed/dataset_jabil/lev_03_caja_lateral_perfil_C.jpg
+  ```
+
+---
+
+### Opción 4: Modo Simulado (Frontend Sin Backend)
 
 Ideal para presentaciones o revisiones de diseño sin necesidad de levantar Python ni Ollama:
 
@@ -324,9 +358,9 @@ npm run dev:mock
 
 ---
 
-### Opción 4: Ejecución de Pruebas y Verificación Integral
+### Opción 5: Ejecución de Pruebas y Verificación Integral
 
-Para validar la integridad matemática, criptográfica y de API:
+Para validar la integridad matemática, criptográfica y de API (62 pruebas automatizadas):
 
 ```bash
 # Ejecutar suite completa con pytest

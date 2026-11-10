@@ -20,10 +20,12 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 
 from backend.app.api.schemas import (
-    ID_PATRON, Actor, Alerta, AtenderAlerta, Autorizacion, CasoDetalle, CasoResumen, ConsultaRAGRequest,
-    CorreccionContexto, CorreccionPuntos, Decision, EstadoVision, FragmentoNormativo, Implementacion,
-    NuevaRecomendacion, NuevoCaso, Ok, RespuestaRAG, ResultadoIntegridad, RevisionHallazgo, Segmento, Vista,
+    ID_PATRON, Actor, Alerta, AnalisisRapidoResponse, AtenderAlerta, Autorizacion, CasoDetalle, CasoResumen,
+    ConsultaRAGRequest, CorreccionContexto, CorreccionPuntos, Decision, EstadoVision, FragmentoNormativo,
+    Implementacion, NuevaRecomendacion, NuevoCaso, Ok, RespuestaRAG, ResultadoIntegridad, ResumenAnguloRapido,
+    RevisionHallazgo, Segmento, Vista,
 )
+from backend.app.vision.annotador import anotar_esqueleto, codificar_imagen_b64
 from backend.app.vision.estimador import VisionNoDisponible, estimador
 from backend.app.core_ergonomics.cambios import PARAMETROS
 from backend.app.services.casos import Conflicto, DatosInvalidos, NoEncontrado, Prohibido, ServicioCasos
@@ -101,6 +103,92 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
     def estado_vision():
         disponible, detalle = estimador.estado()
         return EstadoVision(disponible=disponible, detalle=detalle)
+
+    @app.post("/vision/analizar-rapido", response_model=AnalisisRapidoResponse)
+    async def analizar_rapido(
+        foto: UploadFile = File(..., description="Foto capturada por cámara o subida por el usuario"),
+        tipo_tarea: str = Form("levantamiento"),
+        carga_kg: float = Form(0.0),
+    ):
+        """Analiza instantáneamente una fotografía (desde cámara o archivo) y devuelve el esqueleto anotado y REBA."""
+        t0 = time.perf_counter()
+        contenido = await foto.read()
+        if not contenido:
+            raise DatosInvalidos("El archivo de fotografía está vacío.")
+
+        import cv2
+        import numpy as np
+        from backend.app.core_ergonomics.angle_geometry import extraer_angulos_laterales
+        from backend.app.core_ergonomics.modelos import ContextoTarea
+        from backend.app.core_ergonomics.reba_calculator import RebaCalculator
+
+        nparr = np.frombuffer(contenido, np.uint8)
+        img_bgr = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img_bgr is None:
+            raise DatosInvalidos("Formato de imagen inválido. Se espera JPG o PNG.")
+
+        # Inferencia de pose con el estimador (YOLOX + RTMPose)
+        resultado = await run_in_threadpool(estimador.analizar, img_bgr)
+        if resultado.personas == 0:
+            return AnalisisRapidoResponse(
+                ok=False,
+                personas=0,
+                rostro_anonimizado=False,
+                reba_final=0,
+                reba_nivel="sin_dato",
+                grupo_a=0,
+                grupo_b=0,
+                tabla_c=0,
+                angulos=[],
+                imagen_anotada_b64=None,
+                tiempo_ms=round((time.perf_counter() - t0) * 1000, 2),
+                advertencia="No se detectó a ninguna persona con suficiente claridad en la toma.",
+            )
+
+        angulos_medidos = extraer_angulos_laterales(resultado.puntos)
+        grados_map = {seg: m.grados for seg, m in angulos_medidos.items()}
+
+        # Calcular REBA determinista
+        config = NormativeConfigLoader(CONFIG_DIR)
+        calc = RebaCalculator(config.get_reba_tables())
+        ctx = ContextoTarea(carga_kg=carga_kg)
+        res_reba = calc.calcular(grados_map, ctx)
+
+        # Anotar imagen con esqueleto, banner REBA y etiquetas
+        img_anotada = anotar_esqueleto(
+            resultado.imagen_bgr,
+            resultado.puntos,
+            reba_final=res_reba.final,
+            reba_nivel=res_reba.nivel,
+            angulos=grados_map,
+        )
+        b64_str = codificar_imagen_b64(img_anotada)
+
+        lista_angulos = [
+            ResumenAnguloRapido(
+                segmento=seg,
+                grados=m.grados,
+                puntaje_reba=res_reba.segmentos[seg].puntaje if seg in res_reba.segmentos else 1,
+                estado="sin_dato" if m.grados is None else ("revisar" if m.confianza < 0.4 else "ok"),
+                confianza=m.confianza,
+            )
+            for seg, m in angulos_medidos.items()
+        ]
+
+        t_ms = round((time.perf_counter() - t0) * 1000, 2)
+        return AnalisisRapidoResponse(
+            ok=True,
+            personas=resultado.personas,
+            rostro_anonimizado=resultado.rostro_anonimizado,
+            reba_final=res_reba.final,
+            reba_nivel=res_reba.nivel,
+            grupo_a=res_reba.grupo_a,
+            grupo_b=res_reba.grupo_b,
+            tabla_c=res_reba.tabla_c,
+            angulos=lista_angulos,
+            imagen_anotada_b64=b64_str,
+            tiempo_ms=t_ms,
+        )
 
     @app.post("/casos", response_model=dict)
     async def crear_caso(

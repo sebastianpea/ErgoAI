@@ -45,8 +45,12 @@
   - Detección de personas con **YOLOX** y estimación de hasta **133 keypoints corporales y de mano** con **RTMPose / RTMW WholeBody-133** sobre `onnxruntime`, proyectando ángulos de tronco, cuello, hombro, codo, muñeca y rodilla en vistas lateral y cenital, con detección de oclusión y modo *Human-in-the-Loop* para confirmación o ajuste de ángulos.
 - **Flujo Dual de Especialistas (Ergonomía + Ingeniería)**:
   - Segregación de permisos: los casos de riesgo alto (`REBA >= 8`) bloquean la aprobación unilateral por parte del rol de Ergonomía y exigen dictamen de Ingeniería de Manufactura.
-- **Suite de 61 Pruebas Automatizadas al 100%**:
-  - Cobertura de regresión sobre cálculos REBA, las 5 estrategias NOM-036, RAG en memoria, Ceguera Inducida, Visión 2D, API REST, control de roles y verificación criptográfica de la bitácora SHA-256.
+- **Captura de Fotos y Diagnóstico Ergonómico en Vivo (Windows y Linux)**:
+  - **Módulo Web Integrado (`CapturaCamaraModal.tsx`)**: Permite capturar fotos de las estaciones directamente desde la cámara web (WebRTC estándar 100% compatible en navegadores de Windows y Linux). Incluye enumeración de cámaras USB/internas, guía de encuadre ergonómico, diagnóstico instantáneo con esqueleto biomecánico superpuesto, tarjeta de riesgo REBA y desglose articular.
+  - **Herramienta CLI Multiplataforma (`scripts/capturar_y_analizar.py`)**: Script autónomo en Python/OpenCV con detección automática de backend (`cv2.CAP_DSHOW` / `cv2.CAP_MSMF` en Windows, `cv2.CAP_V4L2` en Linux). Soporta modo interactivo con ventana en vivo, modo desatendido/temporizador (`--headless --timer`) para servidores/SSH/Docker y modo análisis de archivos de imagen (`--image`).
+  - **Endpoint de Análisis Rápido (`POST /vision/analizar-rapido`)**: API REST que procesa la imagen con YOLOX + RTMPose WholeBody-133, calcula el REBA Score determinista y devuelve la imagen renderizada en Base64 con el esqueleto biomecánico colorizado según el nivel de riesgo.
+- **Suite de 62 Pruebas Automatizadas al 100%**:
+  - Cobertura de regresión sobre cálculos REBA, las 5 estrategias NOM-036, RAG en memoria, Ceguera Inducida, Visión 2D (incluyendo endpoint de análisis rápido), API REST, control de roles y verificación criptográfica de la bitácora SHA-256.
 
 ---
 
@@ -122,7 +126,36 @@ cd ..
 
 ---
 
-### Opción B: Despliegue Completo con Docker Compose (Frontend + Backend + Ollama LLM)
+### Opción B: Captura y Diagnóstico con Cámara (Windows y Linux)
+
+ErgoAI ofrece dos formas de captura y análisis de fotografías:
+
+#### 1. Desde la Aplicación Web (Recomendado para Evaluadores de Planta)
+1. Navega a **"Nuevo Caso"** (`http://localhost:5173/nuevo`).
+2. Haz clic en **"⚡ Diagnóstico Rápido con Cámara"** o en el botón **"📷 Tomar con cámara"** en cualquiera de las vistas (lateral, frontal, cenital).
+3. Selecciona tu cámara web preferida (soporta webcams integradas o cámaras USB externas en Windows y Linux sin controladores adicionales).
+4. Alinea al operador en el visor utilizando las guías ergonómicas y presiona **"Capturar y Analizar REBA"**.
+5. Observa el esqueleto biomecánico superpuesto, los ángulos articulares medidos y el REBA Score resultante. Si lo deseas, pulsa **"✓ Usar esta foto para Crear Caso"**.
+
+#### 2. Desde la Línea de Comandos (CLI Script en Python)
+Ideal para quioscos de ergonomía en piso de producción, pruebas de campo o automatización:
+```bash
+# Modo Interactivo con ventana de video en vivo (Espacio para capturar, Q para salir):
+.venv/bin/python scripts/capturar_y_analizar.py
+
+# En Windows seleccionando índice de cámara o backend DirectShow:
+python scripts/capturar_y_analizar.py --camera 0
+
+# Modo Headless con temporizador (útil para Docker, WSL o entornos sin servidor X11):
+.venv/bin/python scripts/capturar_y_analizar.py --headless --timer 3 --output captura_planta.jpg
+
+# Analizar una fotografía ya existente y generar el reporte visual anotado:
+.venv/bin/python scripts/capturar_y_analizar.py --image backend/app/seed/dataset_jabil/lev_03_caja_lateral_perfil_C.jpg
+```
+
+---
+
+### Opción C: Despliegue Completo con Docker Compose (Frontend + Backend + Ollama LLM)
 
 El archivo [`docker-compose.yml`](docker-compose.yml) levanta la infraestructura completa en una red aislada (`ergoai_internal_net`), aprovisionando automáticamente el modelo `qwen3.5:2b` en Ollama:
 

@@ -54,8 +54,37 @@ export interface DatosNuevoCaso {
 }
 export type FotosNuevoCaso = Partial<Record<Vista, File>> & { lateral: File };
 
+export interface ResumenAnguloRapido {
+  grados: number;
+  puntaje_reba: number;
+}
+
+export interface AnalisisRapidoResponse {
+  ok: boolean;
+  reba_score: number;
+  nivel_riesgo: string;
+  accion_recomendada: string;
+  angulos: Record<string, ResumenAnguloRapido>;
+  imagen_anotada_b64: string;
+}
+
 const real = {
   estadoVision: () => http<{ disponible: boolean; detalle: string }>("/vision/estado"),
+  /** Analiza una fotografía al instante con YOLOX + RTMPose y calcula el REBA Score. */
+  analizarRapido: async (foto: File, tipoTarea = "levantamiento", cargaKg = 0): Promise<AnalisisRapidoResponse> => {
+    const form = new FormData();
+    form.append("foto", foto);
+    form.append("tipo_tarea", tipoTarea);
+    form.append("carga_kg", cargaKg.toString());
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/vision/analizar-rapido`, { method: "POST", body: form });
+    } catch {
+      throw new Error(`No se pudo conectar con el backend en ${API_URL}. ¿Está en ejecución?`);
+    }
+    if (!res.ok) throw new Error(mensajeError(res.status, await res.text()));
+    return res.json() as Promise<AnalisisRapidoResponse>;
+  },
   /** Sube las fotos; el backend detecta la pose, calcula REBA y propone recomendaciones. */
   crearCaso: async (datos: DatosNuevoCaso, fotos: FotosNuevoCaso) => {
     const form = new FormData();
@@ -173,6 +202,22 @@ const rolEs = (rol: string) => actorActual().rol === rol;
 
 const mock: typeof real = {
   estadoVision: () => copia({ disponible: false, detalle: "Modo simulado: la visión artificial requiere el backend real." }),
+  analizarRapido: () =>
+    copia<AnalisisRapidoResponse>({
+      ok: true,
+      reba_score: 4,
+      nivel_riesgo: "MEDIO",
+      accion_recomendada: "Es necesaria la actuación e intervención ergonómica para reducir posturas forzadas.",
+      angulos: {
+        tronco: { grados: 22.5, puntaje_reba: 2 },
+        cuello: { grados: 15.0, puntaje_reba: 1 },
+        brazo: { grados: 48.0, puntaje_reba: 3 },
+        antebrazo: { grados: 85.0, puntaje_reba: 1 },
+        muneca: { grados: 18.0, puntaje_reba: 2 },
+        pierna: { grados: 10.0, puntaje_reba: 1 },
+      },
+      imagen_anotada_b64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='400' height='300' fill='%23163E6A'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif'>Simulacion Captura ErgoAI</text></svg>",
+    }),
   crearCaso: () => falla("Crear casos desde fotos requiere el backend real (npm run dev, sin modo simulado)."),
   catalogoParametros: () => copia<ParametroCatalogo[]>([
     { parametro: "angulo.tronco", etiqueta: "Ángulo de tronco", tipo: "numero", unidad: "°", minimo: -90, maximo: 180, opciones: [] },
