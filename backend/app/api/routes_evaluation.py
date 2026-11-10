@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from backend.app.api.schemas import (
     Actor, Alerta, CasoDetalle, CasoResumen, CorreccionContexto, CorreccionPuntos,
     Decision, EstadoVision, ID_PATRON, Impacto, NuevaRecomendacion, NuevoCaso, Ok,
-    ResultadoIntegridad, RevisionHallazgo, Segmento, Vista,
+    MetricasDashboard, PaginaCasos, ResultadoIntegridad, RevisionHallazgo, Segmento, Vista,
 )
 from backend.app.core_ergonomics.cambios import PARAMETROS
 from backend.app.services.casos import Conflicto, DatosInvalidos, NoEncontrado, Prohibido, ServicioCasos
@@ -34,6 +34,16 @@ def catalogo_parametros() -> list:
 @router.get("/casos", response_model=list[CasoResumen])
 def listar_casos(request: Request):
     return svc(request).listar()
+
+
+@router.get("/casos/pagina", response_model=PaginaCasos)
+def pagina_casos(request: Request, page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)):
+    return svc(request).pagina(page, page_size)
+
+
+@router.get("/metricas/dashboard", response_model=MetricasDashboard)
+def metricas_dashboard(request: Request):
+    return svc(request).dashboard()
 
 
 @router.get("/casos/{id_caso}", response_model=CasoDetalle)

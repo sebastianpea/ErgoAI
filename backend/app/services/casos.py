@@ -21,12 +21,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from pydantic import ValidationError
+
 from backend.app.api.schemas import (
     Actor, Alerta, Angulo, Autorizacion, CasoAlmacenado, CasoDetalle, CasoImpacto, CasoResumen, CorreccionContexto,
     CorreccionNom036, CorreccionReferencia, Decision, Descarte, Hallazgo, Imagen, Implementacion, Impacto,
     NuevaRecomendacion, Nom036Captura, NuevoCaso, Punto, Recomendacion, RecomendacionAlmacenada, Residual,
     ResultadoIntegridad, ResultadoNom036, ResultadoReba, RevisionHallazgo, SegmentoResidual, Validacion, VISTAS,
-    Vista,
+    MetricasDashboard, PaginaCasos, Vista,
 )
 from backend.app.core_ergonomics.angle_geometry import (
     extraer_angulos_laterales, extraer_angulos_vista, medir_vista_frontal, segmentos_de_punto,
@@ -114,6 +116,8 @@ def _describir_efecto(e: Efecto) -> str:
 class ServicioCasos:
     ARCHIVO_CASO = "caso.json"
     ARCHIVO_ALERTAS = "alertas.json"
+    ARCHIVO_RESUMEN = "resumen_consulta.json"
+    VERSION_RESUMEN = 1
 
     def __init__(self, mgr: AuditFileManager, config: NormativeConfigLoader):
         self.mgr = mgr
@@ -122,6 +126,9 @@ class ServicioCasos:
         self.reba = RebaCalculator(config.get_reba_tables())
         self.rag = InMemoryRAG(config.get_jabil_standards(), config.get_nom036_kb())
         self._lock = threading.RLock()
+        self._firma_config = hashlib.sha256(json.dumps([
+            config.get_reba_tables(), config.get_nom036_tables(), config.get_jabil_standards(),
+        ], sort_keys=True).encode()).hexdigest()
 
     # ================= Persistencia =================
 
@@ -140,6 +147,52 @@ class ServicioCasos:
 
     def _guardar(self, caso: CasoAlmacenado) -> None:
         self.mgr.write_json_atomic(self._ruta_caso(caso.id_caso), caso.model_dump(mode="json"))
+
+    @staticmethod
+    def _resumen(d: CasoDetalle) -> CasoResumen:
+        return CasoResumen(
+            id_caso=d.id_caso, estacion=d.estacion, tipo_tarea=d.tipo_tarea, fecha=d.fecha,
+            reba_final=d.reba.final if d.reba else None, nivel=d.reba.nivel if d.reba else None,
+            decisiones_pendientes=d.validacion.pendientes, por_autorizar=d.validacion.por_autorizar,
+        )
+
+    def _firma_resumen(self, id_caso: str) -> str:
+        # Sólo metadatos: también invalidar geometría antigua si cambian los archivos de inputs.
+        ruta = self._ruta_caso(id_caso)
+        inputs = ruta.parent / "inputs"
+        archivos = [ruta] + (sorted(inputs.iterdir()) if inputs.exists() else [])
+        firma = [(p.name, s.st_mtime_ns, s.st_ctime_ns, s.st_size)
+                 for p in archivos if p.is_file() for s in [p.stat()]]
+        return hashlib.sha256(json.dumps([self._firma_config, firma]).encode()).hexdigest()
+
+    def _guardar_resumen(self, d: CasoDetalle, firma: str) -> CasoResumen:
+        resumen = self._resumen(d)
+        self.mgr.write_json_atomic(self.mgr.get_case_dir(d.id_caso) / self.ARCHIVO_RESUMEN, {
+            "version": self.VERSION_RESUMEN, "firma": firma, "resumen": resumen.model_dump(mode="json"),
+        })
+        return resumen
+
+    def _resumenes(self, ids: Optional[List[str]] = None) -> List[CasoResumen]:
+        """Materializa sólo los IDs pedidos; sin filtro, el agregado global."""
+        if ids is None:
+            ids = sorted(self._ids())
+        resumenes = []
+        for id_caso in ids:
+            firma = self._firma_resumen(id_caso)
+            ruta = self.mgr.get_case_dir(id_caso) / self.ARCHIVO_RESUMEN
+            try:
+                datos = json.loads(ruta.read_text(encoding="utf-8"))
+                if not isinstance(datos, dict) or datos.get("version") != self.VERSION_RESUMEN or datos.get("firma") != firma:
+                    raise ValueError("Resumen obsoleto")
+                resumen = CasoResumen.model_validate(datos["resumen"])
+                if resumen.id_caso != id_caso:
+                    raise ValueError("Identidad de resumen incompatible")
+            except (FileNotFoundError, ValueError, KeyError, TypeError, ValidationError):
+                # No capturar errores del caso original ni escribirlo durante la reconstrucción.
+                d = self._evaluar(self._cargar(id_caso))
+                resumen = self._guardar_resumen(d, firma)
+            resumenes.append(resumen)
+        return resumenes
 
     def _guardar_foto_protegida(self, id_caso: str, archivo: str, imagen, regiones=None) -> None:
         import cv2
@@ -542,6 +595,7 @@ class ServicioCasos:
         self._registrar_hitos(caso, detalle)
         self._sincronizar_estado(caso, detalle, especialista)
         self._sincronizar_alertas(caso, detalle)
+        self._guardar_resumen(detalle, self._firma_resumen(caso.id_caso))
 
     def _registrar_hitos(self, caso: CasoAlmacenado, d: CasoDetalle) -> None:
         """Primera decisión y validación completa: base de la medición de tiempos de respuesta."""
@@ -673,12 +727,31 @@ class ServicioCasos:
             res = []
             for id_caso in self._ids():
                 d = self._evaluar(self._cargar(id_caso))
-                res.append(CasoResumen(
-                    id_caso=d.id_caso, estacion=d.estacion, tipo_tarea=d.tipo_tarea, fecha=d.fecha,
-                    reba_final=d.reba.final if d.reba else None, nivel=d.reba.nivel if d.reba else None,
-                    decisiones_pendientes=d.validacion.pendientes, por_autorizar=d.validacion.por_autorizar,
-                ))
+                res.append(self._resumen(d))
             return res
+
+    def pagina(self, page: int = 1, page_size: int = 10) -> PaginaCasos:
+        if page < 1 or not 1 <= page_size <= 100:
+            raise DatosInvalidos("Página o tamaño fuera de rango")
+        with self._lock:
+            ids = sorted(self._ids())
+            total = len(ids)
+            inicio = (page - 1) * page_size
+            resumenes = self._resumenes(ids[inicio:inicio + page_size])
+            return PaginaCasos(items=resumenes, total=total,
+                               page=page, page_size=page_size, total_pages=(total + page_size - 1) // page_size)
+
+    def dashboard(self) -> MetricasDashboard:
+        with self._lock:
+            resumenes = self._resumenes()
+            metricas = MetricasDashboard(total_casos=len(resumenes))
+            for r in resumenes:
+                nivel = r.nivel or "sin_evaluar"
+                setattr(metricas.niveles, nivel, getattr(metricas.niveles, nivel) + 1)
+                metricas.tipos_tarea[r.tipo_tarea] = metricas.tipos_tarea.get(r.tipo_tarea, 0) + 1
+                metricas.decisiones_pendientes += r.decisiones_pendientes
+                metricas.por_autorizar += r.por_autorizar
+            return metricas
 
     def obtener(self, id_caso: str) -> CasoDetalle:
         with self._lock:
