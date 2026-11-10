@@ -26,6 +26,10 @@ export function Plan() {
   const qc = useQueryClient();
   const sesion = useSesion();
   const [creando, setCreando] = useState(false);
+  const [descargandoExcel, setDescargandoExcel] = useState(false);
+  const [descargandoPdf, setDescargandoPdf] = useState(false);
+  const [errorDescarga, setErrorDescarga] = useState<string | null>(null);
+
   const { data: caso, isLoading, error } = useQuery({ queryKey: ["caso", id], queryFn: () => api.obtenerCaso(id) });
 
   const refrescar = () => {
@@ -33,6 +37,32 @@ export function Plan() {
     qc.invalidateQueries({ queryKey: ["casos"] });
     qc.invalidateQueries({ queryKey: ["alertas"] });
     qc.invalidateQueries({ queryKey: ["bitacora"] });
+  };
+
+  const handleDescargarExcel = async () => {
+    setDescargandoExcel(true);
+    setErrorDescarga(null);
+    try {
+      await api.descargarExcel(id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorDescarga(msg);
+    } finally {
+      setDescargandoExcel(false);
+    }
+  };
+
+  const handleDescargarPdf = async () => {
+    setDescargandoPdf(true);
+    setErrorDescarga(null);
+    try {
+      await api.descargarPdf(id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorDescarga(msg);
+    } finally {
+      setDescargandoPdf(false);
+    }
   };
 
   const accion = useMutation({
@@ -91,25 +121,27 @@ export function Plan() {
               <button
                 type="button"
                 className="boton"
-                onClick={() => api.descargarPdf(id)}
-                title="Descargar informe oficial en formato PDF"
+                onClick={handleDescargarExcel}
+                disabled={descargandoExcel}
+                title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
               >
-                📥 PDF
+                {descargandoExcel ? "⏳ Excel…" : "📊 Guardar como Excel"}
               </button>
               <button
                 type="button"
                 className="boton"
-                onClick={() => api.descargarExcel(id)}
-                title="Exportar expediente en formato Excel (.xlsx)"
+                onClick={handleDescargarPdf}
+                disabled={descargandoPdf}
+                title="Guardar informe oficial en formato Adobe PDF (.pdf)"
               >
-                📊 Excel
+                {descargandoPdf ? "⏳ PDF…" : "📥 Guardar como PDF"}
               </button>
             </>
           ) : (
             <button
               className="primario"
               disabled
-              title="Para generar el informe, todas las recomendaciones deben estar aprobadas e implementadas en piso."
+              title="Para generar el informe o exportar, todas las recomendaciones deben estar aprobadas e implementadas en piso."
             >
               Generar informe
             </button>
@@ -123,6 +155,49 @@ export function Plan() {
         <div><span className="cifra-valor">{v.por_implementar}</span><span className="cifra-texto">Por implementar</span></div>
         <div><span className="cifra-valor">{v.implementadas}</span><span className="cifra-texto">Implementadas</span></div>
       </div>
+
+      {errorDescarga && (
+        <div className="aviso error">
+          {errorDescarga}
+        </div>
+      )}
+
+      {todoListo && (
+        <div className="tarjeta corte" style={{ borderLeft: "4px solid #2E9E5B", marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <p className="eyebrow" style={{ color: "#2E9E5B" }}>✓ Plan de acción completado e implementado</p>
+              <h3 style={{ margin: "0.2rem 0" }}>Todas las recomendaciones fueron aprobadas e implementadas en planta</h3>
+              <p className="sutil" style={{ margin: 0 }}>
+                El caso cumple con todos los requisitos legales de la NOM-036-1-STPS-2018 y el estándar global Jabil.
+              </p>
+            </div>
+            <div className="acciones">
+              <button
+                type="button"
+                className="boton primario"
+                onClick={handleDescargarExcel}
+                disabled={descargandoExcel}
+                title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
+              >
+                {descargandoExcel ? "⏳ Guardando…" : "📊 Guardar como Excel"}
+              </button>
+              <button
+                type="button"
+                className="boton primario"
+                onClick={handleDescargarPdf}
+                disabled={descargandoPdf}
+                title="Guardar informe oficial en formato Adobe PDF (.pdf)"
+              >
+                {descargandoPdf ? "⏳ Guardando…" : "📥 Guardar como PDF"}
+              </button>
+              <Link className="boton" to={`/casos/${id}/informe`}>
+                📄 Ver Informe Web
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {accion.isError && <p className="aviso error">No se guardó la acción: {accion.error.message}</p>}
       {sesion.esIngenieria && (
