@@ -117,7 +117,7 @@ export function Plan() {
           <Link className="boton claro" to={`/casos/${id}`}>← Análisis</Link>
           {todoListo ? (
             <>
-              <Link className="boton primario" to={`/casos/${id}/informe`}>📄 Ver informe</Link>
+              <Link className="boton primario" to={`/casos/${id}/informe`}>Ver informe</Link>
               <button
                 type="button"
                 className="boton"
@@ -125,7 +125,7 @@ export function Plan() {
                 disabled={descargandoExcel}
                 title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
               >
-                {descargandoExcel ? "⏳ Excel…" : "📊 Guardar como Excel"}
+                {descargandoExcel ? "Generando Excel…" : "Guardar como Excel"}
               </button>
               <button
                 type="button"
@@ -134,7 +134,7 @@ export function Plan() {
                 disabled={descargandoPdf}
                 title="Guardar informe oficial en formato Adobe PDF (.pdf)"
               >
-                {descargandoPdf ? "⏳ PDF…" : "📥 Guardar como PDF"}
+                {descargandoPdf ? "Generando PDF…" : "Guardar como PDF"}
               </button>
             </>
           ) : (
@@ -180,7 +180,7 @@ export function Plan() {
                 disabled={descargandoExcel}
                 title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
               >
-                {descargandoExcel ? "⏳ Guardando…" : "📊 Guardar como Excel"}
+                {descargandoExcel ? "Generando Excel…" : "Guardar como Excel"}
               </button>
               <button
                 type="button"
@@ -189,10 +189,10 @@ export function Plan() {
                 disabled={descargandoPdf}
                 title="Guardar informe oficial en formato Adobe PDF (.pdf)"
               >
-                {descargandoPdf ? "⏳ Guardando…" : "📥 Guardar como PDF"}
+                {descargandoPdf ? "Generando PDF…" : "Guardar como PDF"}
               </button>
               <Link className="boton" to={`/casos/${id}/informe`}>
-                📄 Ver Informe Web
+                Ver Informe Web
               </Link>
             </div>
           </div>

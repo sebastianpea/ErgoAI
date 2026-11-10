@@ -101,7 +101,7 @@ export function Informe() {
           disabled={descargandoExcel}
           title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
         >
-          {descargandoExcel ? "⏳ Generando Excel…" : "📊 Guardar como Excel"}
+          {descargandoExcel ? "Generando Excel…" : "Guardar como Excel"}
         </button>
 
         <button
@@ -111,7 +111,7 @@ export function Informe() {
           disabled={descargandoPdf}
           title="Guardar informe oficial en formato Adobe PDF (.pdf)"
         >
-          {descargandoPdf ? "⏳ Generando PDF…" : "📥 Guardar como PDF"}
+          {descargandoPdf ? "Generando PDF…" : "Guardar como PDF"}
         </button>
 
         <button
@@ -120,7 +120,7 @@ export function Informe() {
           onClick={() => window.print()}
           title="Abrir cuadro de diálogo de impresión"
         >
-          🖨️ Imprimir
+          Imprimir
         </button>
       </div>
 
@@ -236,7 +236,7 @@ export function Informe() {
           disabled={descargandoExcel}
           title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
         >
-          {descargandoExcel ? "⏳ Generando Excel…" : "📊 Guardar como Excel"}
+          {descargandoExcel ? "Generando Excel…" : "Guardar como Excel"}
         </button>
 
         <button
@@ -246,7 +246,7 @@ export function Informe() {
           disabled={descargandoPdf}
           title="Guardar informe oficial en formato Adobe PDF (.pdf)"
         >
-          {descargandoPdf ? "⏳ Generando PDF…" : "📥 Guardar como PDF"}
+          {descargandoPdf ? "Generando PDF…" : "Guardar como PDF"}
         </button>
       </div>
     </article>
