@@ -13,6 +13,7 @@ import { DesgloseNom036, DesgloseReba } from "../components/DesgloseReba";
 import { Encabezado } from "../components/Encabezado";
 import { FormContexto } from "../components/FormContexto";
 import { ListaHallazgos } from "../components/ListaHallazgos";
+import { AlertasCaso } from "../components/AlertasCaso";
 
 export function Analisis() {
   const { id = "" } = useParams();
@@ -83,6 +84,8 @@ export function Analisis() {
           Recomendaciones{v.pendientes + v.por_autorizar > 0 ? ` (${v.pendientes + v.por_autorizar})` : ""} →
         </Link>}
       />
+
+      {caso.id_caso === id && <AlertasCaso idCaso={id} />}
 
       <div className="rejilla">
         <div className="tarjeta">
