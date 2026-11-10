@@ -1,8 +1,8 @@
 // Única puerta al backend. Con VITE_USE_MOCK=true trabaja con datos simulados en memoria.
 import type {
   CambioPropuesto, CasoDetalle, CasoResumen, ColorNom, ContextoTarea, Decision, EntradaBitacora, EvaluacionPrevia,
-  FactorNom, Impacto, MetodoNom036,
-  NuevaRecomendacion, Punto, Segmento,
+  FactorNom, Impacto, MetodoNom036, MetricasDashboard,
+  NuevaRecomendacion, PaginaCasos, Punto, Segmento,
   Recomendacion, ResultadoIntegridad, TipoTarea, Validacion, ValorCambio, Vista,
 } from "./types/caso";
 import type { Alerta } from "./types/alerta";
@@ -86,6 +86,9 @@ const real = {
   corregirReferencia: (id: string, evaluacion_previa: EvaluacionPrevia, motivo: string) =>
     http<CasoDetalle>(`/casos/${seg(id)}/referencia`, enviar("PUT", { evaluacion_previa, motivo, ...actorActual() })),
   listarCasos: () => http<CasoResumen[]>("/casos"),
+  listarCasosPaginados: (page: number, page_size: number) =>
+    http<PaginaCasos>(`/casos/pagina?page=${page}&page_size=${page_size}`),
+  metricasDashboard: () => http<MetricasDashboard>("/metricas/dashboard"),
   obtenerCaso: (id: string) => http<CasoDetalle>(`/casos/${seg(id)}`),
   corregirPuntos: (id: string, vista: Vista, puntos: Punto[]) =>
     http<CasoDetalle>(`/casos/${seg(id)}/puntos/${vista}`, enviar("PUT", { puntos, ...actorActual() })),
@@ -209,6 +212,31 @@ const mock: typeof real = {
     { parametro: "agarre", etiqueta: "Calidad del agarre", tipo: "opcion", opciones: ["bueno", "regular", "malo", "inaceptable"] },
   ]),
   listarCasos: () => copia(store.casos.map(resumen)),
+  listarCasosPaginados: (page, page_size) => {
+    if (!Number.isInteger(page) || page < 1 || !Number.isInteger(page_size) || page_size < 1 || page_size > 100) {
+      return falla("La página debe ser un entero mayor o igual a 1 y el tamaño un entero entre 1 y 100.");
+    }
+    const ordenados = [...store.casos].sort((a, b) => a.id_caso < b.id_caso ? -1 : a.id_caso > b.id_caso ? 1 : 0);
+    return copia({
+      items: ordenados.slice((page - 1) * page_size, page * page_size).map(resumen),
+      total: ordenados.length, page, page_size, total_pages: Math.ceil(ordenados.length / page_size),
+    });
+  },
+  metricasDashboard: () => {
+    const metricas: MetricasDashboard = {
+      total_casos: store.casos.length,
+      niveles: { sin_evaluar: 0, inapreciable: 0, bajo: 0, medio: 0, alto: 0, muy_alto: 0 },
+      tipos_tarea: {}, decisiones_pendientes: 0, por_autorizar: 0,
+    };
+    for (const c of store.casos) {
+      const r = resumen(c);
+      metricas.niveles[r.nivel ?? "sin_evaluar"]++;
+      metricas.tipos_tarea[r.tipo_tarea] = (metricas.tipos_tarea[r.tipo_tarea] ?? 0) + 1;
+      metricas.decisiones_pendientes += r.decisiones_pendientes;
+      metricas.por_autorizar += r.por_autorizar;
+    }
+    return copia(metricas);
+  },
 
   obtenerCaso: id => {
     const c = buscarCaso(id);
