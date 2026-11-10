@@ -35,6 +35,9 @@ class ContextoTarea(BaseModel):
     apoyo_unilateral: bool = False
     muneca_grados: Optional[float] = Field(None, description="Flexión de muñeca medida manualmente (COCO-17 no tiene mano)")
     altura_trabajo_cm: Optional[float] = Field(None, gt=0)
+    personas_en_carga: int = Field(
+        1, ge=1, le=2,
+        description="Personas que manipulan la misma carga. 2 = levantamiento en equipo (hoja NOM-036 Equipo (3))")
     modificadores: Modificadores = Field(default_factory=Modificadores)
 
 

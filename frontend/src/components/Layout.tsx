@@ -45,7 +45,8 @@ export function Layout() {
 
   const enlaces = (
     <>
-      <NavLink to="/" end>Casos</NavLink>
+      <NavLink to="/" end>Dashboard</NavLink>
+      <NavLink to="/casos">Casos</NavLink>
       <NavLink to="/alertas">
         Alertas{nuevas > 0 && <span className="globo" aria-label={`${nuevas} nuevas`}>{nuevas}</span>}
       </NavLink>

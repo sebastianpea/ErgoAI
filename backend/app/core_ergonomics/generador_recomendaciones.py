@@ -14,7 +14,8 @@ from typing import Any, Dict, List, Mapping, Optional
 from backend.app.core_agent.in_memory_rag import InMemoryRAG
 from backend.app.core_ergonomics.modelos import ContextoTarea, Segmento
 
-TAREAS_CON_LEVANTAMIENTO = ("levantamiento", "transporte")
+# Desde 5 kg la carga suma puntos en REBA (catálogo: load_force_kg "5_to_10").
+CARGA_MINIMA_REBA_KG = 5
 
 
 def _g(v: Optional[float]) -> str:
@@ -55,12 +56,41 @@ def generar(
                      "referencia": referencia, "efecto": efecto})
 
     # ---------- Controles de ingeniería (cambios en planta) ----------
-    if tipo_tarea in TAREAS_CON_LEVANTAMIENTO and ctx.carga_kg > limite_kg:
+    sin_brusca = {"carga_brusca": False} if ctx.carga_brusca else {}
+    mejor_agarre = {"agarre": "bueno"} if ctx.agarre != "bueno" else {}
+    en_equipo = ctx.personas_en_carga >= 2
+    limite_equipo_verde = jabil["load_limits"]["team_lift_2_persons_green_max_kg"]
+
+    if tipo_tarea in ("levantamiento", "transporte") and en_equipo and ctx.carga_kg >= limite_equipo_verde:
+        # Entre 2 personas, desde la zona naranja la jerarquía pide eliminar el levantamiento manual.
+        agregar("ingenieria", "planta", "Asistencia mecánica para el levantamiento en equipo",
+                f"Instalar lifter, mesa elevadora o polipasto: la carga de {ctx.carga_kg:g} kg entre 2 personas "
+                f"alcanza la zona naranja o roja (desde {limite_equipo_verde:g} kg).",
+                f"{ref['team_lift']}; NOM-036-1-STPS-2018 Equipo (3)", {"carga_kg": 0, **sin_brusca})
+    elif tipo_tarea == "levantamiento" and not en_equipo and ctx.carga_kg > limite_kg:
         agregar("ingenieria", "planta", "Asistencia mecánica para la carga",
                 f"Instalar lifter, mesa elevadora o polipasto: la carga de {ctx.carga_kg:g} kg supera el límite "
                 f"Jabil de {limite_kg:g} kg por persona.",
-                f"{ref['load_limit']}; NOM-036-1-STPS-2018",
-                {"carga_kg": 0, **({"carga_brusca": False} if ctx.carga_brusca else {})})
+                f"{ref['load_limit']}; NOM-036-1-STPS-2018 levantamiento", {"carga_kg": 0, **sin_brusca})
+
+    # Transporte sin auxiliar (acarreo): cualquier carga que puntúa en REBA justifica un auxiliar.
+    if tipo_tarea == "transporte" and not en_equipo and ctx.carga_kg >= CARGA_MINIMA_REBA_KG:
+        exceso = (f" y supera el límite Jabil de {limite_kg:g} kg por persona" if ctx.carga_kg > limite_kg else "")
+        agregar("ingenieria", "planta", "Sustituir el acarreo manual por un auxiliar de transporte",
+                f"Usar carro, patín o banda transportadora: el operador carga {ctx.carga_kg:g} kg al desplazarse{exceso}.",
+                f"{ref['load_limit']}; NOM-036-1-STPS-2018 transporte (2)", {"carga_kg": 0, **sin_brusca})
+
+    if tipo_tarea == "empuje_con_auxiliar":
+        agregar("ingenieria", "planta", "Adecuar el carro o auxiliar de transporte",
+                "Revisar ruedas (diámetro, estado y tipo de piso), frenos y asas: las asas deben quedar entre la "
+                "altura de cadera y codos para empujar sin flexionar el tronco ni dar tirones.",
+                "NOM-036-1-STPS-2018 transporte con auxiliar (5)", {**sin_brusca, **mejor_agarre})
+
+    if tipo_tarea == "empuje_sin_auxiliar":
+        agregar("ingenieria", "planta", "Proveer un auxiliar para empujar o arrastrar",
+                "Sustituir el empuje o arrastre directo de la carga por un carro, patín hidráulico o rodillos, "
+                "con asas a la altura entre cadera y codos.",
+                "NOM-036-1-STPS-2018 empuje/arrastre sin auxiliar (4)", {**sin_brusca, **mejor_agarre})
 
     if tronco is not None and tronco > lim_tronco:
         agregar("ingenieria", "planta", "Ajustar la altura de la superficie de trabajo",

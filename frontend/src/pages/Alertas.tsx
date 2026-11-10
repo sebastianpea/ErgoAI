@@ -7,6 +7,14 @@ import { Semaforo } from "../components/Semaforo";
 import { Encabezado } from "../components/Encabezado";
 
 const ORDEN_URGENCIA = { CRITICO: 3, ALTO: 2, MEDIO: 1, BAJO: 0 } as const;
+const RESUMEN_EVENTO = {
+  RIESGO_ALTO_PENDIENTE: "Riesgo ergonómico alto pendiente de validación por el especialista.",
+  DISCREPANCIA_EVALUACION: "La evaluación previa y la evidencia del caso requieren comparación.",
+  ANGULO_POR_REVISAR: "Una medición de postura requiere revisión del especialista.",
+  OBJETO_DESCONOCIDO: "Se detectó un objeto en la estación que requiere identificación.",
+  AUTORIZACION_PENDIENTE: "Un cambio en planta espera autorización de ingeniería.",
+  EMERGENCIA_CAIDA: "Simulación de caída para demostrar el flujo de emergencia.",
+} as const;
 
 export function Alertas() {
   const qc = useQueryClient();
@@ -44,10 +52,10 @@ export function Alertas() {
               <Semaforo color={COLOR_URGENCIA[a.nivel_urgencia]} texto={a.nivel_urgencia} />
             </div>
             {a.tipo_evento === "EMERGENCIA_CAIDA" && <span className="fase2">Fase 2 · simulación</span>}
-            <p>{a.detalles}</p>
+            <p>{RESUMEN_EVENTO[a.tipo_evento]}</p>
             <p className="sutil">{a.estacion} · {formatearFecha(a.timestamp)} · {a.estado}</p>
             <div className="acciones">
-              {a.id_caso && <Link className="boton" to={`/casos/${a.id_caso}`}>Ver caso</Link>}
+              {a.id_caso && <Link className="boton" to={`/casos/${encodeURIComponent(a.id_caso)}`}>Ver caso</Link>}
               {a.estado !== "atendida" && (
                 <button disabled={atender.isPending} onClick={() => atender.mutate(a.id_alerta)}>Marcar atendida</button>
               )}

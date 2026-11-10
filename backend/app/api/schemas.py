@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from backend.app.core_ergonomics.cambios import CambioPropuesto
 from backend.app.core_ergonomics.modelos import ContextoTarea, Efecto, NivelReba, Segmento
@@ -177,6 +177,110 @@ class CasoResumen(BaseModel):
     por_autorizar: int = 0
 
 
+class PaginaCasos(BaseModel):
+    items: List[CasoResumen]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class NivelesDashboard(BaseModel):
+    sin_evaluar: int = 0
+    inapreciable: int = 0
+    bajo: int = 0
+    medio: int = 0
+    alto: int = 0
+    muy_alto: int = 0
+
+
+class MetricasDashboard(BaseModel):
+    total_casos: int
+    niveles: NivelesDashboard = Field(default_factory=NivelesDashboard)
+    tipos_tarea: Dict[str, int] = Field(default_factory=dict)
+    decisiones_pendientes: int = 0
+    por_autorizar: int = 0
+
+
+class EvaluacionPrevia(BaseModel):
+    """Estudio de referencia de Jabil (capturado en piso), contra el que se audita el análisis."""
+    segmentos: Dict[Segmento, int] = Field(default_factory=dict)
+    reba_final: Optional[int] = Field(None, ge=1, le=15)
+
+    @model_validator(mode="after")
+    def _rangos(self) -> "EvaluacionPrevia":
+        for seg, v in self.segmentos.items():
+            if not 1 <= v <= 6:
+                raise ValueError(f"Puntaje REBA de {seg} fuera de rango (1–6): {v}")
+        return self
+
+
+class Metricas(BaseModel):
+    """Tiempos del estudio, para medir el impacto (criterio 8 de la rúbrica)."""
+    creado_en: Optional[str] = None
+    analisis_ms: Optional[float] = None          # visión + cálculo REBA + recomendaciones
+    primera_decision_en: Optional[str] = None
+    validado_en: Optional[str] = None            # el plan quedó completo (informe habilitado)
+class Hoja14H(BaseModel):
+    """
+    Datos de la hoja oficial 16-PE80-6500-00014-H que no salen de la foto.
+    Todo es opcional: lo que falte se queda en blanco en el Excel para llenarse a mano.
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    # Encabezado
+    negocio: str = Field("", max_length=120)
+    linea: str = Field("", max_length=120)
+    area: str = Field("", max_length=120)
+    modelo: str = Field("", max_length=120)
+    # A. Zona de alcance más lejana donde se toma el material (1 a 5)
+    zona_maxima: Optional[int] = Field(None, ge=1, le=5)
+    # B. Área de trabajo
+    posicion: Optional[Literal["Sentado", "Pie", "Combinado"]] = None
+    espacio_pies_cm: Optional[float] = Field(None, ge=0, le=300)
+    tapete_antifatiga: Optional[bool] = None
+    reposapies_altura_cm: Optional[float] = Field(None, ge=0, le=300)
+    reposapies_profundidad_cm: Optional[float] = Field(None, ge=0, le=300)
+    altura_area: Optional[Literal[">95<120", ">120<130", "<95>130"]] = None
+    tipo_trabajo: Optional[Literal["Precisión", "Ligero", "Esfuerzo"]] = None
+    tiempo_posicion: Optional[Literal["> 4hrs", "≤ 4hrs"]] = None
+    piernas_profundidad_cm: Optional[float] = Field(None, ge=0, le=300)
+    piernas_ancho_cm: Optional[float] = Field(None, ge=0, le=300)
+    asiento_cm: Optional[float] = Field(None, ge=0, le=300)
+    espesor_mesa_cm: Optional[float] = Field(None, ge=0, le=300)
+    # C. Fuerza
+    fuerza_kg: Optional[float] = Field(None, ge=0, le=500)
+    tipo_accion: Optional[int] = Field(None, ge=0, le=12, description="Renglón de 'Tipo de acción/postura' (0 = herramientas manuales)")
+    velocidad: Optional[Literal["inmovil", "apreciable"]] = None
+    duracion_accion: Optional[Literal["menos_3s", "mas_3s"]] = None
+    frecuencia: Optional[Literal["0.2_o_menos", "0.2_2", "2_20", "mas_20"]] = None
+    duracion_tarea: Optional[Literal["hasta_1h", "1_2h", "mas_2h"]] = None
+    # E. Accesibilidad (True = cumple)
+    acceso_800mm: Optional[bool] = None
+    distancia_operadores_800mm: Optional[bool] = None
+    libertad_superiores: Optional[bool] = None
+    libertad_inferiores: Optional[bool] = None
+    # F. Visual - señalización
+    ayuda_visual_altura: Optional[Literal["1400_1600", "fuera_de_rango"]] = None
+    visualizacion: Optional[Literal["Buena", "Mala"]] = None
+    # G. Iluminación
+    iluminacion_actividad: Optional[int] = Field(None, ge=1, le=4)
+    iluminacion_lux: Optional[float] = Field(None, ge=0, le=100000)
+    reflexion_lux: Optional[float] = Field(None, ge=0, le=100000)
+    # H. Evaluación del operador (1 muy bien … 5 muy doloroso)
+    evaluacion_operador: Optional[int] = Field(None, ge=1, le=5)
+
+
+class GrupoResumen(BaseModel):
+    """Caso que forma parte de una foto con varios operadores (un caso por operador)."""
+    id_grupo: str
+    indice: int
+    total: int
+    casos: List[str]
+    personas_por_vista: Dict[str, int]
+    asignacion: Dict[str, int]  # vista → persona detectada (0 = la de más a la izquierda)
+
+
 class CasoDetalle(BaseModel):
     id_caso: str
     estacion: str
@@ -184,6 +288,7 @@ class CasoDetalle(BaseModel):
     fecha: str
     imagenes: List[Imagen]
     contexto: ContextoTarea
+    evaluacion_previa: EvaluacionPrevia
     angulos: List[Angulo]
     reba: Optional[ResultadoReba]
     nom036: Optional[ResultadoNom036]
@@ -191,6 +296,9 @@ class CasoDetalle(BaseModel):
     recomendaciones: List[Recomendacion]
     residual: Optional[Residual]
     validacion: Validacion
+    metricas: Metricas
+    hoja_14h: Hoja14H = Field(default_factory=Hoja14H)
+    grupo: Optional[GrupoResumen] = None
 
 
 # ---------- Persistencia del caso (caso.json) ----------
@@ -206,12 +314,15 @@ class Nom036Captura(BaseModel):
     factores: List[FactorNom]
 
 
-class EvaluacionPrevia(BaseModel):
-    """Evaluación capturada manualmente en piso, contra la que se audita."""
-    segmentos: Dict[Segmento, int] = Field(default_factory=dict)
-    reba_final: Optional[int] = Field(None, ge=1, le=15)
-
-
+class GrupoOperadores(BaseModel):
+    """Varios operadores en la misma foto: cada uno es un caso; aquí se guarda cómo se emparejaron."""
+    id_grupo: str
+    indice: int = Field(ge=1)
+    total: int = Field(ge=2)
+    casos: List[str]
+    detectadas: Dict[str, List[List[Punto]]] = Field(
+        default_factory=dict, description="Por vista, las personas detectadas de izquierda a derecha")
+    asignacion: Dict[str, int] = Field(default_factory=dict, description="Por vista, qué persona es este operador")
 class CasoAlmacenado(BaseModel):
     id_caso: str = Field(pattern=ID_PATRON)
     estacion: str
@@ -221,10 +332,14 @@ class CasoAlmacenado(BaseModel):
     contexto: ContextoTarea = Field(default_factory=ContextoTarea)
     evaluacion_previa: EvaluacionPrevia = Field(default_factory=EvaluacionPrevia)
     nom036: Optional[Nom036Captura] = None
+    nom036_override: bool = False
     hallazgos_vision: List[Hallazgo] = Field(default_factory=list)
     hallazgos_descartados: Dict[str, Descarte] = Field(default_factory=dict)
     angulos_confirmados: List[str] = Field(default_factory=list)
+    metricas: Metricas = Field(default_factory=Metricas)
     recomendaciones: List[RecomendacionAlmacenada] = Field(default_factory=list)
+    hoja_14h: Hoja14H = Field(default_factory=Hoja14H)
+    grupo: Optional[GrupoOperadores] = None
 
     @model_validator(mode="after")
     def _ids_unicos(self) -> "CasoAlmacenado":
@@ -315,6 +430,33 @@ class NuevaRecomendacion(Actor):
         return self
 
 
+class CorreccionNom036(Actor):
+    nom036: Optional[Nom036Captura]  # None = quitar la evaluación NOM-036 del caso
+    motivo: str = Field(min_length=3, max_length=2000)
+
+
+class CorreccionReferencia(Actor):
+    evaluacion_previa: EvaluacionPrevia
+    motivo: str = Field(min_length=3, max_length=2000)
+
+
+class CasoImpacto(BaseModel):
+    id_caso: str
+    estacion: str
+    analisis_s: Optional[float]
+    validacion_min: Optional[float]  # de creado a validado (incluye el tiempo humano de revisión)
+
+
+class Impacto(BaseModel):
+    minutos_evaluacion_manual: float
+    fuente_referencia_manual: str
+    casos: List[CasoImpacto]
+    analisis_promedio_s: Optional[float]
+    validacion_promedio_min: Optional[float]
+    ahorro_promedio_min: Optional[float]
+    ahorro_porcentaje: Optional[float]
+
+
 class CorreccionContexto(Actor):
     contexto: ContextoTarea
     motivo: str = Field(min_length=3, max_length=2000)
@@ -336,6 +478,9 @@ class NuevoCaso(Actor):
     tipo_operacion: Optional[str] = None
     contexto: ContextoTarea = Field(default_factory=ContextoTarea)
     evaluacion_previa: EvaluacionPrevia = Field(default_factory=EvaluacionPrevia)
+    hoja_14h: Hoja14H = Field(default_factory=Hoja14H)
+    evaluar_todos: bool = Field(
+        False, description="Si la foto lateral tiene varias personas, crear un caso por cada operador")
 
     @model_validator(mode="before")
     @classmethod
@@ -343,6 +488,11 @@ class NuevoCaso(Actor):
         if not isinstance(data, dict):
             return data
         op = data.get("tipo_operacion")
+        if op and str(op).strip().lower() in ("equipo (3)", "equipo_3", "equipo"):
+            # Levantamiento en equipo: misma tarea de levantamiento, con dos personas en la carga.
+            contexto = dict(data.get("contexto") or {})
+            contexto.setdefault("personas_en_carga", 2)
+            data = {**data, "contexto": contexto}
         if op and not data.get("tipo_tarea"):
             mapa = {
                 "levantamiento (1)": "levantamiento",
@@ -368,6 +518,18 @@ class NuevoCaso(Actor):
             if normalizado:
                 data = {**data, "tipo_tarea": normalizado}
         return data
+
+
+class ActualizacionHoja14H(Actor):
+    hoja_14h: Hoja14H
+    motivo: Optional[str] = Field(None, max_length=2000)
+
+
+class AsignacionOperador(Actor):
+    """Corrige qué persona detectada en una vista corresponde a este operador."""
+    vista: Vista
+    indice: int = Field(ge=0)
+    motivo: str = Field(min_length=3, max_length=2000)
 
 
 class EstadoVision(BaseModel):

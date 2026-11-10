@@ -19,7 +19,7 @@ const AGARRES: { valor: Agarre; etiqueta: string }[] = [
 
 export const CONTEXTO_VACIO: ContextoTarea = {
   carga_kg: 0, carga_brusca: false, agarre: "bueno", actividad: 0, apoyo_unilateral: false,
-  muneca_grados: null, altura_trabajo_cm: null,
+  muneca_grados: null, altura_trabajo_cm: null, personas_en_carga: 1,
   modificadores: {
     tronco_torsion_o_inclinacion: false, cuello_torsion_o_inclinacion: false, hombro_elevado: false,
     brazo_abducido_o_rotado: false, brazo_apoyado: false, muneca_desviada_o_torcida: false,

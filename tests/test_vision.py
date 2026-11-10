@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
 
 from fastapi.testclient import TestClient
 
-from backend.app.core_ergonomics.angle_geometry import extraer_angulos_laterales
+from backend.app.core_ergonomics.angle_geometry import extraer_angulos_laterales, medir_vista_frontal
 from backend.app.vision import estimador as mod_estimador
 from backend.app.vision.estimador import PuntoDetectado, ResultadoFoto
 from backend.main import create_app
@@ -102,6 +102,32 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
         with mock.patch.object(mod_estimador.estimador, "analizar", side_effect=lambda img: _resultado(img, 0)):
             self.assertEqual(self.crear().status_code, 422)  # nadie en la foto lateral
 
+    def test_impacto_medido(self):
+        id_caso = self.crear().json()["id"]
+        imp = self.c.get("/metricas/impacto").json()
+        self.assertEqual([c["id_caso"] for c in imp["casos"]], [id_caso])  # los casos de ejemplo no cuentan
+        self.assertIsNotNone(imp["analisis_promedio_s"])
+        self.assertIsNone(imp["casos"][0]["validacion_min"])  # aún sin validar
+        for r in self.c.get(f"/casos/{id_caso}").json()["recomendaciones"]:
+            cuerpo = {**ERGO, "id_caso": id_caso, "id_recomendacion": r["id"], "accion": "aprobar"}
+            self.c.post(f"/casos/{id_caso}/recomendaciones/{r['id']}/decision", json=cuerpo)
+        d = self.c.get(f"/casos/{id_caso}").json()
+        self.assertTrue(d["validacion"]["completa"])
+        self.assertIsNotNone(d["metricas"]["validado_en"])
+        imp = self.c.get("/metricas/impacto").json()
+        self.assertIsNotNone(imp["casos"][0]["validacion_min"])
+        self.assertGreater(imp["ahorro_porcentaje"], 0)
+
+    def test_recomendaciones_por_tipo_de_transporte(self):
+        base = {**ERGO, "estacion": "Línea 3 · Almacén", "contexto": {"carga_kg": 8}}
+        acarreo = self.crear(datos={**base, "tipo_tarea": "transporte"}).json()["id"]
+        carro = self.crear(datos={**base, "tipo_tarea": "empuje_con_auxiliar"}).json()["id"]
+        t1 = [r["titulo"] for r in self.c.get(f"/casos/{acarreo}").json()["recomendaciones"]]
+        t2 = [r["titulo"] for r in self.c.get(f"/casos/{carro}").json()["recomendaciones"]]
+        self.assertIn("Sustituir el acarreo manual por un auxiliar de transporte", t1)
+        self.assertNotIn("Asistencia mecánica para la carga", t1)
+        self.assertIn("Adecuar el carro o auxiliar de transporte", t2)
+
     def test_sin_modelos_responde_503(self):
         with mock.patch.object(mod_estimador.EstimadorPose, "estado", staticmethod(lambda: (False, "faltan modelos"))):
             r = self.crear()
@@ -131,6 +157,35 @@ class TestMunecaDesdeMano(unittest.TestCase):
         flexionada = extraer_angulos_laterales(base + [P(9, 300, 200), P(17, 335, 235)])
         self.assertAlmostEqual(recta["muneca"].grados, 0.0, places=1)
         self.assertAlmostEqual(flexionada["muneca"].grados, 45.0, places=1)
+
+
+class TestVistaFrontal(unittest.TestCase):
+    class P:
+        def __init__(self, i, x, y):
+            self.id, self.x, self.y, self.confianza = i, x, y, 0.9
+
+    def puntos(self, codo_izq, hombros=((560, 300), (720, 300))):
+        # Vista frontal: el hombro izquierdo (5) aparece a la DERECHA de la imagen.
+        (xd, yd), (xi, yi) = hombros
+        P = self.P
+        return [P(6, xd, yd), P(5, xi, yi), P(12, 590, 450), P(11, 690, 450), P(7, *codo_izq)]
+
+    def test_brazo_pegado_al_cuerpo(self):
+        m = medir_vista_frontal(self.puntos((725, 420)), "izq", 0.3)
+        self.assertLess(m["abduccion_brazo"], 5)
+        self.assertLess(m["inclinacion_tronco"], 5)
+
+    def test_brazo_abducido_hacia_afuera(self):
+        m = medir_vista_frontal(self.puntos((800, 380)), "izq", 0.3)
+        self.assertGreater(m["abduccion_brazo"], 40)
+
+    def test_codo_cruzado_no_es_abduccion(self):
+        m = medir_vista_frontal(self.puntos((640, 400)), "izq", 0.3)
+        self.assertEqual(m["abduccion_brazo"], 0.0)
+
+    def test_inclinacion_lateral_de_tronco(self):
+        m = medir_vista_frontal(self.puntos((780, 400), hombros=((620, 300), (780, 300))), "izq", 0.3)
+        self.assertGreater(m["inclinacion_tronco"], 15)
 
 
 @unittest.skipUnless(cv2 is not None and mod_estimador.EstimadorPose.estado()[0], "Modelos ONNX no descargados")

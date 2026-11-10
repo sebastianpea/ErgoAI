@@ -62,8 +62,10 @@ export interface FactorNom {
   valor: number;
 }
 
+export type MetodoNom036 = Exclude<TipoTarea, "postura">;
+
 export interface ResultadoNom036 {
-  metodo: Exclude<TipoTarea, "postura">;
+  metodo: MetodoNom036;
   total: number;
   nivel: ColorNom;
   factores: FactorNom[];
@@ -114,6 +116,8 @@ export interface ContextoTarea {
   apoyo_unilateral: boolean;
   muneca_grados: number | null;
   altura_trabajo_cm: number | null;
+  /** Personas que manipulan la misma carga (2 = levantamiento en equipo, hoja NOM-036 Equipo (3)). */
+  personas_en_carga: number;
   modificadores: Modificadores;
 }
 
@@ -186,6 +190,24 @@ export interface CasoResumen {
   por_autorizar: number;
 }
 
+/** Página del servidor, ordenada por id_caso ascendente. */
+export interface PaginaCasos {
+  items: CasoResumen[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+/** Agregados de todos los casos, independientes de la página consultada. */
+export interface MetricasDashboard {
+  total_casos: number;
+  niveles: Record<NivelReba | "sin_evaluar", number>;
+  tipos_tarea: Record<string, number>;
+  decisiones_pendientes: number;
+  por_autorizar: number;
+}
+
 /** Calculado por el backend: el informe solo se habilita cuando `completa` es true. */
 export interface Validacion {
   pendientes: number;
@@ -197,6 +219,30 @@ export interface Validacion {
   aprobado_e_implementado?: boolean;
 }
 
+/** Estudio de referencia de Jabil (puntajes REBA capturados en piso). */
+export interface EvaluacionPrevia {
+  segmentos: Partial<Record<Segmento, number>>;
+  reba_final: number | null;
+}
+
+/** Tiempos del estudio (criterio 8: impacto en tiempos de respuesta). */
+export interface Metricas {
+  creado_en: string | null;
+  analisis_ms: number | null;
+  primera_decision_en: string | null;
+  validado_en: string | null;
+}
+
+export interface Impacto {
+  minutos_evaluacion_manual: number;
+  fuente_referencia_manual: string;
+  casos: { id_caso: string; estacion: string; analisis_s: number | null; validacion_min: number | null }[];
+  analisis_promedio_s: number | null;
+  validacion_promedio_min: number | null;
+  ahorro_promedio_min: number | null;
+  ahorro_porcentaje: number | null;
+}
+
 export interface CasoDetalle {
   id_caso: string;
   estacion: string;
@@ -204,6 +250,7 @@ export interface CasoDetalle {
   fecha: string;
   imagenes: Imagen[];
   contexto: ContextoTarea;
+  evaluacion_previa: EvaluacionPrevia;
   angulos: Angulo[];
   reba: ResultadoReba | null;
   nom036: ResultadoNom036 | null;
@@ -211,6 +258,56 @@ export interface CasoDetalle {
   recomendaciones: Recomendacion[];
   residual: Residual | null;
   validacion: Validacion;
+  metricas: Metricas;
+  hoja_14h: Hoja14H;
+  grupo: GrupoResumen | null;
+}
+
+/** Varios operadores en la misma foto: un caso por operador. */
+export interface GrupoResumen {
+  id_grupo: string;
+  indice: number;
+  total: number;
+  casos: string[];
+  personas_por_vista: Partial<Record<Vista, number>>;
+  asignacion: Partial<Record<Vista, number>>; // vista → persona detectada (0 = la de más a la izquierda)
+}
+
+/** Datos de la hoja oficial 16-PE80-6500-00014-H que no salen de la foto. Todo es opcional. */
+export interface Hoja14H {
+  negocio: string;
+  linea: string;
+  area: string;
+  modelo: string;
+  zona_maxima: number | null;
+  posicion: "Sentado" | "Pie" | "Combinado" | null;
+  espacio_pies_cm: number | null;
+  tapete_antifatiga: boolean | null;
+  reposapies_altura_cm: number | null;
+  reposapies_profundidad_cm: number | null;
+  altura_area: ">95<120" | ">120<130" | "<95>130" | null;
+  tipo_trabajo: "Precisión" | "Ligero" | "Esfuerzo" | null;
+  tiempo_posicion: "> 4hrs" | "≤ 4hrs" | null;
+  piernas_profundidad_cm: number | null;
+  piernas_ancho_cm: number | null;
+  asiento_cm: number | null;
+  espesor_mesa_cm: number | null;
+  fuerza_kg: number | null;
+  tipo_accion: number | null;
+  velocidad: "inmovil" | "apreciable" | null;
+  duracion_accion: "menos_3s" | "mas_3s" | null;
+  frecuencia: "0.2_o_menos" | "0.2_2" | "2_20" | "mas_20" | null;
+  duracion_tarea: "hasta_1h" | "1_2h" | "mas_2h" | null;
+  acceso_800mm: boolean | null;
+  distancia_operadores_800mm: boolean | null;
+  libertad_superiores: boolean | null;
+  libertad_inferiores: boolean | null;
+  ayuda_visual_altura: "1400_1600" | "fuera_de_rango" | null;
+  visualizacion: "Buena" | "Mala" | null;
+  iluminacion_actividad: number | null;
+  iluminacion_lux: number | null;
+  reflexion_lux: number | null;
+  evaluacion_operador: number | null;
 }
 
 export interface Decision extends Actor {

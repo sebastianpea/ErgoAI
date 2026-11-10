@@ -98,6 +98,9 @@ CONFIG_DIR = _ruta(["ERGOAI_CONFIG_DIR", "CONFIG_NORMATIVO_DIR", "CONFIG_DIR"], 
 WORKSPACE_DIR = _ruta(["ERGOAI_WORKSPACE_DIR", "WORKSPACE_DIR"], REPO_ROOT / "casos_jabil_workspace")
 SEED_DIR = Path(__file__).resolve().parent / "seed"
 MODELS_DIR = _ruta(["ERGOAI_MODELS_DIR", "VISION_MODELOS_DIR", "MODELS_DIR"], REPO_ROOT / "models")
+# Plantilla oficial de Jabil (16-PE80-6500-00014-H). Es material de Jabil: no se versiona en git.
+PLANTILLA_14H = _ruta(["ERGOAI_PLANTILLA_14H", "PLANTILLA_14H"],
+                      REPO_ROOT / "plantillas" / "16-PE80-6500-00014-H.xlsm")
 
 # --- Visión artificial (YOLOX + RTMPose WholeBody-133 sobre ONNX Runtime) ---
 # "cpu" funciona en cualquier laptop; "cuda" requiere onnxruntime-gpu.
@@ -120,6 +123,13 @@ RTMPOSE_MODEL_URL = _env_str(
     "rtmw-dw-l-m_simcc-cocktail14_270e-256x192_20231122.zip",
 )
 MAX_FOTO_MB = _env_float(["ERGOAI_MAX_FOTO_MB", "MAX_FOTO_MB"], 15.0)
+
+# Línea base para medir el impacto (criterio 8). Reemplazar por el tiempo medido en Jabil cuando se tenga.
+MINUTOS_EVALUACION_MANUAL = float(os.environ.get("ERGOAI_MINUTOS_EVALUACION_MANUAL", "45"))
+FUENTE_EVALUACION_MANUAL = os.environ.get(
+    "ERGOAI_FUENTE_EVALUACION_MANUAL",
+    "Estimación del equipo (Especificaciones_y_Arquitectura_ErgoAI.md): ~45 min por evaluación manual REBA + redacción",
+)
 
 # --- Seguridad y CORS ---
 CORS_ORIGINS = [

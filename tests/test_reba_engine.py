@@ -90,6 +90,22 @@ class TestReba(unittest.TestCase):
         for seg in ("tronco", "cuello", "brazo", "antebrazo", "piernas"):
             self.assertAlmostEqual(a[seg].grados, b[seg].grados, places=1, msg=seg)
 
+    def test_direccion_sin_nariz_usa_otras_pistas(self):
+        # Mismo operador inclinado 45° mirando a la derecha, pero sin nariz ni oreja (rostro oculto):
+        # deben decidir las manos (por delante de la cadera) y la rodilla (por delante del tobillo).
+        pts = [p for p in esqueleto((200, 200), (200, 300), (300, 300), (100, 300), (130, 400), (100, 500),
+                                    (270, 130), (290, 140)) if p.id not in (0, 3)]
+        a = extraer_angulos_laterales(pts)
+        self.assertAlmostEqual(a["tronco"].grados, 45.0, places=1)
+        espejo = extraer_angulos_laterales([P(p.id, 1000 - p.x, p.y) for p in pts])
+        self.assertAlmostEqual(espejo["tronco"].grados, 45.0, places=1)
+
+    def test_direccion_ignora_nariz_poco_confiable(self):
+        # La nariz con baja confianza apunta al lado equivocado; las demás pistas ganan.
+        pts = esqueleto((200, 200), (200, 300), (300, 300), (100, 300), (130, 400), (100, 500), (270, 130), (290, 140))
+        pts = [P(0, 150, 140, 0.1) if p.id == 0 else p for p in pts]
+        self.assertAlmostEqual(extraer_angulos_laterales(pts)["tronco"].grados, 45.0, places=1)
+
     def test_residual(self):
         ctx = ContextoTarea(carga_kg=16, agarre="regular", actividad=1)
         angulos = {"tronco": 45, "cuello": 10, "piernas": 0, "brazo": 60, "antebrazo": 80}

@@ -259,6 +259,52 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   text-transform: uppercase; letter-spacing: 0.08em;
 }
 
+/* Dashboard y paginación: reutilizan superficies, cifras y controles de marca. */
+.dashboard-graficas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.grafica-dashboard { margin: 0; min-width: 0; border-top: 3px solid var(--jabil-cyan); }
+.grafica-dashboard figcaption { color: var(--jabil-navy); font-weight: 700; margin-bottom: 1.25rem; }
+.grafica-contenido { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; align-items: center; }
+.grafica-donut { position: relative; width: min(100%, 260px); margin-inline: auto; }
+.grafica-donut svg { display: block; width: 100%; height: auto; }
+.grafica-fondo { stroke: var(--fondo); }
+.grafica-segmento.seleccionado { filter: drop-shadow(0 2px 2px rgba(13, 42, 74, 0.25)); }
+.grafica-centro { position: absolute; inset: 24%; display: flex; flex-direction: column; justify-content: center; text-align: center; line-height: 1.3; color: var(--jabil-navy); overflow-wrap: anywhere; }
+.grafica-centro > span { font-size: 0.85rem; }
+.grafica-centro > strong { font-size: clamp(1.5rem, 4vw, 2.5rem); line-height: 1.2; overflow-wrap: anywhere; }
+.grafica-dashboard strong { font-variant-numeric: tabular-nums; }
+.grafica-leyenda { min-width: 0; }
+.grafica-dashboard ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+.grafica-dashboard li { min-width: 0; }
+.grafica-leyenda li button { width: 100%; min-height: 48px; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; gap: 0.6rem; padding: 0.6rem; text-align: left; text-transform: none; letter-spacing: normal; font-size: 0.9rem; font-weight: 400; border: 1px solid transparent; color: var(--texto); transition: none; }
+.grafica-leyenda li button:hover { background: var(--fondo); color: var(--jabil-navy); }
+.grafica-leyenda li button[aria-pressed="true"] { border-color: var(--jabil-navy); background: var(--fondo); }
+.grafica-leyenda button:focus-visible { outline: 3px solid var(--jabil-navy); outline-offset: 2px; }
+.grafica-muestra { width: 12px; height: 12px; border: 1px solid rgba(13, 42, 74, 0.25); }
+.grafica-etiqueta { overflow-wrap: anywhere; }
+.grafica-porcentaje { color: var(--sutil); font-variant-numeric: tabular-nums; min-width: 3.5ch; text-align: right; }
+.grafica-seleccion { grid-column: 2 / -1; color: var(--jabil-navy); font-size: 0.75rem; font-weight: 700; }
+.grafica-restablecer { margin-top: 0.75rem; min-height: 44px; transition: none; }
+.grafica-nota { margin: 1rem 0 0; padding-top: 0.75rem; border-top: 1px solid var(--borde); color: var(--sutil); font-size: 0.85rem; }
+@media screen and (min-width: 1100px) {
+  .grafica-contenido { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+}
+@media screen and (max-width: 400px) {
+  .grafica-leyenda li button { grid-template-columns: 12px minmax(0, 1fr) auto; }
+  .grafica-porcentaje { grid-column: 2 / -1; text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grafica-dashboard, .grafica-dashboard * { animation: none !important; transition: none !important; }
+}
+.paginacion-casos { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-bottom: 1.25rem; }
+.paginacion-casos label { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.paginacion-casos button, .paginacion-casos select { min-height: 44px; }
+.bandeja .caso h3 { overflow-wrap: anywhere; }
+.bandeja .caso-cabecera { flex-wrap: wrap; }
+@media screen and (max-width: 800px) {
+  .dashboard-graficas { grid-template-columns: 1fr; }
+  .bandeja .lista-casos { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* =========================================================================
    Análisis
    ========================================================================= */
@@ -442,6 +488,18 @@ button.enlace:hover:not(:disabled) { background: none; color: var(--jabil-navy);
 .agregar-parametro { margin: 0.5rem 0 1rem; }
 .pegajosa { position: sticky; top: 72px; }
 
+/* ---- NOM-036 ---- */
+.form-nom036 { margin-top: 1rem; border-top: 1px solid var(--borde); padding-top: 1rem; }
+.form-nom036 select { width: 100%; }
+.valor-corto { width: 5rem; font: inherit; padding: 0.3rem 0.4rem; border: 1px solid var(--gris-plata); border-radius: var(--radio); }
+
+/* ---- Referencia Jabil e impacto ---- */
+.campos-referencia { grid-template-columns: repeat(7, 1fr); }
+.impacto { margin-top: 2rem; }
+.impacto-cifras { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 1rem; }
+.impacto-cifras > div { border-left: 3px solid var(--jabil-cyan); padding-left: 1rem; display: flex; flex-direction: column; }
+.impacto-cifras .cifra-valor { font-size: 1.75rem; }
+
 /* ---- Nuevo caso: selector de fotos ---- */
 .selector-fotos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 .selector-foto {
@@ -465,11 +523,11 @@ button.enlace:hover:not(:disabled) { background: none; color: var(--jabil-navy);
 .barra-fila { display: grid; grid-template-columns: 90px 1fr; gap: 0.5rem; align-items: center; }
 .barra-etiqueta { font-size: 0.85rem; }
 .barra-par { display: flex; flex-direction: column; gap: 2px; }
-.barra {
+.barra-valor {
   color: white; font-size: 0.7rem; font-weight: 700; padding: 0 0.4rem; min-width: 1.5rem; line-height: 1.1rem;
   transform-origin: left; animation: crecer 0.6s var(--ease) both;
 }
-.barra-par .barra:nth-child(2) { color: var(--jabil-profundo); animation-delay: 0.1s; }
+.barra-par .barra-valor:nth-child(2) { color: var(--jabil-profundo); animation-delay: 0.1s; }
 
 /* =========================================================================
    Bitácora
@@ -542,31 +600,35 @@ main > section > .tarjeta, main > section > .rejilla { animation: entrar 0.45s v
    Impresión
    ========================================================================= */
 @media print {
+  @page { size: letter; margin: 14mm 12mm; }
   .barra, .pie, .menu-movil, .saltar, .no-imprimir { display: none !important; }
-  body { background: white; }
-  main { padding: 0; }
+  :root, body, main { background: white; }
+  main { padding: 0; min-height: 0; }
   main > :not(section) { width: auto; }
-  .informe { border: none; padding: 0; margin: 0; }
-  .informe h2 { break-after: avoid; }
-  table, figure { break-inside: avoid; }
-  .chip, .informe-cabecera::after, .etiqueta-control, .informe-justificacion-rag, .rec-rag-justificacion-destacada {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  .informe-justificacion-rag {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-  * { animation: none !important; }
+  /* Los colores del semáforo y de las barras de riesgo residual son información: se imprimen. */
+  * { animation: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .informe { border: none; padding: 0; margin: 0; font-size: 10.5pt; }
+  .informe h1 { font-size: 20pt; }
+  .informe h2 { break-after: avoid; margin-top: 1.1rem; }
+  .fotos-informe { grid-template-columns: repeat(3, 1fr); }
+  .fotos-informe img, .fotos-informe .esqueleto { max-height: 70mm; }
+  .tabla-scroll { overflow: visible; }
+  .informe table { font-size: 8.5pt; }
+  .informe th, .informe td { padding: 0.3rem 0.35rem; }
+  .informe th { white-space: normal; }
+  tr, figure, .desglose, .residual-total { break-inside: avoid; }
+  .rejilla { grid-template-columns: 1fr 1fr; }
+  .firmas { margin-top: 2.5rem; break-inside: avoid; }
+  .informe td .sutil, .informe td div { font-size: 1em; }
 }
 
 /* =========================================================================
    Responsive
    ========================================================================= */
-@media (max-width: 960px) {
+@media screen and (max-width: 960px) {
   .cifras { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 800px) {
+@media screen and (max-width: 800px) {
   main { padding-bottom: 2rem; }
   main > :not(section), main > section > :not(.banda) { width: calc(100% - 2rem); }
   .barra-interior { padding: 0 1rem; gap: 1rem; height: 60px; }
@@ -580,10 +642,11 @@ main > section > .tarjeta, main > section > .rejilla { animation: entrar 0.45s v
   .campos, .campos-3 { grid-template-columns: 1fr; }
   .resumen-plan { grid-template-columns: repeat(2, 1fr); }
   .selector-fotos { grid-template-columns: 1fr; }
+  .campos-referencia, .impacto-cifras { grid-template-columns: repeat(2, 1fr); }
   .pegajosa { position: static; }
   .informe { padding: 1rem; }
 }
-@media (max-width: 480px) {
+@media screen and (max-width: 480px) {
   .separador, .producto { display: none; }
   .cifras { grid-template-columns: 1fr 1fr; gap: 1rem; }
 }
@@ -884,3 +947,15 @@ main > section > .tarjeta, main > section > .rejilla { animation: entrar 0.45s v
   display: block;
 }
 
+
+/* ---- Varios operadores y hoja 16-PE80-6500-00014-H ---- */
+.casilla-linea { display: flex; gap: 0.6rem; align-items: flex-start; margin: 0.75rem 0 0.25rem; font-size: 0.9rem; cursor: pointer; }
+.casilla-linea input { width: 1.05rem; height: 1.05rem; margin-top: 0.2rem; accent-color: var(--jabil-navy); flex: none; }
+.panel-operadores { border-left: 4px solid var(--jabil-cyan); }
+.panel-operadores .acciones { margin-bottom: 0.75rem; }
+.panel-operadores .boton.activo { pointer-events: none; }
+.entrada-motivo {
+  flex: 1; min-width: 16rem; font: inherit; font-size: 0.95rem; padding: 0.5rem 0.6rem;
+  border: 1px solid var(--gris-plata); border-radius: var(--radio);
+}
+.ayuda-campo { text-transform: none; letter-spacing: 0; color: var(--sutil); font-size: 0.75rem; }

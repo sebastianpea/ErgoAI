@@ -84,6 +84,41 @@ def elegir_lado(por_id: Mapping[int, PuntoLike]) -> Tuple[str, Dict[str, int]]:
     return ("izq", LADO_IZQ) if media(LADO_IZQ) >= media(LADO_DER) else ("der", LADO_DER)
 
 
+CONFIANZA_VOTO = 0.3
+
+
+def direccion_frente(por_id: Mapping[int, PuntoLike], idx: Dict[str, int]) -> float:
+    """
+    Hacia dónde mira el operador en la foto lateral: +1 derecha, -1 izquierda.
+    Si se equivoca, una flexión se lee como extensión y el REBA cambia, así que se vota con varias
+    pistas anatómicas en lugar de depender solo de la nariz (que puede faltar o estar oculta):
+      - nariz por delante de la oreja (la más fiable),
+      - nariz por delante del hombro,
+      - manos por delante de la cadera (al trabajar o cargar),
+      - rodilla por delante del tobillo (las rodillas solo flexionan hacia el frente).
+    """
+    def p(i: Optional[int]) -> Optional[PuntoLike]:
+        punto = por_id.get(i) if i is not None else None
+        return punto if punto is not None and punto.confianza >= CONFIANZA_VOTO else None
+
+    def signo(adelante: Optional[PuntoLike], atras: Optional[PuntoLike], minimo: float = 3.0) -> float:
+        if adelante is None or atras is None or abs(adelante.x - atras.x) < minimo:
+            return 0.0
+        return 1.0 if adelante.x > atras.x else -1.0
+
+    nariz = p(NARIZ)
+    oreja = p(idx["oreja"])
+    hombro, cadera, rodilla, tobillo = p(idx["hombro"]), p(idx["cadera"]), p(idx["rodilla"]), p(idx["tobillo"])
+    mano = p(idx.get("mano")) or p(idx["muneca"])
+    votos = (
+        2.0 * signo(nariz, oreja)
+        + 1.0 * signo(nariz, hombro, minimo=8.0)
+        + 1.0 * signo(mano, cadera, minimo=15.0)
+        + 0.5 * signo(rodilla, tobillo, minimo=10.0)
+    )
+    return -1.0 if votos < 0 else 1.0
+
+
 def extraer_angulos_laterales(puntos: Iterable[PuntoLike]) -> Dict[Segmento, AnguloMedido]:
     por_id = {p.id: p for p in puntos}
     lado, idx = elegir_lado(por_id)
@@ -93,12 +128,9 @@ def extraer_angulos_laterales(puntos: Iterable[PuntoLike]) -> Dict[Segmento, Ang
 
     hombro, codo, muneca, mano = p("hombro"), p("codo"), p("muneca"), p("mano")
     cadera, rodilla, tobillo, oreja = p("cadera"), p("rodilla"), p("tobillo"), p("oreja")
-    nariz = por_id.get(NARIZ)
 
-    # Hacia dónde mira el operador: +1 derecha, -1 izquierda
-    frente = 1.0
-    if nariz and hombro and nariz.x != hombro.x:
-        frente = 1.0 if nariz.x > hombro.x else -1.0
+    # Hacia dónde mira el operador: +1 derecha, -1 izquierda (votación de varias pistas)
+    frente = direccion_frente(por_id, idx)
 
     def flexion(ref: Vec, v: Vec, cadena_inferior: bool = False) -> float:
         rot = _rotacion_ccw(ref, v)
@@ -255,3 +287,30 @@ def extraer_angulos_vista(puntos: Iterable[PuntoLike], vista: str = "lateral") -
         _extraer_cenital(por_id, base, h_izq, h_der, c_izq, c_der, m_hom, m_cad)
 
     return base
+
+
+def medir_vista_frontal(puntos: Iterable[PuntoLike], lado: str, confianza_minima: float) -> Dict[str, Optional[float]]:
+    """
+    Vista frontal (plano coronal):
+    - inclinación lateral de tronco: línea cadera-media → hombro-medio respecto a la vertical;
+    - abducción del brazo del lado evaluado: hombro → codo respecto a la vertical, solo hacia afuera
+      del cuerpo (un codo cruzado hacia la línea media no es abducción).
+    """
+    por_id = {p.id: p for p in puntos if p.confianza >= confianza_minima}
+    res: Dict[str, Optional[float]] = {"inclinacion_tronco": None, "abduccion_brazo": None}
+    hi, hd, ci, cd = por_id.get(5), por_id.get(6), por_id.get(11), por_id.get(12)
+    if hi and hd and ci and cd:
+        hombro_medio = ((hi.x + hd.x) / 2, (hi.y + hd.y) / 2)
+        cadera_media = ((ci.x + cd.x) / 2, (ci.y + cd.y) / 2)
+        tronco = (hombro_medio[0] - cadera_media[0], -(hombro_medio[1] - cadera_media[1]))
+        res["inclinacion_tronco"] = round(abs(_rotacion_ccw((0.0, 1.0), tronco)), 1)
+
+    idx = LADO_IZQ if lado == "izq" else LADO_DER
+    otro = LADO_DER if lado == "izq" else LADO_IZQ
+    hombro, codo, hombro_otro = por_id.get(idx["hombro"]), por_id.get(idx["codo"]), por_id.get(otro["hombro"])
+    if hombro and codo and hombro_otro:
+        afuera = 1.0 if hombro.x >= hombro_otro.x else -1.0
+        brazo = (codo.x - hombro.x, -(codo.y - hombro.y))
+        angulo = abs(_rotacion_ccw((0.0, -1.0), brazo))
+        res["abduccion_brazo"] = round(angulo if brazo[0] * afuera > 0 else 0.0, 1)
+    return res

@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api";
-import type { CasoDetalle, ContextoTarea, Punto, Segmento, Vista } from "../types/caso";
+import { api, type Nom036Captura } from "../api";
+import { FormNom036 } from "../components/FormNom036";
+import type { CasoDetalle, ContextoTarea, EvaluacionPrevia, Hoja14H, Punto, Segmento, Vista } from "../types/caso";
+import { FormReferencia } from "../components/FormReferencia";
+import { FormHoja14H } from "../components/FormHoja14H";
+import { PanelOperadores } from "../components/PanelOperadores";
 import { COLOR_SEMAFORO, ETIQUETA_TAREA, VISTAS, semaforoSegmento } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
 import { SkeletonEditor } from "../components/SkeletonEditor";
@@ -11,6 +15,7 @@ import { DesgloseNom036, DesgloseReba } from "../components/DesgloseReba";
 import { Encabezado } from "../components/Encabezado";
 import { FormContexto } from "../components/FormContexto";
 import { ListaHallazgos } from "../components/ListaHallazgos";
+import { AlertasCaso } from "../components/AlertasCaso";
 
 export function Analisis() {
   const { id = "" } = useParams();
@@ -37,6 +42,14 @@ export function Analisis() {
     mutationFn: ({ c, motivo }: { c: ContextoTarea; motivo: string }) => api.corregirContexto(id, c, motivo),
     onSuccess: aplicar,
   });
+  const nom036 = useMutation({
+    mutationFn: ({ n, motivo }: { n: Nom036Captura | null; motivo: string }) => api.corregirNom036(id, n, motivo),
+    onSuccess: aplicar,
+  });
+  const referencia = useMutation({
+    mutationFn: ({ v, motivo }: { v: EvaluacionPrevia; motivo: string }) => api.corregirReferencia(id, v, motivo),
+    onSuccess: aplicar,
+  });
   const hallazgo = useMutation({
     mutationFn: ({ h, accion, motivo }: { h: string; accion: "descartar" | "restaurar"; motivo: string }) =>
       api.revisarHallazgo(id, h, accion, motivo),
@@ -45,6 +58,14 @@ export function Analisis() {
   const confirmarAngulo = useMutation({
     mutationFn: ({ v, s }: { v: Vista; s: Segmento }) => api.confirmarAngulo(id, v, s),
     onSuccess: aplicar,
+  });
+  const hoja14h = useMutation({
+    mutationFn: (h: Hoja14H) => api.actualizarHoja14H(id, h),
+    onSuccess: aplicar,
+  });
+  const asignacion = useMutation({
+    mutationFn: ({ v, i, motivo }: { v: Vista; i: number; motivo: string }) => api.asignarOperador(id, v, i, motivo),
+    onSuccess: actualizado => { aplicar(actualizado); setReinicios(n => n + 1); },
   });
 
   if (isLoading) return <p className="cargando">Cargando caso…</p>;
@@ -74,6 +95,15 @@ export function Analisis() {
         </Link>}
       />
 
+      {caso.id_caso === id && <AlertasCaso idCaso={id} />}
+      {caso.grupo && (
+        <PanelOperadores
+          idCaso={caso.id_caso} grupo={caso.grupo} editable={esErgonomia} ocupado={asignacion.isPending}
+          error={asignacion.error?.message}
+          onAsignar={(vv, i, motivo) => asignacion.mutate({ v: vv, i, motivo })}
+        />
+      )}
+
       <div className="rejilla">
         <div className="tarjeta">
           <h2>Esqueleto detectado</h2>
@@ -96,8 +126,9 @@ export function Analisis() {
           )}
           <p className="leyenda">
             {esErgonomia
-              ? "Si un punto está mal colocado, arrástralo a su lugar. Punteado naranja = baja confianza; azul marino = corregido."
+              ? "Corrige un punto arrastrándolo o con Tab y flechas (Mayús: 10 píxeles). Punteado naranja = confianza baja o desconocida; azul marino = corregido."
               : "Solo Ergonomía puede corregir el esqueleto."}
+            {" Las conexiones solo se muestran entre puntos fiables o corregidos dentro de la imagen. Los puntos ausentes o fuera de la imagen no permiten inferir una postura."}
             {corregir.isPending && " Guardando…"}
           </p>
           {corregir.isError && <p className="aviso error">No se guardó la corrección: {corregir.error.message}</p>}
@@ -135,13 +166,47 @@ export function Analisis() {
         />
       </div>
 
+      <div className="tarjeta">
+        <h2>Estudio de referencia de Jabil</h2>
+        <p className="sutil">
+          Puntajes del estudio previo de la estación. Cada segmento que no coincide con la foto aparece como
+          hallazgo de auditoría y en la columna "Capturado en piso" de la tabla de ángulos.
+        </p>
+        <FormReferencia
+          key={JSON.stringify(caso.evaluacion_previa)}
+          valor={caso.evaluacion_previa} editable={esErgonomia} ocupado={referencia.isPending}
+          error={referencia.error?.message}
+          onGuardar={(v, motivo) => referencia.mutate({ v, motivo })}
+        />
+      </div>
+
+      <div className="tarjeta">
+        <h2>Hoja oficial 16-PE80-6500-00014-H</h2>
+        <p className="sutil">
+          Datos de la hoja de Jabil que no salen de la foto. La sección D (brazo, antebrazo, muñeca, cuello, tronco
+          y piernas) se llena sola con el REBA calculado. Lo que dejes vacío queda en blanco en el Excel.
+        </p>
+        <FormHoja14H
+          key={JSON.stringify(caso.hoja_14h)}
+          valor={caso.hoja_14h} editable={esErgonomia} ocupado={hoja14h.isPending}
+          error={hoja14h.error?.message} onGuardar={h => hoja14h.mutate(h)}
+        />
+      </div>
+
       <div className="rejilla">
         {caso.reba && (
           <div className="tarjeta"><h2>REBA</h2><DesgloseReba reba={caso.reba} /></div>
         )}
-        {caso.nom036 && (
-          <div className="tarjeta"><h2>NOM-036-1-STPS-2018</h2><DesgloseNom036 nom={caso.nom036} /></div>
-        )}
+        <div className="tarjeta">
+          <h2>NOM-036-1-STPS-2018</h2>
+          {caso.nom036 && <DesgloseNom036 nom={caso.nom036} />}
+          <FormNom036
+            key={JSON.stringify(caso.nom036)}
+            tipoTarea={caso.tipo_tarea} actual={caso.nom036} editable={esErgonomia}
+            ocupado={nom036.isPending} error={nom036.error?.message}
+            onGuardar={(n, motivo) => nom036.mutate({ n, motivo })}
+          />
+        </div>
       </div>
 
       <div className="tarjeta" style={{
@@ -156,7 +221,7 @@ export function Analisis() {
           Paso 2: Generar Plan de Mitigación con ErgoAI
         </h3>
         <p style={{ margin: "0 0 16px 0", color: "#475569", maxWidth: "680px", marginLeft: "auto", marginRight: "auto", fontSize: "0.95rem" }}>
-          El análisis biomecánico se ha completado con exactitud matemática (REBA {caso.reba?.final ?? "—"}).
+          REBA calculado: {caso.reba?.final ?? "—"}. Revisa los puntos y los ángulos pendientes antes de usar el resultado.
           Continúa al plan de acción para que el Agente consulte la NOM-036-1-STPS-2018 y los estándares de Jabil y redacte las recomendaciones técnicas.
         </p>
         <Link className="boton primario" style={{ fontSize: "1rem", padding: "12px 28px", display: "inline-block" }} to={`/casos/${id}/plan`}>

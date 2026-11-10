@@ -4,13 +4,15 @@ propuestos, autorización de ingeniería para cambios en planta e implementació
 """
 
 import json
-import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from backend.app.api.schemas import Hallazgo
+from backend.app.settings import SEED_DIR
 from backend.main import create_app
 
 ERGO = {"usuario": "Ing. Ergonomía", "rol": "ergonomia"}
@@ -19,13 +21,25 @@ IE = {"usuario": "Ing. Procesos", "rol": "ingenieria"}
 
 class TestFlujoEspecialista(unittest.TestCase):
     def setUp(self):
-        self.ws = Path(tempfile.mkdtemp(prefix="ergoai_flujo_"))
-        self.c = TestClient(create_app(workspace_dir=self.ws))
-        self.c.__enter__()
-
-    def tearDown(self):
-        self.c.__exit__(None, None, None)
-        shutil.rmtree(self.ws, ignore_errors=True)
+        self.ws = Path(self.enterContext(tempfile.TemporaryDirectory(prefix="ergoai_flujo_")))
+        semilla = json.loads((SEED_DIR / "casos_demo.json").read_text(encoding="utf-8"))
+        # El flujo del especialista usa plantillas generadas, no inferencia sobre fotos reales.
+        for caso in semilla["casos"]:
+            caso["fotos"] = {}
+        ruta = self.ws / "semilla.json"
+        ruta.write_text(json.dumps(semilla), encoding="utf-8")
+        inferencia = self.enterContext(patch("backend.app.services.casos.estimador.analizar"))
+        self.addCleanup(inferencia.assert_not_called)
+        self.c = self.enterContext(TestClient(create_app(workspace_dir=self.ws / "casos", sembrar=False)))
+        servicio = self.c.app.state.servicio
+        self.assertEqual(servicio.sembrar_si_vacio(ruta), len(semilla["casos"]))
+        # La siembra no infiere objetos: conservar los hallazgos sintéticos de esta fixture.
+        for datos in semilla["casos"]:
+            caso = servicio._cargar(datos["id_caso"])
+            caso.hallazgos_vision.extend(Hallazgo.model_validate(h) for h in datos.get("hallazgos_vision", []))
+            servicio._guardar(caso)
+            servicio._sincronizar(caso, servicio._evaluar(caso))
+        self.ws = self.ws / "casos"
 
     # ---------- utilidades ----------
 
@@ -156,6 +170,50 @@ class TestFlujoEspecialista(unittest.TestCase):
         entrada = next(e for e in self.c.get("/bitacora?id_caso=C-001").json() if e["accion"] == "contexto_corregido")
         self.assertIn("carga_kg: 16 kg", entrada["antes"])
         self.assertEqual(entrada["motivo"], "Se pesó la pieza: 8 kg")
+
+    def test_capturar_referencia_de_jabil(self):
+        url = "/casos/C-003/referencia"
+        # C-003 se capturó con tronco 3; la foto da 3 → sin discrepancia en tronco
+        ref = {"segmentos": {"tronco": 2, "cuello": 1}, "reba_final": 3}
+        self.assertEqual(self.c.put(url, json={**ERGO, "evaluacion_previa": ref}).status_code, 422)  # sin motivo
+        self.assertEqual(self.c.put(url, json={**IE, "evaluacion_previa": ref, "motivo": "xxx"}).status_code, 403)
+        malo = {"segmentos": {"tronco": 9}}
+        self.assertEqual(self.c.put(url, json={**ERGO, "evaluacion_previa": malo, "motivo": "xxx"}).status_code, 422)
+        r = self.c.put(url, json={**ERGO, "evaluacion_previa": ref, "motivo": "Estudio Jabil de la sesión 28/10"})
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        self.assertEqual(d["evaluacion_previa"]["reba_final"], 3)
+        self.assertTrue(any(h["id"] == "AUD-tronco" for h in d["hallazgos"]))
+        entrada = next(e for e in self.c.get("/bitacora?id_caso=C-003").json() if e["accion"] == "referencia_corregida")
+        self.assertIn("tronco: 2", entrada["despues"])
+
+    def test_capturar_nom036(self):
+        catalogo = self.c.get("/catalogo/nom036").json()
+        lev = catalogo["levantamiento"]["factores"]
+        factores = [{"codigo": f["codigo"], "etiqueta": f["etiqueta"], "color": "amarillo",
+                     "valor": f["opciones"]["amarillo"]} for f in lev]
+        url = "/casos/C-003/nom036"
+        cuerpo = {**ERGO, "motivo": "Hoja 16-PE80 llenada en piso", "nom036": {"metodo": "levantamiento", "factores": factores}}
+        r = self.c.put(url, json=cuerpo)
+        self.assertEqual(r.status_code, 200, r.text)
+        nom = r.json()["nom036"]
+        self.assertEqual(nom["total"], sum(f["valor"] for f in factores))
+        self.assertEqual(nom["nivel"], "rojo")  # 4+3+1+1+1+1+1+1 = 13
+
+        # El valor lo fija el color de la hoja
+        mal = [dict(f) for f in factores]
+        mal[0]["valor"] = 99
+        self.assertEqual(self.c.put(url, json={**cuerpo, "nom036": {"metodo": "levantamiento", "factores": mal}}).status_code, 422)
+        # Faltan factores
+        self.assertEqual(self.c.put(url, json={**cuerpo, "nom036": {"metodo": "levantamiento", "factores": factores[:3]}}).status_code, 422)
+        # Captura libre en empuje
+        libres = [{"codigo": f["codigo"], "etiqueta": f["etiqueta"], "color": "verde", "valor": 0}
+                  for f in catalogo["empuje_sin_auxiliar"]["factores"]]
+        self.assertEqual(self.c.put(url, json={**cuerpo, "nom036": {"metodo": "empuje_sin_auxiliar", "factores": libres}}).status_code, 200)
+        # Quitarla y permisos
+        self.assertIsNone(self.c.put(url, json={**cuerpo, "nom036": None}).json()["nom036"])
+        self.assertEqual(self.c.put(url, json={**cuerpo, **IE}).status_code, 403)
+        self.assertTrue(any(e["accion"] == "nom036_capturada" for e in self.c.get("/bitacora?id_caso=C-003").json()))
 
     def test_descartar_y_restaurar_hallazgo(self):
         url = "/casos/C-001/hallazgos/V1/revision"

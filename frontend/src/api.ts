@@ -1,7 +1,9 @@
 // Única puerta al backend. Con VITE_USE_MOCK=true trabaja con datos simulados en memoria.
 import type {
-  CambioPropuesto, CasoDetalle, CasoResumen, ContextoTarea, Decision, EntradaBitacora, NuevaRecomendacion, Punto,
-  Recomendacion, ResultadoIntegridad, Segmento, TipoTarea, Validacion, ValorCambio, Vista,
+  CambioPropuesto, CasoDetalle, CasoResumen, ColorNom, ContextoTarea, Decision, EntradaBitacora, EvaluacionPrevia,
+  FactorNom, Hoja14H, Impacto, MetodoNom036, MetricasDashboard,
+  NuevaRecomendacion, PaginaCasos, Punto, Segmento,
+  Recomendacion, ResultadoIntegridad, TipoTarea, Validacion, ValorCambio, Vista,
 } from "./types/caso";
 import type { Alerta } from "./types/alerta";
 import { API_URL, USE_MOCK } from "./lib/config";
@@ -56,10 +58,17 @@ const rutaRec = (idCaso: string, idRec: string) => `/casos/${seg(idCaso)}/recome
 /** Parámetro que una recomendación puede modificar (catálogo del backend). */
 export type ParametroCatalogo = Omit<CambioPropuesto, "actual" | "objetivo">;
 
+export interface FactorCatalogo { codigo: string; etiqueta: string; opciones?: Partial<Record<ColorNom, number>> }
+export type CatalogoNom036 = Record<string, { hoja: string; captura_libre?: boolean; factores: FactorCatalogo[] } | string>;
+export interface Nom036Captura { metodo: MetodoNom036; factores: FactorNom[] }
+
 export interface DatosNuevoCaso {
   estacion: string;
   tipo_tarea: TipoTarea;
   contexto: ContextoTarea;
+  evaluacion_previa: EvaluacionPrevia;
+  /** Si la foto lateral tiene varias personas, un caso por operador. */
+  evaluar_todos?: boolean;
 }
 export type FotosNuevoCaso = Partial<Record<Vista, File>> & { lateral: File };
 
@@ -110,7 +119,16 @@ const real = {
     return res.json() as Promise<{ ok: true; id: string }>;
   },
   catalogoParametros: () => http<ParametroCatalogo[]>("/catalogo/parametros"),
+  impacto: () => http<Impacto>("/metricas/impacto"),
+  catalogoNom036: () => http<CatalogoNom036>("/catalogo/nom036"),
+  corregirNom036: (id: string, nom036: Nom036Captura | null, motivo: string) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/nom036`, enviar("PUT", { nom036, motivo, ...actorActual() })),
+  corregirReferencia: (id: string, evaluacion_previa: EvaluacionPrevia, motivo: string) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/referencia`, enviar("PUT", { evaluacion_previa, motivo, ...actorActual() })),
   listarCasos: () => http<CasoResumen[]>("/casos"),
+  listarCasosPaginados: (page: number, page_size: number) =>
+    http<PaginaCasos>(`/casos/pagina?page=${page}&page_size=${page_size}`),
+  metricasDashboard: () => http<MetricasDashboard>("/metricas/dashboard"),
   obtenerCaso: (id: string) => http<CasoDetalle>(`/casos/${seg(id)}`),
   corregirPuntos: (id: string, vista: Vista, puntos: Punto[]) =>
     http<CasoDetalle>(`/casos/${seg(id)}/puntos/${vista}`, enviar("PUT", { puntos, ...actorActual() })),
@@ -118,6 +136,10 @@ const real = {
     http<CasoDetalle>(`/casos/${seg(id)}/angulos/${vista}/${segmento}/confirmar`, enviar("POST", actorActual())),
   corregirContexto: (id: string, contexto: ContextoTarea, motivo: string) =>
     http<CasoDetalle>(`/casos/${seg(id)}/contexto`, enviar("PUT", { contexto, motivo, ...actorActual() })),
+  actualizarHoja14H: (id: string, hoja_14h: Hoja14H) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/hoja-14h`, enviar("PUT", { hoja_14h, ...actorActual() })),
+  asignarOperador: (id: string, vista: Vista, indice: number, motivo: string) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/asignacion-operador`, enviar("PUT", { vista, indice, motivo, ...actorActual() })),
   revisarHallazgo: (id: string, idHallazgo: string, accion: "descartar" | "restaurar", motivo: string) =>
     http<CasoDetalle>(`/casos/${seg(id)}/hallazgos/${seg(idHallazgo)}/revision`,
       enviar("POST", { accion, motivo, ...actorActual() })),
@@ -147,7 +169,9 @@ const real = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Informe_Ergonomico_${idCaso}.xlsx`;
+    // Hoja oficial 16-PE80-6500-00014-H (.xlsm); el backend indica el nombre (por grupo si hay varios operadores)
+    const nombre = /filename="?([^";]+)"?/.exec(res.headers.get("content-disposition") ?? "")?.[1];
+    a.download = nombre ?? `16-PE80-6500-00014-H_${idCaso}.xlsm`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -278,6 +302,22 @@ const mock: typeof real = {
       imagen_anotada_b64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='400' height='300' fill='%23163E6A'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif'>Simulacion Captura ErgoAI</text></svg>",
     }),
   crearCaso: () => falla("Crear casos desde fotos requiere el backend real (npm run dev, sin modo simulado)."),
+  impacto: () => copia<Impacto>({
+    minutos_evaluacion_manual: 45, fuente_referencia_manual: "Modo simulado", casos: [],
+    analisis_promedio_s: null, validacion_promedio_min: null, ahorro_promedio_min: null, ahorro_porcentaje: null,
+  }),
+  catalogoNom036: () => falla("El catálogo NOM-036 requiere el backend real."),
+  corregirNom036: () => falla("Capturar NOM-036 requiere el backend real."),
+  corregirReferencia: (id, evaluacion_previa, motivo) => {
+    const c = buscarCaso(id);
+    if (!c) return falla(`Caso ${id} no encontrado`);
+    if (!rolEs("ergonomia")) return falla("Solo Ergonomía puede capturar la evaluación de referencia");
+    c.evaluacion_previa = evaluacion_previa;
+    registrar({ usuario: actorActual().usuario, accion: "referencia_corregida", objetivo: `${id} / evaluación de referencia`, id_caso: id, motivo });
+    return copia(detalle(c));
+  },
+  actualizarHoja14H: () => falla("La hoja 16-PE80-6500-00014-H requiere el backend real."),
+  asignarOperador: () => falla("Reasignar operadores requiere el backend real."),
   catalogoParametros: () => copia<ParametroCatalogo[]>([
     { parametro: "angulo.tronco", etiqueta: "Ángulo de tronco", tipo: "numero", unidad: "°", minimo: -90, maximo: 180, opciones: [] },
     { parametro: "angulo.cuello", etiqueta: "Ángulo de cuello", tipo: "numero", unidad: "°", minimo: -90, maximo: 180, opciones: [] },
@@ -286,6 +326,31 @@ const mock: typeof real = {
     { parametro: "agarre", etiqueta: "Calidad del agarre", tipo: "opcion", opciones: ["bueno", "regular", "malo", "inaceptable"] },
   ]),
   listarCasos: () => copia(store.casos.map(resumen)),
+  listarCasosPaginados: (page, page_size) => {
+    if (!Number.isInteger(page) || page < 1 || !Number.isInteger(page_size) || page_size < 1 || page_size > 100) {
+      return falla("La página debe ser un entero mayor o igual a 1 y el tamaño un entero entre 1 y 100.");
+    }
+    const ordenados = [...store.casos].sort((a, b) => a.id_caso < b.id_caso ? -1 : a.id_caso > b.id_caso ? 1 : 0);
+    return copia({
+      items: ordenados.slice((page - 1) * page_size, page * page_size).map(resumen),
+      total: ordenados.length, page, page_size, total_pages: Math.ceil(ordenados.length / page_size),
+    });
+  },
+  metricasDashboard: () => {
+    const metricas: MetricasDashboard = {
+      total_casos: store.casos.length,
+      niveles: { sin_evaluar: 0, inapreciable: 0, bajo: 0, medio: 0, alto: 0, muy_alto: 0 },
+      tipos_tarea: {}, decisiones_pendientes: 0, por_autorizar: 0,
+    };
+    for (const c of store.casos) {
+      const r = resumen(c);
+      metricas.niveles[r.nivel ?? "sin_evaluar"]++;
+      metricas.tipos_tarea[r.tipo_tarea] = (metricas.tipos_tarea[r.tipo_tarea] ?? 0) + 1;
+      metricas.decisiones_pendientes += r.decisiones_pendientes;
+      metricas.por_autorizar += r.por_autorizar;
+    }
+    return copia(metricas);
+  },
 
   obtenerCaso: id => {
     const c = buscarCaso(id);

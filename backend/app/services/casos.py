@@ -12,29 +12,34 @@ Flujo de una recomendación:
 
 from __future__ import annotations
 
+import hashlib
+import io
 import json
 import logging
-import shutil
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
+
+from pydantic import ValidationError
 
 from backend.app.api.schemas import (
-    VISTAS, Actor, Alerta, Angulo, Autorizacion, CasoAlmacenado, CasoDetalle, CasoResumen, CorreccionContexto, Decision,
-    Descarte, Hallazgo, Imagen, Implementacion, NuevaRecomendacion, NuevoCaso, Punto, Recomendacion, RecomendacionAlmacenada,
-    Residual, ResultadoIntegridad, ResultadoNom036, ResultadoReba, RevisionHallazgo, SegmentoResidual, Validacion,
-    Vista,
+    Actor, Alerta, Angulo, Autorizacion, CasoAlmacenado, CasoDetalle, CasoImpacto, CasoResumen, CorreccionContexto,
+    CorreccionNom036, CorreccionReferencia, Decision, Descarte, Hallazgo, Imagen, Implementacion, Impacto,
+    NuevaRecomendacion, Nom036Captura, NuevoCaso, Punto, Recomendacion, RecomendacionAlmacenada, Residual,
+    ResultadoIntegridad, ResultadoNom036, ResultadoReba, RevisionHallazgo, SegmentoResidual, Validacion, VISTAS,
+    MetricasDashboard, PaginaCasos, Vista, ActualizacionHoja14H, AsignacionOperador, GrupoOperadores, GrupoResumen,
 )
 from backend.app.core_ergonomics.angle_geometry import (
-    extraer_angulos_laterales, extraer_angulos_vista, segmentos_de_punto,
+    extraer_angulos_laterales, extraer_angulos_vista, medir_vista_frontal, segmentos_de_punto,
 )
 from backend.app.core_ergonomics.cambios import (
     PARAMETROS, describir_contexto, dict_a_efecto, efecto_a_cambios, efecto_a_dict,
 )
 from backend.app.core_ergonomics.modelos import SEGMENTOS, AnguloMedido, Efecto, Segmento
 from backend.app.core_ergonomics.nom036_calculator import (
-    EnrutadorNom036, color_total, nivel_riesgo_texto, total_factores,
+    EnrutadorNom036, color_total, nivel_riesgo_texto, total_factores, validar_captura,
 )
 from backend.app.core_ergonomics.reba_calculator import RebaCalculator, ResultadoRebaCalculado
 from backend.app.core_ergonomics.residual_simulator import simular
@@ -45,9 +50,11 @@ from backend.app.session_store import (
 )
 from backend.app.core_ergonomics.generador_recomendaciones import generar
 from backend.app.settings import (
-    CALIDAD_JPEG, CONFIANZA_MINIMA, MAX_FOTO_MB, TOLERANCIA_UMBRAL_GRADOS, USUARIO_SISTEMA,
+    CALIDAD_JPEG, CONFIANZA_MINIMA, FUENTE_EVALUACION_MANUAL, MAX_FOTO_MB, MINUTOS_EVALUACION_MANUAL,
+    PLANTILLA_14H, TOLERANCIA_UMBRAL_GRADOS, USUARIO_POR_DEFECTO, USUARIO_SISTEMA,
 )
-from backend.app.vision.estimador import VisionNoDisponible, estimador
+from backend.app.vision.estimador import VisionNoDisponible, estimador, reducir
+from backend.app.vision.privacidad import AVISO_PRIVACIDAD, localizar_cabezas, proteger_imagen
 
 log = logging.getLogger("ergoai.casos")
 
@@ -110,6 +117,8 @@ def _describir_efecto(e: Efecto) -> str:
 class ServicioCasos:
     ARCHIVO_CASO = "caso.json"
     ARCHIVO_ALERTAS = "alertas.json"
+    ARCHIVO_RESUMEN = "resumen_consulta.json"
+    VERSION_RESUMEN = 1
 
     def __init__(self, mgr: AuditFileManager, config: NormativeConfigLoader):
         self.mgr = mgr
@@ -118,6 +127,9 @@ class ServicioCasos:
         self.reba = RebaCalculator(config.get_reba_tables())
         self.rag = InMemoryRAG(config.get_jabil_standards(), config.get_nom036_kb())
         self._lock = threading.RLock()
+        self._firma_config = hashlib.sha256(json.dumps([
+            config.get_reba_tables(), config.get_nom036_tables(), config.get_jabil_standards(),
+        ], sort_keys=True).encode()).hexdigest()
 
     # ================= Persistencia =================
 
@@ -136,6 +148,86 @@ class ServicioCasos:
 
     def _guardar(self, caso: CasoAlmacenado) -> None:
         self.mgr.write_json_atomic(self._ruta_caso(caso.id_caso), caso.model_dump(mode="json"))
+
+    @staticmethod
+    def _resumen(d: CasoDetalle) -> CasoResumen:
+        return CasoResumen(
+            id_caso=d.id_caso, estacion=d.estacion, tipo_tarea=d.tipo_tarea, fecha=d.fecha,
+            reba_final=d.reba.final if d.reba else None, nivel=d.reba.nivel if d.reba else None,
+            decisiones_pendientes=d.validacion.pendientes, por_autorizar=d.validacion.por_autorizar,
+        )
+
+    def _firma_resumen(self, id_caso: str) -> str:
+        # Sólo metadatos: también invalidar geometría antigua si cambian los archivos de inputs.
+        ruta = self._ruta_caso(id_caso)
+        inputs = ruta.parent / "inputs"
+        archivos = [ruta] + (sorted(inputs.iterdir()) if inputs.exists() else [])
+        firma = [(p.name, s.st_mtime_ns, s.st_ctime_ns, s.st_size)
+                 for p in archivos if p.is_file() for s in [p.stat()]]
+        return hashlib.sha256(json.dumps([self._firma_config, firma]).encode()).hexdigest()
+
+    def _guardar_resumen(self, d: CasoDetalle, firma: str) -> CasoResumen:
+        resumen = self._resumen(d)
+        self.mgr.write_json_atomic(self.mgr.get_case_dir(d.id_caso) / self.ARCHIVO_RESUMEN, {
+            "version": self.VERSION_RESUMEN, "firma": firma, "resumen": resumen.model_dump(mode="json"),
+        })
+        return resumen
+
+    def _resumenes(self, ids: Optional[List[str]] = None) -> List[CasoResumen]:
+        """Materializa sólo los IDs pedidos; sin filtro, el agregado global."""
+        if ids is None:
+            ids = sorted(self._ids())
+        resumenes = []
+        for id_caso in ids:
+            firma = self._firma_resumen(id_caso)
+            ruta = self.mgr.get_case_dir(id_caso) / self.ARCHIVO_RESUMEN
+            try:
+                datos = json.loads(ruta.read_text(encoding="utf-8"))
+                if not isinstance(datos, dict) or datos.get("version") != self.VERSION_RESUMEN or datos.get("firma") != firma:
+                    raise ValueError("Resumen obsoleto")
+                resumen = CasoResumen.model_validate(datos["resumen"])
+                if resumen.id_caso != id_caso:
+                    raise ValueError("Identidad de resumen incompatible")
+            except (FileNotFoundError, ValueError, KeyError, TypeError, ValidationError):
+                # No capturar errores del caso original ni escribirlo durante la reconstrucción.
+                d = self._evaluar(self._cargar(id_caso))
+                resumen = self._guardar_resumen(d, firma)
+            resumenes.append(resumen)
+        return resumenes
+
+    def _guardar_foto_protegida(self, id_caso: str, archivo: str, imagen, regiones=None) -> None:
+        import cv2
+        regiones = localizar_cabezas(imagen) if regiones is None else regiones
+        regiones = regiones or []
+        segura = proteger_imagen(imagen, regiones)
+        ruta = self.mgr.get_case_dir(id_caso) / "inputs" / archivo
+        if not cv2.imwrite(str(ruta), segura, [cv2.IMWRITE_JPEG_QUALITY, CALIDAD_JPEG]):
+            raise RuntimeError(f"No se pudo guardar la foto {archivo}")
+        # Vincular sólo a los bytes protegidos: no confiar en marcas de privacidad de archivos antiguos.
+        self.mgr.write_json_atomic(ruta.with_name(ruta.name + ".privacidad.json"), {
+            "politica": 2, "sha256": hashlib.sha256(ruta.read_bytes()).hexdigest(), "regiones": regiones,
+        })
+
+    def imagen_media_protegida(self, id_caso: str, archivo: str):
+        import cv2
+        import numpy as np
+        ruta = self.ruta_media(id_caso, archivo)
+        contenido = ruta.read_bytes()
+        imagen = cv2.imdecode(np.frombuffer(contenido, np.uint8), cv2.IMREAD_COLOR)
+        if imagen is None:
+            raise DatosInvalidos("No se puede servir este archivo de forma segura como imagen")
+        regiones = None
+        metadata = ruta.with_name(ruta.name + ".privacidad.json")
+        if metadata.is_file():
+            try:
+                datos = json.loads(metadata.read_text(encoding="utf-8"))
+                if (isinstance(datos, dict) and datos.get("politica") == 2
+                        and datos.get("sha256") == hashlib.sha256(contenido).hexdigest()):
+                    regiones = datos.get("regiones", [])
+            except (ValueError, OSError):
+                pass
+        # Sin evidencia vinculada a estos bytes, volver a detectar; nunca devolver el original.
+        return proteger_imagen(imagen, regiones)
 
     def _ids(self) -> List[str]:
         return [i for i in self.mgr.list_cases() if self._ruta_caso(i).exists()]
@@ -176,7 +268,6 @@ class ServicioCasos:
                 return 0
             with open(ruta_semilla, "r", encoding="utf-8") as f:
                 semilla = json.load(f)
-            imagen_origen = ruta_semilla.parent / semilla["imagen_placeholder"]
 
             if not self._ruta_alertas.exists():
                 self._guardar_alertas([Alerta.model_validate(a) for a in semilla.get("alertas", [])])
@@ -184,7 +275,7 @@ class ServicioCasos:
             for datos in semilla["casos"]:
                 id_caso = datos["id_caso"]
                 case_dir = self.mgr.init_case_workspace(id_caso)
-                imagenes = []
+                imagenes, hallazgos = [], []
                 for vista in VISTAS:
                     esq = (datos.get("esqueletos") or {}).get(vista) or semilla.get("esqueletos", {}).get(vista) or semilla["esqueletos"]
                     foto_nombre = (datos.get("fotos") or {}).get(vista)
@@ -197,20 +288,46 @@ class ServicioCasos:
                         elif candidato_directo.exists():
                             foto_origen = candidato_directo
                     if foto_origen:
-                        destino = case_dir / "inputs" / foto_origen.name
-                        shutil.copyfile(foto_origen, destino)
+                        import cv2
+                        img = cv2.imread(str(foto_origen))
+                        if img is None:
+                            raise DatosInvalidos(f"No se pudo leer la foto semilla {foto_origen.name}")
+                        img = reducir(img)
+                        puntos, regiones = [], None
+                        try:
+                            resultado = estimador.analizar(img)
+                            img = resultado.imagen_bgr
+                            regiones = resultado.regiones_privacidad
+                            puntos = [vars(p) for p in resultado.puntos] if resultado.personas else []
+                        except VisionNoDisponible:
+                            log.warning("Semilla sin pose disponible: %s", foto_origen.name)
+                        h, w = img.shape[:2]
                         url_foto = foto_origen.name
+                        self._guardar_foto_protegida(id_caso, url_foto, img, regiones)
+                        hallazgos.append(Hallazgo(
+                            id=f"V-privacidad-{vista}", origen="vision", severidad="advertencia", vista=vista,
+                            mensaje=AVISO_PRIVACIDAD + (" Sin pose disponible: revisar; no se usa un esqueleto de plantilla." if not puntos else "")))
                     else:
-                        shutil.copyfile(imagen_origen, case_dir / "inputs" / imagen_origen.name)
-                        url_foto = imagen_origen.name
+                        # Los puntos de demostración sólo se usan con una imagen generada a partir de ellos.
+                        import cv2
+                        import numpy as np
+                        w, h = esq["ancho"], esq["alto"]
+                        img = np.full((h, w, 3), 235, np.uint8)
+                        puntos = [{"id": i, "x": x, "y": y, "confianza": c, "corregido": False}
+                                  for i, x, y, c in esq["puntos"]]
+                        for p in puntos:
+                            cv2.circle(img, (round(p["x"]), round(p["y"])), 5, (80, 80, 80), -1)
+                        url_foto = f"plantilla-{vista}.png"
+                        if not cv2.imwrite(str(case_dir / "inputs" / url_foto), img):
+                            raise RuntimeError(f"No se pudo guardar la plantilla {vista}")
+                        hallazgos.append(Hallazgo(
+                            id=f"V-plantilla-{vista}", origen="vision", severidad="info", vista=vista,
+                            mensaje="Demostración sintética: puntos de plantilla, no una evaluación de una persona real."))
 
-                    imagenes.append({
-                        "vista": vista, "url": url_foto, "ancho": esq["ancho"], "alto": esq["alto"],
-                        "puntos": [{"id": i, "x": x, "y": y, "confianza": c, "corregido": False}
-                                   for i, x, y, c in esq["puntos"]],
-                    })
+                    imagenes.append({"vista": vista, "url": url_foto, "ancho": w, "alto": h, "puntos": puntos})
                 recs = [{**r, "texto_ia": r["texto"]} for r in datos.get("recomendaciones", [])]
-                caso = CasoAlmacenado.model_validate({**datos, "imagenes": imagenes, "recomendaciones": recs})
+                caso = CasoAlmacenado.model_validate({**datos, "imagenes": imagenes, "recomendaciones": recs,
+                                                       "hallazgos_vision": hallazgos})
 
                 self._guardar(caso)
                 detalle = self._evaluar(caso)
@@ -286,7 +403,7 @@ class ServicioCasos:
                     segmento=seg, lado=m.lado, vista=img.vista, angulo_grados=g,
                     puntaje_reba=ps.puntaje, modificadores=ps.modificadores,
                     estado=estado, motivo_estado=motivo, confirmado=confirmado,
-                    puntaje_previo=caso.evaluacion_previa.segmentos.get(seg) if img.vista == "lateral" else None,
+                    puntaje_previo=caso.evaluacion_previa.segmentos.get(seg),
                 ))
         return angulos
 
@@ -315,8 +432,26 @@ class ServicioCasos:
         ctx = caso.contexto
         jabil = self.config.get_jabil_standards()
         hallazgos: List[Hallazgo] = []
-        limite = jabil["load_limits"]["max_single_person_lift_kg"]
-        if caso.tipo_tarea in TAREAS_CON_LEVANTAMIENTO and ctx.carga_kg > limite:
+        cargas = jabil["load_limits"]
+        limite = cargas["max_single_person_lift_kg"]
+        if caso.tipo_tarea in TAREAS_CON_LEVANTAMIENTO and ctx.personas_en_carga >= 2:
+            # Levantamiento en equipo (16-PE30-6500-00023 §6.4.2): verde < 19 kg, naranja hasta 28 kg.
+            verde, naranja = cargas["team_lift_2_persons_green_max_kg"], cargas["team_lift_2_persons_orange_max_kg"]
+            if verde <= ctx.carga_kg <= naranja:
+                hallazgos.append(Hallazgo(
+                    id="JABIL-carga-equipo", origen="reglas_jabil", severidad="advertencia",
+                    mensaje=(f"Carga de {ctx.carga_kg:g} kg entre 2 personas: zona naranja ({verde:g}–{naranja:g} kg). "
+                             "Requiere evaluación médica de los operadores y trámite MOC."),
+                    referencia=jabil["references"]["team_lift"],
+                ))
+            elif ctx.carga_kg > naranja:
+                hallazgos.append(Hallazgo(
+                    id="JABIL-carga-equipo", origen="reglas_jabil", severidad="critico",
+                    mensaje=(f"Carga de {ctx.carga_kg:g} kg supera el límite de {naranja:g} kg para 2 personas: "
+                             "requiere asistencia mecánica."),
+                    referencia=jabil["references"]["team_lift"],
+                ))
+        elif caso.tipo_tarea in TAREAS_CON_LEVANTAMIENTO and ctx.carga_kg > limite:
             hallazgos.append(Hallazgo(
                 id="JABIL-carga", origen="reglas_jabil", severidad="critico",
                 mensaje=f"Carga de {ctx.carga_kg:g} kg supera el límite de {limite:g} kg por persona",
@@ -335,6 +470,8 @@ class ServicioCasos:
     def _calcular_nom036(
         self, caso: CasoAlmacenado, grados: Optional[Dict[Segmento, Optional[float]]] = None
     ) -> Optional[ResultadoNom036]:
+        if caso.nom036_override:
+            return None
         if caso.nom036:
             total = total_factores(f.valor for f in caso.nom036.factores)
             return ResultadoNom036(
@@ -352,8 +489,12 @@ class ServicioCasos:
                 "apoyo_unilateral": caso.contexto.apoyo_unilateral,
                 "agarre": caso.contexto.agarre,
                 "actividad": caso.contexto.actividad,
+                "num_operadores": caso.contexto.personas_en_carga,
             }
-            res_est = EnrutadorNom036.evaluar(caso.tipo_tarea, datos_op, self.config.get_nom036_tables())
+            # Levantamiento entre 2 personas se evalúa con la hoja Equipo (3), no con Levantamiento (1).
+            metodo = "equipo" if (caso.tipo_tarea == "levantamiento" and caso.contexto.personas_en_carga >= 2) \
+                else caso.tipo_tarea
+            res_est = EnrutadorNom036.evaluar(metodo, datos_op, self.config.get_nom036_tables())
             return ResultadoNom036(
                 metodo=res_est.metodo_api,  # type: ignore[arg-type]
                 total=res_est.total,
@@ -392,6 +533,29 @@ class ServicioCasos:
         return recomendaciones
 
     def _evaluar(self, caso: CasoAlmacenado) -> CasoDetalle:
+        # Proyección solamente: no migrar ni sobrescribir geometría/auditorías antiguas al leer.
+        try:
+            import cv2
+        except ImportError:
+            cv2 = None
+        copia = None
+        for indice, imagen in enumerate(caso.imagenes):
+            pixeles = None
+            if cv2 is not None:
+                try:
+                    ruta = self.ruta_media(caso.id_caso, imagen.url)
+                    pixeles = cv2.imread(str(ruta))
+                except NoEncontrado:
+                    pass
+            w, h = (imagen.ancho, imagen.alto) if pixeles is None else pixeles.shape[1::-1]
+            if pixeles is None or (imagen.ancho, imagen.alto) != (w, h):
+                copia = copia or caso.model_copy(deep=True)
+                segura = copia.imagenes[indice]
+                segura.ancho, segura.alto, segura.puntos = w, h, []
+                copia.hallazgos_vision.append(Hallazgo(
+                    id=f"V-geometria-{imagen.vista}", origen="vision", severidad="advertencia", vista=imagen.vista,
+                    mensaje="Geometría incompatible o no verificable con los píxeles: puntos ocultos; requiere revisión, no se reescala la plantilla."))
+        caso = copia or caso
         ctx = caso.contexto
         angulos: List[Angulo] = []
         reba: Optional[ResultadoReba] = None
@@ -425,9 +589,21 @@ class ServicioCasos:
         return CasoDetalle(
             id_caso=caso.id_caso, estacion=caso.estacion, tipo_tarea=caso.tipo_tarea, fecha=caso.fecha,
             imagenes=[Imagen(**{**i.model_dump(), "url": f"/media/{caso.id_caso}/{i.url}"}) for i in caso.imagenes],
-            contexto=ctx, angulos=angulos, reba=reba, nom036=self._calcular_nom036(caso, grados), hallazgos=hallazgos,
+            contexto=ctx, evaluacion_previa=caso.evaluacion_previa, angulos=angulos, reba=reba,
+            nom036=self._calcular_nom036(caso, grados), hallazgos=hallazgos,
             recomendaciones=self._proyectar_recomendaciones(caso, grados, calculo is not None),
-            residual=residual, validacion=self._validacion(caso, reba),
+            residual=residual, validacion=self._validacion(caso, reba), metricas=caso.metricas,
+            hoja_14h=caso.hoja_14h, grupo=self._resumen_grupo(caso),
+        )
+
+    @staticmethod
+    def _resumen_grupo(caso: CasoAlmacenado) -> Optional[GrupoResumen]:
+        g = caso.grupo
+        if g is None:
+            return None
+        return GrupoResumen(
+            id_grupo=g.id_grupo, indice=g.indice, total=g.total, casos=g.casos,
+            personas_por_vista={v: len(p) for v, p in g.detectadas.items()}, asignacion=g.asignacion,
         )
 
     @staticmethod
@@ -464,8 +640,21 @@ class ServicioCasos:
     # ================= Estado de sesión y alertas =================
 
     def _sincronizar(self, caso: CasoAlmacenado, detalle: CasoDetalle, especialista: Optional[str] = None) -> None:
+        self._registrar_hitos(caso, detalle)
         self._sincronizar_estado(caso, detalle, especialista)
         self._sincronizar_alertas(caso, detalle)
+        self._guardar_resumen(detalle, self._firma_resumen(caso.id_caso))
+
+    def _registrar_hitos(self, caso: CasoAlmacenado, d: CasoDetalle) -> None:
+        """Primera decisión y validación completa: base de la medición de tiempos de respuesta."""
+        m, cambio = caso.metricas, False
+        if m.primera_decision_en is None and any(r.estado != "propuesta" for r in caso.recomendaciones):
+            m.primera_decision_en, cambio = _ahora(), True
+        if m.validado_en is None and d.validacion.completa:
+            m.validado_en, cambio = _ahora(), True
+        if cambio:
+            self._guardar(caso)
+            d.metricas = m
 
     def _sincronizar_estado(self, caso: CasoAlmacenado, d: CasoDetalle, especialista: Optional[str]) -> None:
         estado = self.mgr.load_session_state(caso.id_caso)
@@ -586,12 +775,31 @@ class ServicioCasos:
             res = []
             for id_caso in self._ids():
                 d = self._evaluar(self._cargar(id_caso))
-                res.append(CasoResumen(
-                    id_caso=d.id_caso, estacion=d.estacion, tipo_tarea=d.tipo_tarea, fecha=d.fecha,
-                    reba_final=d.reba.final if d.reba else None, nivel=d.reba.nivel if d.reba else None,
-                    decisiones_pendientes=d.validacion.pendientes, por_autorizar=d.validacion.por_autorizar,
-                ))
+                res.append(self._resumen(d))
             return res
+
+    def pagina(self, page: int = 1, page_size: int = 10) -> PaginaCasos:
+        if page < 1 or not 1 <= page_size <= 100:
+            raise DatosInvalidos("Página o tamaño fuera de rango")
+        with self._lock:
+            ids = sorted(self._ids())
+            total = len(ids)
+            inicio = (page - 1) * page_size
+            resumenes = self._resumenes(ids[inicio:inicio + page_size])
+            return PaginaCasos(items=resumenes, total=total,
+                               page=page, page_size=page_size, total_pages=(total + page_size - 1) // page_size)
+
+    def dashboard(self) -> MetricasDashboard:
+        with self._lock:
+            resumenes = self._resumenes()
+            metricas = MetricasDashboard(total_casos=len(resumenes))
+            for r in resumenes:
+                nivel = r.nivel or "sin_evaluar"
+                setattr(metricas.niveles, nivel, getattr(metricas.niveles, nivel) + 1)
+                metricas.tipos_tarea[r.tipo_tarea] = metricas.tipos_tarea.get(r.tipo_tarea, 0) + 1
+                metricas.decisiones_pendientes += r.decisiones_pendientes
+                metricas.por_autorizar += r.por_autorizar
+            return metricas
 
     def obtener(self, id_caso: str) -> CasoDetalle:
         with self._lock:
@@ -1142,7 +1350,7 @@ class ServicioCasos:
     def crear_caso(self, datos: NuevoCaso, fotos: Dict[str, bytes]) -> str:
         """
         Crea un caso a partir de fotos reales: visión (YOLOX + RTMPose) → puntos → REBA → hallazgos →
-        recomendaciones propuestas. Las fotos se guardan con el rostro difuminado.
+        recomendaciones propuestas. Las fotos se guardan con máscaras sólidas de privacidad.
         """
         _exigir_rol(datos, "ergonomia", "crear casos")
         if "lateral" not in fotos:
@@ -1157,6 +1365,8 @@ class ServicioCasos:
         import cv2  # dependencia opcional: solo se necesita con visión instalada
         import numpy as np
 
+        t0 = time.perf_counter()
+
         # La inferencia (lenta) va fuera del candado del servicio.
         resultados = {}
         for vista, contenido in fotos.items():
@@ -1170,64 +1380,251 @@ class ServicioCasos:
             raise DatosInvalidos("No se detectó a ninguna persona en la foto lateral. Usa una toma donde el "
                                  "operador se vea de cuerpo completo y de costado.")
 
+        lateral = resultados["lateral"]
+        n_lateral = max(1, len(lateral.todas))
+        if datos.evaluar_todos and n_lateral > 1 and not lateral.por_respaldo:
+            operadores = list(range(n_lateral))          # un caso por persona, de izquierda a derecha
+        else:
+            operadores = [lateral.indice_principal]       # solo la persona principal (la de mayor tamaño)
+        en_grupo = len(operadores) > 1
+
+        def a_puntos(lista) -> List[Punto]:
+            return [Punto(id=p.id, x=round(p.x, 1), y=round(p.y, 1), confianza=p.confianza) for p in lista]
+
+        detectadas = {v: [a_puntos(p) for p in r.todas] for v, r in resultados.items()}
+
         with self._lock:
             usados = set(self._ids())
             num = 1
-            while f"C-{num:03d}" in usados:
+            while f"C-{num:03d}" in usados or any(u.startswith(f"C-{num:03d}-") for u in usados):
                 num += 1
-            id_caso = f"C-{num:03d}"
-            case_dir = self.mgr.init_case_workspace(id_caso)
+            id_grupo = f"C-{num:03d}"
+            ids = [f"{id_grupo}-{k + 1}" for k in range(len(operadores))] if en_grupo else [id_grupo]
 
-            imagenes, hallazgos = [], []
-            for vista in VISTAS:
-                r = resultados.get(vista)
-                if r is None:
-                    continue
-                archivo = f"{vista}.jpg"
-                # Se re-codifica: elimina metadatos EXIF y conserva solo la versión anonimizada.
-                if not cv2.imwrite(str(case_dir / "inputs" / archivo), r.imagen_bgr, [cv2.IMWRITE_JPEG_QUALITY, CALIDAD_JPEG]):
-                    raise RuntimeError(f"No se pudo guardar la foto {vista}")
-                h, w = r.imagen_bgr.shape[:2]
-                imagenes.append(Imagen(vista=vista, url=archivo, ancho=w, alto=h, puntos=[
-                    Punto(id=p.id, x=round(p.x, 1), y=round(p.y, 1), confianza=p.confianza) for p in r.puntos]))
-                if r.personas > 1:
+            for posicion, (id_caso, persona_lateral) in enumerate(zip(ids, operadores), start=1):
+                self.mgr.init_case_workspace(id_caso)
+                imagenes, hallazgos, asignacion = [], [], {}
+                for vista in VISTAS:
+                    r = resultados.get(vista)
+                    if r is None:
+                        continue
+                    archivo = f"{vista}.jpg"
+                    # Se re-codifica: elimina metadatos EXIF y conserva solo la versión con máscaras de privacidad.
+                    self._guardar_foto_protegida(id_caso, archivo, r.imagen_bgr, r.regiones_privacidad)
+                    h, w = r.imagen_bgr.shape[:2]
+                    personas_vista = detectadas.get(vista, [])
+                    if not en_grupo:
+                        puntos = a_puntos(r.puntos)
+                    elif personas_vista:
+                        # Misma posición izquierda→derecha que en la lateral; si en esta vista se ven menos
+                        # personas, se usa la más cercana y se avisa para que el especialista lo confirme.
+                        idx = min(persona_lateral, len(personas_vista) - 1)
+                        asignacion[vista] = idx
+                        puntos = personas_vista[idx]
+                        if len(personas_vista) != len(operadores):
+                            hallazgos.append(Hallazgo(
+                                id=f"V-asignacion-{vista}", origen="vision", severidad="advertencia", vista=vista,
+                                mensaje=(f"En la vista {vista} se ven {len(personas_vista)} persona(s) y en la lateral "
+                                         f"{len(operadores)}: confirma que el operador {posicion} sea la persona correcta.")))
+                    else:
+                        puntos = []
+                    imagenes.append(Imagen(vista=vista, url=archivo, ancho=w, alto=h, puntos=puntos))
                     hallazgos.append(Hallazgo(
-                        id=f"V-personas-{vista}", origen="vision", severidad="info", vista=vista,
-                        mensaje=(f"Se detectaron {r.personas} personas en la vista {vista}; se evalúa la de mayor "
-                                 f"tamaño. Si no es el operador auditado, corrige los puntos."),
-                        caja=r.caja))
-                if r.por_respaldo:
-                    hallazgos.append(Hallazgo(
-                        id=f"V-oclusion-{vista}", origen="vision", severidad="advertencia", vista=vista,
-                        mensaje=(f"El operador está parcialmente oculto en la vista {vista}; los puntos se estimaron "
-                                 f"sobre la imagen completa. Verifícalos antes de validar.")))
-                if r.personas == 0:
-                    hallazgos.append(Hallazgo(
-                        id=f"V-sin-persona-{vista}", origen="vision", severidad="info", vista=vista,
-                        mensaje=f"No se detectó a ninguna persona en la vista {vista}."))
+                        id=f"V-privacidad-{vista}", origen="vision", severidad="advertencia", vista=vista,
+                        mensaje=AVISO_PRIVACIDAD))
+                    if r.personas > 1 and not en_grupo:
+                        hallazgos.append(Hallazgo(
+                            id=f"V-personas-{vista}", origen="vision", severidad="info", vista=vista,
+                            mensaje=(f"Se detectaron {r.personas} personas en la vista {vista}; se evalúa la de mayor "
+                                     f"tamaño. Si no es el operador auditado, corrige los puntos."),
+                            caja=r.caja))
+                    if r.por_respaldo:
+                        hallazgos.append(Hallazgo(
+                            id=f"V-oclusion-{vista}", origen="vision", severidad="advertencia", vista=vista,
+                            mensaje=(f"El operador está parcialmente oculto en la vista {vista}; los puntos se estimaron "
+                                     f"sobre la imagen completa. Verifícalos antes de validar.")))
+                    if r.personas == 0:
+                        hallazgos.append(Hallazgo(
+                            id=f"V-sin-persona-{vista}", origen="vision", severidad="info", vista=vista,
+                            mensaje=f"No se detectó a ninguna persona en la vista {vista}."))
 
-            caso = CasoAlmacenado(
-                id_caso=id_caso, estacion=datos.estacion.strip(), tipo_tarea=datos.tipo_tarea,
-                fecha=datetime.now().astimezone().isoformat(timespec="seconds"), imagenes=imagenes,
-                contexto=datos.contexto, evaluacion_previa=datos.evaluacion_previa, hallazgos_vision=hallazgos,
-            )
-            medidos, res = self._calcular_reba(caso)  # type: ignore[misc]  (hay foto lateral)
-            propuestas = generar(
-                {s: m.grados for s, m in medidos.items()}, caso.contexto, caso.tipo_tarea, res.final,
-                self.config.get_reba_tables(), self.config.get_jabil_standards(), self.rag)
-            caso.recomendaciones = [RecomendacionAlmacenada.model_validate({**r, "texto_ia": r["texto"]})
-                                    for r in propuestas]
+                grupo = None
+                if en_grupo:
+                    grupo = GrupoOperadores(id_grupo=id_grupo, indice=posicion, total=len(ids), casos=ids,
+                                            detectadas=detectadas, asignacion=asignacion)
+                estacion = datos.estacion.strip()
+                caso = CasoAlmacenado(
+                    id_caso=id_caso, estacion=f"{estacion} · Operador {posicion}" if en_grupo else estacion,
+                    tipo_tarea=datos.tipo_tarea, fecha=datetime.now().astimezone().isoformat(timespec="seconds"),
+                    imagenes=imagenes, contexto=datos.contexto, evaluacion_previa=datos.evaluacion_previa,
+                    hallazgos_vision=hallazgos, hoja_14h=datos.hoja_14h, grupo=grupo,
+                )
+                medidos = self._medir(caso)
+                self._aplicar_vista_frontal(caso, medidos["brazo"].lado or "izq")
+                medidos, res = self._calcular_reba(caso)  # type: ignore[misc]  (hay foto lateral)
+                propuestas = generar(
+                    {s: m.grados for s, m in medidos.items()}, caso.contexto, caso.tipo_tarea, res.final,
+                    self.config.get_reba_tables(), self.config.get_jabil_standards(), self.rag)
+                caso.recomendaciones = [RecomendacionAlmacenada.model_validate({**r, "texto_ia": r["texto"]})
+                                        for r in propuestas]
+                caso.metricas.creado_en = _ahora()
+                caso.metricas.analisis_ms = round((time.perf_counter() - t0) * 1000, 1)
 
-            self._guardar(caso)
-            detalle = self._evaluar(caso)
-            self.ledger.registrar(datos.usuario, "caso_creado", id_caso, id_caso,
-                                  despues=f"{caso.estacion} · {len(fotos)} foto(s)")
+                self._guardar(caso)
+                detalle = self._evaluar(caso)
+                self.ledger.registrar(datos.usuario, "caso_creado", id_caso, id_caso,
+                                      despues=f"{caso.estacion} · {len(fotos)} foto(s)"
+                                              + (f" · operador {posicion} de {len(ids)}" if en_grupo else ""))
+                self.ledger.registrar(
+                    USUARIO_SISTEMA, "analisis_ejecutado", id_caso, id_caso,
+                    despues=f"REBA {res.final} · {len(propuestas)} recomendación(es) · {detalle_vision}")
+                self._sincronizar(caso, detalle, datos.usuario)
+                log.info("Caso creado desde fotos: %s REBA=%s", id_caso, res.final)
+            return ids[0]
+
+    def actualizar_hoja_14h(self, id_caso: str, a: ActualizacionHoja14H) -> CasoDetalle:
+        """Guarda los datos de la hoja oficial 16-PE80-6500-00014-H que no salen de la foto."""
+        _exigir_rol(a, "ergonomia", "capturar la hoja 16-PE80-6500-00014-H")
+        with self._lock:
+            caso = self._cargar(id_caso)
+            if caso.hoja_14h == a.hoja_14h:
+                return self._evaluar(caso)
+            antes, despues = caso.hoja_14h.model_dump(), a.hoja_14h.model_dump()
+            cambios = [k for k in despues if antes.get(k) != despues.get(k)]
+            caso.hoja_14h = a.hoja_14h
+            detalle = self._cerrar_mutacion(caso)
             self.ledger.registrar(
-                USUARIO_SISTEMA, "analisis_ejecutado", id_caso, id_caso,
-                despues=f"REBA {res.final} · {len(propuestas)} recomendación(es) · {detalle_vision}")
-            self._sincronizar(caso, detalle, datos.usuario)
-            log.info("Caso creado desde fotos: %s REBA=%s", id_caso, res.final)
-            return id_caso
+                a.usuario, "hoja_14h_actualizada", f"{id_caso} / hoja 16-PE80-6500-00014-H", id_caso,
+                antes="; ".join(f"{k}: {antes.get(k)}" for k in cambios),
+                despues="; ".join(f"{k}: {despues.get(k)}" for k in cambios),
+                motivo=(a.motivo or "").strip() or None,
+            )
+            return detalle
+
+    def asignar_operador(self, id_caso: str, a: AsignacionOperador) -> CasoDetalle:
+        """Cambia qué persona detectada en una vista corresponde a este operador (casos con varios operadores)."""
+        _exigir_rol(a, "ergonomia", "corregir la asignación de operadores")
+        with self._lock:
+            caso = self._cargar(id_caso)
+            if caso.grupo is None:
+                raise Conflicto("El caso no tiene varios operadores")
+            personas = caso.grupo.detectadas.get(a.vista, [])
+            if not 0 <= a.indice < len(personas):
+                raise DatosInvalidos(f"En la vista {a.vista} solo hay {len(personas)} persona(s) detectada(s)")
+            imagen = next((i for i in caso.imagenes if i.vista == a.vista), None)
+            if imagen is None:
+                raise NoEncontrado(f"El caso no tiene foto {a.vista}")
+            anterior = caso.grupo.asignacion.get(a.vista)
+            if anterior == a.indice:
+                return self._evaluar(caso)
+            antes = self._evaluar(caso)
+            imagen.puntos = [p.model_copy() for p in personas[a.indice]]
+            caso.grupo.asignacion[a.vista] = a.indice
+            caso.hallazgos_vision = [h for h in caso.hallazgos_vision if h.id != f"V-asignacion-{a.vista}"]
+            despues = self._cerrar_mutacion(caso)
+            cambio = f"; REBA {antes.reba.final} → {despues.reba.final}" if antes.reba and despues.reba else ""
+            self.ledger.registrar(
+                a.usuario, "operador_reasignado", f"{id_caso} / {a.vista}", id_caso,
+                antes=f"persona {anterior + 1 if anterior is not None else '—'}",
+                despues=f"persona {a.indice + 1}{cambio}", motivo=a.motivo.strip())
+            self._sincronizar(caso, despues, a.usuario)
+            return despues
+
+    def _aplicar_vista_frontal(self, caso: CasoAlmacenado, lado: str) -> None:
+        """Marca los modificadores que se ven en la foto frontal; el especialista puede desmarcarlos."""
+        frontal = next((i for i in caso.imagenes if i.vista == "frontal" and i.puntos), None)
+        if frontal is None:
+            return
+        umbrales = self.config.get_reba_tables()["frontal_view_thresholds_deg"]
+        m = medir_vista_frontal(frontal.puntos, lado, CONFIANZA_MINIMA)
+        mods = caso.contexto.modificadores
+        if m["inclinacion_tronco"] is not None and m["inclinacion_tronco"] > umbrales["trunk_side_bending"]:
+            mods.tronco_torsion_o_inclinacion = True
+            caso.hallazgos_vision.append(Hallazgo(
+                id="V-frontal-tronco", origen="vision", severidad="info", vista="frontal",
+                mensaje=(f"Vista frontal: inclinación lateral de tronco de {m['inclinacion_tronco']:g}° "
+                         f"(> {umbrales['trunk_side_bending']:g}°); se marcó el modificador REBA de tronco.")))
+        if m["abduccion_brazo"] is not None and m["abduccion_brazo"] > umbrales["upper_arm_abduction"]:
+            mods.brazo_abducido_o_rotado = True
+            caso.hallazgos_vision.append(Hallazgo(
+                id="V-frontal-brazo", origen="vision", severidad="info", vista="frontal",
+                mensaje=(f"Vista frontal: abducción del brazo de {m['abduccion_brazo']:g}° "
+                         f"(> {umbrales['upper_arm_abduction']:g}°); se marcó el modificador REBA de brazo.")))
+
+    def corregir_referencia(self, id_caso: str, c: CorreccionReferencia) -> CasoDetalle:
+        """Carga o corrige el estudio de referencia de Jabil contra el que se audita el análisis."""
+        _exigir_rol(c, "ergonomia", "capturar la evaluación de referencia")
+        with self._lock:
+            caso = self._cargar(id_caso)
+            if caso.evaluacion_previa == c.evaluacion_previa:
+                return self._evaluar(caso)
+
+            def txt(e) -> str:
+                partes = [f"{s}: {v}" for s, v in e.segmentos.items()]
+                return "; ".join(partes + [f"REBA {e.reba_final}"] if e.reba_final else partes) or "sin captura"
+
+            antes = txt(caso.evaluacion_previa)
+            caso.evaluacion_previa = c.evaluacion_previa
+            despues = self._cerrar_mutacion(caso)
+            self.ledger.registrar(c.usuario, "referencia_corregida", f"{id_caso} / evaluación de referencia", id_caso,
+                                  antes=antes, despues=txt(c.evaluacion_previa), motivo=c.motivo.strip())
+            self._sincronizar(caso, despues, c.usuario)
+            return despues
+
+    def corregir_nom036(self, id_caso: str, c: CorreccionNom036) -> CasoDetalle:
+        """Captura o corrige la evaluación NOM-036 (factores de la hoja 16-PE80-6500-00014-H)."""
+        _exigir_rol(c, "ergonomia", "capturar la evaluación NOM-036")
+        tablas = self.config.get_nom036_tables()
+        if c.nom036 is not None:
+            try:
+                validar_captura(c.nom036.metodo, c.nom036.factores, tablas)
+            except ValueError as e:
+                raise DatosInvalidos(str(e)) from e
+        with self._lock:
+            caso = self._cargar(id_caso)
+            if caso.nom036 == c.nom036:
+                return self._evaluar(caso)
+
+            def txt(n: Optional[Nom036Captura]) -> str:
+                if n is None:
+                    return "sin evaluación"
+                total = total_factores(f.valor for f in n.factores)
+                return f"{n.metodo}: total {total} ({color_total(total, tablas)})"
+
+            antes = txt(caso.nom036)
+            caso.nom036 = c.nom036
+            caso.nom036_override = c.nom036 is None
+            despues = self._cerrar_mutacion(caso)
+            self.ledger.registrar(c.usuario, "nom036_capturada", f"{id_caso} / NOM-036", id_caso,
+                                  antes=antes, despues=txt(c.nom036), motivo=c.motivo.strip())
+            self._sincronizar(caso, despues, c.usuario)
+            return despues
+
+    def impacto(self) -> Impacto:
+        """Tiempos medidos en los casos analizados desde fotos frente a la evaluación manual."""
+        with self._lock:
+            casos = []
+            for id_caso in self._ids():
+                c = self._cargar(id_caso)
+                m = c.metricas
+                if m.analisis_ms is None:
+                    continue  # casos de ejemplo: no tienen tiempo real medido
+                validacion = None
+                if m.creado_en and m.validado_en:
+                    validacion = round((datetime.fromisoformat(m.validado_en)
+                                        - datetime.fromisoformat(m.creado_en)).total_seconds() / 60, 1)
+                casos.append(CasoImpacto(id_caso=id_caso, estacion=c.estacion,
+                                         analisis_s=round(m.analisis_ms / 1000, 1), validacion_min=validacion))
+            analisis = [c.analisis_s for c in casos if c.analisis_s is not None]
+            validados = [c.validacion_min for c in casos if c.validacion_min is not None]
+            prom_val = round(sum(validados) / len(validados), 1) if validados else None
+            ahorro = round(MINUTOS_EVALUACION_MANUAL - prom_val, 1) if prom_val is not None else None
+            return Impacto(
+                minutos_evaluacion_manual=MINUTOS_EVALUACION_MANUAL, fuente_referencia_manual=FUENTE_EVALUACION_MANUAL,
+                casos=casos, analisis_promedio_s=round(sum(analisis) / len(analisis), 1) if analisis else None,
+                validacion_promedio_min=prom_val, ahorro_promedio_min=ahorro,
+                ahorro_porcentaje=round(ahorro / MINUTOS_EVALUACION_MANUAL * 100, 1) if ahorro is not None else None,
+            )
 
     def listar_alertas(self) -> List[Alerta]:
         with self._lock:
@@ -1276,20 +1673,62 @@ class ServicioCasos:
         with self._lock:
             return self.rag.buscar(consulta, top_k=top_k)
 
-    def exportar_excel(self, id_caso: str) -> io.BytesIO:
-        """Exporta el expediente completo a formato Microsoft Excel (.xlsx)."""
-        from backend.app.services.exportador_excel import generar_excel_caso
+    def exportar_excel(self, id_caso: str) -> Tuple[io.BytesIO, str]:
+        """
+        Llena la hoja oficial de Jabil 16-PE80-6500-00014-H (.xlsm). Si el caso pertenece a una foto con
+        varios operadores, el archivo incluye una hoja de evaluación por cada uno.
+        Devuelve (contenido, nombre de archivo).
+        """
+        from backend.app.services.exportador_hoja_14h import OperadorExport, generar_hoja_14h
 
+        if not PLANTILLA_14H.is_file():
+            raise VisionNoDisponible(
+                f"No se encontró la plantilla oficial en {PLANTILLA_14H}. Copia el archivo 16-PE80-6500-00014-H.xlsm "
+                "a la carpeta plantillas/ o define ERGOAI_PLANTILLA_14H.")
         with self._lock:
             caso = self.obtener(id_caso)
-            if not caso.validacion.aprobado_e_implementado:
-                raise DatosInvalidos(
-                    f"El informe de {id_caso} no puede generarse hasta que todas las recomendaciones "
-                    "estén aprobadas e implementadas en piso de producción."
-                )
-            entradas = self.ledger.listar(id_caso)
-            bitacora_hash = entradas[-1].hash if entradas else None
-            return generar_excel_caso(caso, bitacora_hash)
+            ids = caso.grupo.casos if caso.grupo else [id_caso]
+            operadores = []
+            for id_op in ids:
+                detalle = caso if id_op == id_caso else self.obtener(id_op)
+                if not detalle.validacion.aprobado_e_implementado:
+                    raise DatosInvalidos(
+                        f"El informe de {id_op} no puede generarse hasta que todas las recomendaciones "
+                        "estén aprobadas e implementadas en piso de producción.")
+                almacenado = self._cargar(id_op)
+                aprobadores = [r.aprobado_por for r in almacenado.recomendaciones if r.aprobado_por]
+                operadores.append(OperadorExport(
+                    caso=detalle, realizado_por=aprobadores[0] if aprobadores else USUARIO_POR_DEFECTO,
+                    fotos=self._fotos_para_hoja(almacenado, detalle)))
+            contenido = generar_hoja_14h(PLANTILLA_14H.read_bytes(), operadores, self.config.get_nom036_tables())
+            base = caso.grupo.id_grupo if caso.grupo else id_caso
+            self.ledger.registrar(operadores[0].realizado_por, "hoja_14h_exportada", base, id_caso,
+                                  despues=f"16-PE80-6500-00014-H · {len(operadores)} operador(es)")
+            return io.BytesIO(contenido), f"16-PE80-6500-00014-H_{base}.xlsm"
+
+    def _fotos_para_hoja(self, caso: CasoAlmacenado, detalle: CasoDetalle) -> List[Tuple[bytes, int, int, str]]:
+        """Fotos ya anonimizadas, con el esqueleto dibujado, para la hoja 'Fotos de la estacion'."""
+        try:
+            import cv2
+            from backend.app.vision.annotador import anotar_esqueleto
+        except ImportError:
+            return []
+        fotos = []
+        for imagen in caso.imagenes:
+            ruta = self.mgr.get_case_dir(caso.id_caso) / "inputs" / imagen.url
+            img = cv2.imread(str(ruta))
+            if img is None:
+                continue
+            if imagen.puntos:
+                lateral = imagen.vista == "lateral" and detalle.reba is not None
+                img = anotar_esqueleto(img, imagen.puntos,
+                                       reba_final=detalle.reba.final if lateral else None,
+                                       reba_nivel=detalle.reba.nivel if lateral else None)
+            ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+            if ok:
+                h, w = img.shape[:2]
+                fotos.append((buf.tobytes(), w, h, f"{caso.id_caso} · vista {imagen.vista}"))
+        return fotos
 
     def exportar_pdf(self, id_caso: str) -> io.BytesIO:
         """Exporta el informe oficial a formato Adobe PDF (.pdf)."""

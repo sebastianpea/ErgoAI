@@ -26,8 +26,8 @@ export function GraficaResidual({ residual }: { residual: Residual }) {
           <div key={s.segmento} className="barra-fila">
             <span className="barra-etiqueta">{ETIQUETA_SEGMENTO[s.segmento]}</span>
             <div className="barra-par">
-              <div className="barra" style={{ width: `${(s.antes / max) * 100}%`, background: COLOR_SEMAFORO.gris }}>{s.antes}</div>
-              <div className="barra" style={{ width: `${(s.despues / max) * 100}%`, background: "var(--jabil-cyan)" }}>{s.despues}</div>
+              <div className="barra-valor" style={{ width: `${(s.antes / max) * 100}%`, background: COLOR_SEMAFORO.gris }}>{s.antes}</div>
+              <div className="barra-valor" style={{ width: `${(s.despues / max) * 100}%`, background: "var(--jabil-cyan)" }}>{s.despues}</div>
             </div>
           </div>
         ))}

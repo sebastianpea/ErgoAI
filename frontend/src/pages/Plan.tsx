@@ -37,6 +37,7 @@ export function Plan() {
     qc.invalidateQueries({ queryKey: ["casos"] });
     qc.invalidateQueries({ queryKey: ["alertas"] });
     qc.invalidateQueries({ queryKey: ["bitacora"] });
+    qc.invalidateQueries({ queryKey: ["impacto"] });
   };
 
   const handleDescargarExcel = async () => {

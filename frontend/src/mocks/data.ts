@@ -4,6 +4,7 @@ import type {
   CambioPropuesto, CasoDetalle, ContextoTarea, Imagen, NivelControl, Punto, Recomendacion, TipoCambio,
 } from "../types/caso";
 import type { Alerta } from "../types/alerta";
+import { HOJA_14H_VACIA } from "../lib/hoja14h";
 
 export type CasoMock = Omit<CasoDetalle, "validacion">;
 
@@ -58,7 +59,7 @@ const num = (parametro: string, etiqueta: string, unidad: string, actual: number
 
 const contexto: ContextoTarea = {
   carga_kg: 16, carga_brusca: false, agarre: "regular", actividad: 1, apoyo_unilateral: false,
-  muneca_grados: null, altura_trabajo_cm: null,
+  muneca_grados: null, altura_trabajo_cm: null, personas_en_carga: 1,
   modificadores: {
     tronco_torsion_o_inclinacion: true, cuello_torsion_o_inclinacion: true, hombro_elevado: false,
     brazo_abducido_o_rotado: false, brazo_apoyado: false, muneca_desviada_o_torcida: false,
@@ -72,6 +73,10 @@ const casoBase: CasoMock = {
   fecha: "2026-11-06T10:00:00-06:00",
   imagenes: [lateral, frontal, cenital],
   contexto,
+  evaluacion_previa: { segmentos: { tronco: 2, cuello: 1, piernas: 1, brazo: 3, antebrazo: 1 }, reba_final: 7 },
+  metricas: { creado_en: null, analisis_ms: null, primera_decision_en: null, validado_en: null },
+  hoja_14h: HOJA_14H_VACIA,
+  grupo: null,
   angulos: [
     { segmento: "tronco", lado: null, vista: "lateral", angulo_grados: 34.2, puntaje_reba: 3, modificadores: ["torsión"], estado: "ok", puntaje_previo: 2 },
     { segmento: "cuello", lado: null, vista: "lateral", angulo_grados: 22.5, puntaje_reba: 2, modificadores: [], estado: "revisar", puntaje_previo: 1 },

@@ -1,0 +1,49 @@
+flowchart TD
+    subgraph Entradas["1. Entradas (6 Casos Jabil)"]
+        F1["Foto Frontal (sin rostro)"]
+        F2["Foto Lateral / Costado"]
+        F3["Foto Vista Aérea"]
+        META["Parámetros operativos (tarea, peso kg, frecuencia, altura mesa)"]
+    end
+
+    subgraph Vision["2. Motor de Visión Computacional Multi-Vista"]
+        MP["YOLOX + RTMPose WholeBody-133 (ONNX)"]
+        GEOM["Cálculo vectorial de ángulos y zonas de alcance 1-5"]
+    end
+
+    subgraph Determinista["3. Motores Deterministas (cero alucinación)"]
+        REBA["Calculadora REBA (Tablas A, B, C)"]
+        NOM["Calculadora NOM-036-1 (5 hojas Strategy)"]
+        LAW["Evaluador Ley Silla STPS (7 factores)"]
+        EAWS["Calculadora EAWS"]
+        RES["Simulador de Riesgo Residual"]
+    end
+
+    subgraph AgenteIA["4. Agente Inteligente ErgoAI"]
+        RAG["RAG en memoria (BM25 + ceguera inducida)"]
+        LLM["Generador de recomendaciones jerarquizadas"]
+    end
+
+    subgraph HITL["5. Validación del Especialista (Human-in-the-Loop)"]
+        UI["Consola interactiva (aprobar/editar/rechazar)"]
+        AUDIT["Bitácora inmutable SHA-256 (hash chaining)"]
+    end
+
+    subgraph Salidas["6. Salidas y Entregables Oficiales"]
+        PDF["Informe de Evaluación Ergonómica PDF"]
+        XLSM["Autollenado Jabil 16-PE80-6500-00014-H.xlsm"]
+    end
+
+    F1 & F2 & F3 --> MP
+    MP --> GEOM
+    GEOM --> REBA
+    GEOM & META --> NOM
+    GEOM --> LAW
+    GEOM --> EAWS
+    REBA & NOM & LAW & EAWS --> RES
+    RAG --> LLM
+    RES --> LLM
+    LLM --> UI
+    UI <-->|"Registra cada edición"| AUDIT
+    UI -->|"Aprobación humana obligatoria"| PDF
+    UI -->|"Aprobación humana obligatoria"| XLSM

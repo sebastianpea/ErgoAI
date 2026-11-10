@@ -22,3 +22,8 @@ frontend/dist/
 
 # Modelos ONNX de visión (~150 MB). Se descargan con: python -m backend.app.vision.modelos
 models/
+
+# Plantilla oficial de Jabil: material del reto, no se publica (reglas de la competencia)
+plantillas/*.xlsm
+plantillas/*.xlsx
+16-PE80-6500-00014-H*.xlsm

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type FotosNuevoCaso } from "../api";
-import type { ContextoTarea, TipoTarea, Vista } from "../types/caso";
+import type { ContextoTarea, EvaluacionPrevia, TipoTarea, Vista } from "../types/caso";
+import { CamposReferencia, REFERENCIA_VACIA } from "../components/FormReferencia";
 import { ETIQUETA_TAREA } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
 import { Encabezado } from "../components/Encabezado";
@@ -115,7 +116,17 @@ export function NuevoCaso() {
   const [estacion, setEstacion] = useState("");
   const [tarea, setTarea] = useState<TipoTarea>("levantamiento");
   const [contexto, setContexto] = useState<ContextoTarea>(CONTEXTO_VACIO);
+  const [referencia, setReferencia] = useState<EvaluacionPrevia>(REFERENCIA_VACIA);
   const [fotos, setFotos] = useState<Partial<Record<Vista, File>>>({});
+  const [evaluarTodos, setEvaluarTodos] = useState(false);
+
+  // "Levantamiento entre 2 personas" es un levantamiento con dos personas en la carga (hoja Equipo (3)).
+  const opcionTarea = tarea === "levantamiento" && contexto.personas_en_carga >= 2 ? "levantamiento_equipo" : tarea;
+  const elegirTarea = (valor: string) => {
+    const enEquipo = valor === "levantamiento_equipo";
+    setTarea(enEquipo ? "levantamiento" : (valor as TipoTarea));
+    setContexto(c => ({ ...c, personas_en_carga: enEquipo ? 2 : 1 }));
+  };
 
   // Control del modal de cámara integrado
   const [modalCamara, setModalCamara] = useState<{
@@ -129,11 +140,14 @@ export function NuevoCaso() {
   });
 
   const crear = useMutation({
-    mutationFn: () => api.crearCaso({ estacion: estacion.trim(), tipo_tarea: tarea, contexto }, fotos as FotosNuevoCaso),
+    mutationFn: () => api.crearCaso(
+      { estacion: estacion.trim(), tipo_tarea: tarea, contexto, evaluacion_previa: referencia, evaluar_todos: evaluarTodos },
+      fotos as FotosNuevoCaso),
     onSuccess: ({ id }) => {
       qc.invalidateQueries({ queryKey: ["casos"] });
       qc.invalidateQueries({ queryKey: ["alertas"] });
       qc.invalidateQueries({ queryKey: ["bitacora"] });
+      qc.invalidateQueries({ queryKey: ["impacto"] });
       navegar(`/casos/${id}`);
     },
   });
@@ -193,13 +207,35 @@ export function NuevoCaso() {
           <div className="campos">
             <label>Estación<input value={estacion} onChange={e => setEstacion(e.target.value)} placeholder="Ej. Línea 2 · Estación 04" required minLength={3} /></label>
             <label>Tipo de tarea
-              <select value={tarea} onChange={e => setTarea(e.target.value as TipoTarea)}>
-                {(Object.keys(ETIQUETA_TAREA) as TipoTarea[]).map(t => <option key={t} value={t}>{ETIQUETA_TAREA[t]}</option>)}
+              <select value={opcionTarea} onChange={e => elegirTarea(e.target.value)}>
+                {(Object.keys(ETIQUETA_TAREA) as TipoTarea[]).flatMap(t => [
+                  <option key={t} value={t}>{ETIQUETA_TAREA[t]}</option>,
+                  ...(t === "levantamiento"
+                    ? [<option key="levantamiento_equipo" value="levantamiento_equipo">Levantamiento entre 2 personas (equipo)</option>]
+                    : []),
+                ])}
               </select>
             </label>
           </div>
+          <label className="casilla-linea">
+            <input type="checkbox" checked={evaluarTodos} onChange={e => setEvaluarTodos(e.target.checked)} />
+            <span>
+              <strong>Evaluar a todas las personas detectadas.</strong> Si la foto lateral tiene a varios operadores
+              (p. ej. una carga entre dos personas), se crea un caso por cada uno, con su propio REBA y
+              recomendaciones. Se emparejan de izquierda a derecha entre vistas; puedes corregirlo después.
+            </span>
+          </label>
           <p className="etiqueta-campo">Datos que no salen de la foto</p>
           <CamposContexto valor={contexto} onChange={setContexto} />
+        </div>
+
+        <div className="tarjeta">
+          <h2>Estudio de referencia de Jabil (opcional)</h2>
+          <p className="sutil">
+            Puntajes REBA del estudio previo de la estación. El sistema los compara con lo que mide en la foto y
+            marca cada diferencia como hallazgo de auditoría. Se pueden capturar después.
+          </p>
+          <CamposReferencia valor={referencia} onChange={setReferencia} />
         </div>
 
         {crear.isError && <p className="aviso error">No se creó el caso: {crear.error.message}</p>}

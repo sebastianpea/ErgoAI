@@ -48,6 +48,11 @@
     "lower_arm": { "flexion_range": [60, 100] },
     "wrist": { "limit": 15 }
   },
+  "frontal_view_thresholds_deg": {
+    "_nota": "Detección automática de modificadores REBA en la vista frontal. El especialista puede desmarcarlos.",
+    "upper_arm_abduction": 20,
+    "trunk_side_bending": 10
+  },
   "table_a_matrix": {
     "_indices": "[tronco 1-5][cuello 1-3][piernas 1-4]",
     "values": [

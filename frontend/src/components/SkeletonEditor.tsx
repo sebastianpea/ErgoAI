@@ -31,7 +31,21 @@ export function SkeletonEditor({
   const [puntos, setPuntos] = useState<Punto[]>(imagen.puntos);
   const puntosRef = useRef(puntos);
   const [arrastrando, setArrastrando] = useState<number | null>(null);
+  // Comparar valores, no referencias: un refetch idéntico no debe borrar una edición local.
+  const origen = JSON.stringify([imagen.url, imagen.vista, imagen.ancho, imagen.alto,
+    imagen.puntos.map(p => [p.id, p.x, p.y, p.confianza, p.corregido])]);
+  const [origenAnterior, setOrigenAnterior] = useState(origen);
+  if (origen !== origenAnterior) {
+    setOrigenAnterior(origen);
+    setPuntos(imagen.puntos);
+    puntosRef.current = imagen.puntos;
+    setArrastrando(null);
+  }
 
+  const dentroDeImagen = (p: Punto) => Number.isFinite(p.x) && Number.isFinite(p.y)
+    && p.x >= 0 && p.y >= 0 && p.x <= imagen.ancho && p.y <= imagen.alto;
+  const fiable = (p: Punto) => p.corregido || (Number.isFinite(p.confianza)
+    && p.confianza >= confianzaMinima && p.confianza <= 1);
   const porId = useMemo(() => new Map(puntos.map(p => [p.id, p])), [puntos]);
   const r = Math.max(imagen.ancho, imagen.alto) * 0.008;
 
@@ -51,7 +65,7 @@ export function SkeletonEditor({
   };
 
   const alMover = (e: React.PointerEvent) => {
-    if (arrastrando === null) return;
+    if (!editable || arrastrando === null) return;
     const p = aCoordenadasImagen(e);
     if (!p) return;
     actualizar(puntosRef.current.map(k => (k.id === arrastrando ? { ...k, ...p, corregido: true } : k)));
@@ -60,6 +74,24 @@ export function SkeletonEditor({
   const alSoltar = () => {
     if (arrastrando === null) return;
     setArrastrando(null);
+    if (editable) onCommit?.(puntosRef.current);
+  };
+
+  const alTecla = (e: React.KeyboardEvent, k: Punto) => {
+    if (!editable) return;
+    const direccion: Record<string, [number, number]> = {
+      ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
+    };
+    const delta = direccion[e.key];
+    if (!delta) return;
+    e.preventDefault();
+    const paso = e.shiftKey ? 10 : 1;
+    actualizar(puntosRef.current.map(p => p.id === k.id ? {
+      ...p,
+      x: Math.min(imagen.ancho, Math.max(0, p.x + delta[0] * paso)),
+      y: Math.min(imagen.alto, Math.max(0, p.y + delta[1] * paso)),
+      corregido: true,
+    } : p));
     onCommit?.(puntosRef.current);
   };
 
@@ -86,7 +118,7 @@ export function SkeletonEditor({
 
       {ARISTAS.map(({ a, b, segmento }) => {
         const p = porId.get(a), q = porId.get(b);
-        if (!p || !q) return null;
+        if (!p || !q || !dentroDeImagen(p) || !dentroDeImagen(q) || !fiable(p) || !fiable(q)) return null;
         return (
           <line key={`${a}-${b}`} x1={p.x} y1={p.y} x2={q.x} y2={q.y}
             stroke={colorSegmento?.(segmento) ?? "var(--jabil-cyan)"}
@@ -94,14 +126,18 @@ export function SkeletonEditor({
         );
       })}
 
-      {puntos.map(k => {
-        const baja = k.confianza < confianzaMinima && !k.corregido;
+      {puntos.filter(dentroDeImagen).map(k => {
+        const baja = !fiable(k);
         return (
           <circle key={k.id} cx={k.x} cy={k.y} r={arrastrando === k.id ? r * 1.5 : r}
             fill={baja ? "white" : k.corregido ? "var(--jabil-navy)" : "var(--jabil-cyan)"}
             stroke={baja ? "#E8790C" : "white"} strokeWidth={r * 0.35}
             strokeDasharray={baja ? `${r * 0.6} ${r * 0.4}` : undefined}
             style={{ cursor: editable ? "grab" : "default" }}
+            tabIndex={editable ? 0 : undefined}
+            role={editable ? "button" : undefined}
+            aria-label={`Punto ${k.id}. Confianza ${Number.isFinite(k.confianza) ? `${(k.confianza * 100).toFixed(0)}%` : "desconocida"}${k.corregido ? ". Corregido" : ""}${editable ? ". Mover con flechas; Mayús para 10 píxeles." : ""}`}
+            onKeyDown={e => alTecla(e, k)}
             onPointerDown={e => {
               if (!editable) return;
               (e.target as Element).setPointerCapture(e.pointerId);
