@@ -12,7 +12,7 @@ type Ok = { ok: true };
 
 // ---------- Backend real ----------
 
-/** Convierte el `detail` de FastAPI (texto o lista de errores de validación) en un mensaje legible. */
+/** Convierte el `detail` de FastAPI o errores de proxy (Nginx) en un mensaje legible y amigable. */
 function mensajeError(status: number, cuerpo: string): string {
   try {
     const { detail } = JSON.parse(cuerpo);
@@ -21,7 +21,16 @@ function mensajeError(status: number, cuerpo: string): string {
       return detail.map((d: { msg?: string }) => (d.msg ?? "").replace(/^Value error, /, "")).join("; ");
     }
   } catch {
-    // cuerpo no JSON: se usa tal cual
+    // Si la respuesta es una página de error HTML (ej. Nginx 504 Gateway Time-out o 502 Bad Gateway)
+    if (cuerpo.includes("<html") || cuerpo.includes("<!DOCTYPE") || status === 504 || status === 502) {
+      if (status === 504) {
+        return "Tiempo de espera agotado (504 Gateway Timeout). La inferencia de IA o el servidor está tomando más tiempo del esperado en procesar. Espera un momento y vuelve a intentarlo.";
+      }
+      if (status === 502) {
+        return "El backend no está respondiendo (502 Bad Gateway). Verifica que el contenedor del backend esté en ejecución.";
+      }
+      return `Error del servidor web (${status}). Por favor intenta de nuevo.`;
+    }
   }
   return `Error ${status}${cuerpo ? `: ${cuerpo}` : ""}`;
 }

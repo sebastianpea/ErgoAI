@@ -959,6 +959,7 @@ class ServicioCasos:
             retriever = InMemoryNormativeRetriever(self.config.get_jabil_reglas())
             llm = LLMFactory.get_llm()
             agente = ErgoAIAgent(llm=llm, retriever=retriever)
+            base_prop = propuestas_base[0] if propuestas_base else None
 
             try:
                 res_ia = agente.evaluar_caso(
@@ -969,11 +970,17 @@ class ServicioCasos:
                     riesgo_determinista=riesgo_determinista,
                 )
             except Exception as exc:
-                log.error("Error en evaluación con ErgoAI para caso %s: %s", id_caso, exc)
-                raise DatosInvalidos(
-                    f"No se pudo generar la recomendación con ErgoAI: {exc}. "
-                    "Verifica que Ollama esté corriendo y tenga el modelo descargado."
-                ) from exc
+                log.warning(
+                    "Aviso: La consulta al LLM tardó o falló (%s). Aplicando fallback determinista normativo para caso %s.",
+                    exc,
+                    id_caso,
+                )
+                res_ia = {
+                    "titulo": base_prop["titulo"] if base_prop else "Ajuste Ergonómico según Estándar Jabil",
+                    "descripcion_tecnica": base_prop["texto"] if base_prop else "Optimizar la postura de trabajo ciñéndose a las tolerancias de la NOM-036-1-STPS-2018.",
+                    "fundamento_normativo": base_prop["referencia"] if base_prop else ref_jabil.get("work_height", "NOM-036-1-STPS-2018"),
+                    "nivel_control": "ingenieria" if (reba_score >= 8 or (evaluacion.reba and evaluacion.reba.nivel in ("alto", "muy_alto"))) else "administrativo",
+                }
 
             # 3. Validar coherencia biomecánica (Guardrail Anti-Alucinaciones) y actualizar tarjeta sin duplicar
             titulo_ia = str(res_ia.get("titulo", "")).strip()

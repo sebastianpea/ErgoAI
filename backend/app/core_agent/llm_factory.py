@@ -94,6 +94,7 @@ class LLMFactory:
                 base_url=base_url,
                 model=modelo,
                 temperature=temperature,
+                sync_client_kwargs={"timeout": 60.0},
             )
 
         elif provider == "GEMINI":
