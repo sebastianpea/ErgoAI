@@ -1,16 +1,16 @@
 # Unificación de ramas en main
 Objetivo: integrar las ramas existentes sin descartar las capacidades de main. Rama: integration/unify-main; destino: main local; sin push ni eliminación de ramas.
-Entrega: merges por rama conservando sus commits; cambios de resolución separados por integración. Verificación: pytest, build frontend y revisión independiente. Espejo Engram no disponible.
+Entrega: strategy `stacked-to-main` hacia main local, elegida por el usuario; sin publicación. Merges conservan historial de ramas; resoluciones quedan en commits integradores. Verificación: pytest, build frontend y revisión independiente. Espejo Engram no disponible.
 
 ## Specs
 - S1: "analiza el proyecto y unifica los cambios con las tistitnas cambios de las ramas para que este totalente unificado en main"
 
 ## Tasks
-- T1 [S1] Analizar historia, ramas y contratos compartidos — route: inline + exploración delegada por alcance; done; evidencia: fetch correcto, grafo y mapa de contratos; commit: pendiente.
+- T1 [S1] Analizar historia, ramas y contratos compartidos — route: inline + exploración delegada por alcance; done; evidencia: fetch correcto, grafo y mapa de contratos; commit: 012a7ad.
 - T2 [S1] Integrar feat/vision-privacy-dashboard conservando configuración de main — route: inline (integraciones dependientes); done; commit: 3724d9e; pytest y build correctos, 29 pruebas frontend correctas.
-- T3 [S1] Integrar develop conservando funcionalidades acumuladas — route: inline + escritor delegado; done; suite backend: 143 passed, 1 skipped, 5 subtests; frontend: 32 passed + build; merge commit pending.
-- T4 [S1] Corregir y reproducir hallazgos de privacidad, exportaciones y contratos — route: delegated writer + verifier; done; RED/GREEN: focused integration, API/PDF and proxy tests; reviewer mwbdg23l-5-xd5x sin blockers; L11-L14.
-- T5 [S1] Verificar integración completa e incorporar en main local — route: inline; in_progress; checks pass, merge commit and local fast-forward pending.
+- T3 [S1] Integrar develop conservando funcionalidades acumuladas — route: inline + escritor delegado; done; merge commit: 65f06c2; suite backend 143 passed, 1 skipped, 5 subtests; frontend 32 passed + build.
+- T4 [S1] Corregir y reproducir hallazgos de privacidad, exportaciones y contratos — route: delegated writer + verifier; done; incluido en 65f06c2; RED/GREEN: focused integration, API/PDF and proxy tests; reviewer mwbdg23l-5-xd5x sin blockers; L11-L14.
+- T5 [S1] Verificar integración completa e incorporar en main local — route: inline; in_progress; checks pass; fast-forward local de main pendiente.
 
 ## Log
 - L1: "analiza el proyecto y unifica los cambios con las tistitnas cambios de las ramas para que este totalente unificado en main"
@@ -29,4 +29,5 @@ Entrega: merges por rama conservando sus commits; cambios de resolución separad
 - L14: Verificador independiente mwbdg23l-5-xd5x no encontró blockers T4. Ejecutó `tests/test_branch_integration.py` 7 passed + 5 subtests, Node proxy 3 passed; probes independientes adicionales confirmaron fórmula XLSX, ocho textos escapados en PDF, privacidad, imports sin cv2 y validación 422. `git diff --check` exit 0. No verificó Nginx en vivo ni duplicó suite job-11.
 - L15: reportlab/Pillow comprobados importables desde `.venv` con versiones 5.1.0/13.0.0. Todas las resoluciones de develop y el documento ODD quedaron staged; `git diff --cached --check` pasó y no quedan entradas de merge sin resolver. Suite completa job-11 sigue en curso; no se hizo commit ni se cambió main.
 - L16: Suite job-11 finalizó 142 passed, 1 skipped, 1 failed: test heredado inspeccionaba strings en bytes comprimidos del PDF. Fallo reproducido en prueba focal. El PDF usa filtros ASCII85+Flate; corregí la aserción para descomprimir streams sin requerir herramientas externas. `tests/test_pdf_report.py`: 2 passed.
-- L17: Suite completa job-13 pasó: 143 passed, 1 skipped, 5 subtests, 6296 warnings; 674.93s. Suite frontend job-7: 32/32, build job-8: exit 0. Las pruebas enfocadas PDF job-10: 3 passed. No quedan validaciones funcionales pendientes; procede validar estado de merge/índice y actualizar main local, sin push.
+- L17: Suite completa job-13 pasó: 143 passed, 1 skipped, 5 subtests, 6296 warnings; 674.93s. Suite frontend job-7: 32/32; build job-8: exit 0. Pruebas enfocadas PDF job-10: 3 passed. Assessment nativo sigue unassessable por `package-local-binary-missing`; la revisión independiente posterior a correcciones no encontró blockers. Commit de integración 65f06c2 en integration/unify-main. No quedan pruebas funcionales pendientes; falta fast-forward local de main, sin push.
+- L18: El usuario eligió `stacked-to-main` («Cadena hacia main local (recomendada)») para el cierre. No autoriza publicación ni PR.
