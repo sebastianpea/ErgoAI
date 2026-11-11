@@ -10,8 +10,8 @@ Entrega: strategy `stacked-to-main` hacia main local, elegida por el usuario; si
 - T2 [S1] Integrar feat/vision-privacy-dashboard conservando configuración de main — route: inline (integraciones dependientes); done; commit: 3724d9e; pytest y build correctos, 29 pruebas frontend correctas.
 - T3 [S1] Integrar develop conservando funcionalidades acumuladas — route: inline + escritor delegado; done; merge commit: 65f06c2; suite backend 143 passed, 1 skipped, 5 subtests; frontend 32 passed + build.
 - T4 [S1] Corregir y reproducir hallazgos de privacidad, exportaciones y contratos — route: delegated writer + verifier; done; incluido en 65f06c2; RED/GREEN: focused integration, API/PDF and proxy tests; reviewer mwbdg23l-5-xd5x sin blockers; L11-L14.
-- T5 [S1] Verificar y añadir las modificaciones concurrentes autorizadas — route: inline; in_progress; route ID validation y parser de PDF requieren pruebas.
-- T6 [S1] Incorporar integración verificada en main local — route: inline; pending; fast-forward solo tras T5.
+- T5 [S1] Verificar y añadir las modificaciones concurrentes autorizadas — route: inline; done; commit c95b3e0; tests/differential en L21.
+- T6 [S1] Incorporar integración verificada en main local — route: inline; in_progress; candidate `c95b3e0` listo para fast-forward, sin push.
 
 ## Log
 - L1: "analiza el proyecto y unifica los cambios con las tistitnas cambios de las ramas para que este totalente unificado en main"
@@ -34,4 +34,5 @@ Entrega: strategy `stacked-to-main` hacia main local, elegida por el usuario; si
 - L18: El usuario eligió `stacked-to-main` («Cadena hacia main local (recomendada)») para el cierre. No autoriza publicación ni PR.
 - L19: Tras commits `65f06c2` y `b03f164`, `git status` mostró dos modificaciones unstaged de origen desconocido: `backend/app/api/routes_reports.py` (añade `RutaParam(pattern=ID_PATRON)` a rutas legacy informe/Excel Jabil) y `tests/test_pdf_report.py` (tolerancia adicional al descomprimir streams PDF). Preservados sin stage/commit al detectarlos.
 - L20: El usuario autorizó conservar, verificar e incluir ambos cambios. T5 cubre rechazo de IDs inválidos en rutas de informes, comportamiento válido heredado y robustez del parser PDF.
-- L21: `tests/test_routes_reports.py` focal: 2 passed (422 para ID inválido sin invocar exporter; IDs válidos preservan PDF/XLSX y headers); `tests/test_pdf_report.py`: 2 passed. Differential público contra base `b03f164` en scratch aislado: entradas inválidas recibían 200 y activaban exporter en base, ahora 422 sin invocarlo; IDs válidos siguen 200 con los mismos tipos de contenido. Diferencia intencional/autorizada. Scratch eliminado. Pendiente diff check/commit.
+- L21: `tests/test_routes_reports.py` focal: 2 passed (422 para ID inválido sin invocar exporter; IDs válidos preservan PDF/XLSX y headers); `tests/test_pdf_report.py`: 2 passed. Differential público contra base `b03f164` en scratch aislado: entradas inválidas recibían 200 y activaban exporter en base, ahora 422 sin invocarlo; IDs válidos siguen 200 con los mismos tipos de contenido. Diferencia intencional/autorizada. Scratch eliminado. Commit c95b3e0.
+- L22: Todos los remotos solicitados son ancestros de `integration/unify-main`; base `main=f34252a` es ancestro y `git merge-base --is-ancestor main integration/unify-main` pasó. Estrategia de entrega `stacked-to-main` elegida. Candidate actual `c95b3e0`; T6 hará únicamente `git merge --ff-only`, sin push.
