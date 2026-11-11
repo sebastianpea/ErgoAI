@@ -582,11 +582,25 @@ class ServicioCasos:
             and r.implementacion != "denegada"
             for r in recs)
         falta = riesgo_alto and not ing_aprobada
+        por_autorizar = sum(r.implementacion == "pendiente_autorizacion" for r in recs)
+        por_implementar = sum(r.implementacion == "por_implementar" for r in recs)
+        implementadas = sum(r.implementacion == "implementada" for r in recs)
+        aprobadas = sum(r.estado in ("aprobada", "editada_aprobada") and r.implementacion != "denegada" for r in recs)
+
+        aprobado_e_implementado = (
+            pendientes == 0
+            and not falta
+            and por_autorizar == 0
+            and por_implementar == 0
+            and (implementadas > 0 or not aprobadas)
+        )
+
         return Validacion(
             pendientes=pendientes, falta_ingenieria=falta, completa=pendientes == 0 and not falta,
-            por_autorizar=sum(r.implementacion == "pendiente_autorizacion" for r in recs),
-            por_implementar=sum(r.implementacion == "por_implementar" for r in recs),
-            implementadas=sum(r.implementacion == "implementada" for r in recs),
+            por_autorizar=por_autorizar,
+            por_implementar=por_implementar,
+            implementadas=implementadas,
+            aprobado_e_implementado=aprobado_e_implementado,
         )
 
     # ================= Estado de sesión y alertas =================
@@ -1133,6 +1147,7 @@ class ServicioCasos:
             retriever = InMemoryNormativeRetriever(self.config.get_jabil_reglas())
             llm = LLMFactory.get_llm()
             agente = ErgoAIAgent(llm=llm, retriever=retriever)
+            base_prop = propuestas_base[0] if propuestas_base else None
 
             try:
                 res_ia = agente.evaluar_caso(
@@ -1143,11 +1158,17 @@ class ServicioCasos:
                     riesgo_determinista=riesgo_determinista,
                 )
             except Exception as exc:
-                log.error("Error en evaluación con ErgoAI para caso %s: %s", id_caso, exc)
-                raise DatosInvalidos(
-                    f"No se pudo generar la recomendación con ErgoAI: {exc}. "
-                    "Verifica que Ollama esté corriendo y tenga el modelo descargado."
-                ) from exc
+                log.warning(
+                    "Aviso: La consulta al LLM tardó o falló (%s). Aplicando fallback determinista normativo para caso %s.",
+                    exc,
+                    id_caso,
+                )
+                res_ia = {
+                    "titulo": base_prop["titulo"] if base_prop else "Ajuste Ergonómico según Estándar Jabil",
+                    "descripcion_tecnica": base_prop["texto"] if base_prop else "Optimizar la postura de trabajo ciñéndose a las tolerancias de la NOM-036-1-STPS-2018.",
+                    "fundamento_normativo": base_prop["referencia"] if base_prop else ref_jabil.get("work_height", "NOM-036-1-STPS-2018"),
+                    "nivel_control": "ingenieria" if (reba_score >= 8 or (evaluacion.reba and evaluacion.reba.nivel in ("alto", "muy_alto"))) else "administrativo",
+                }
 
             # 3. Validar coherencia biomecánica (Guardrail Anti-Alucinaciones) y actualizar tarjeta sin duplicar
             titulo_ia = str(res_ia.get("titulo", "")).strip()
@@ -1532,3 +1553,33 @@ class ServicioCasos:
         """Consulta el motor RAG léxico en memoria RAM sin bases de datos."""
         with self._lock:
             return self.rag.buscar(consulta, top_k=top_k)
+
+    def exportar_excel(self, id_caso: str) -> io.BytesIO:
+        """Exporta el expediente completo a formato Microsoft Excel (.xlsx)."""
+        from backend.app.services.exportador_excel import generar_excel_caso
+
+        with self._lock:
+            caso = self.obtener(id_caso)
+            if not caso.validacion.aprobado_e_implementado:
+                raise DatosInvalidos(
+                    f"El informe de {id_caso} no puede generarse hasta que todas las recomendaciones "
+                    "estén aprobadas e implementadas en piso de producción."
+                )
+            entradas = self.ledger.listar(id_caso)
+            bitacora_hash = entradas[-1].hash if entradas else None
+            return generar_excel_caso(caso, bitacora_hash)
+
+    def exportar_pdf(self, id_caso: str) -> io.BytesIO:
+        """Exporta el informe oficial a formato Adobe PDF (.pdf)."""
+        from backend.app.services.exportador_pdf import generar_pdf_caso
+
+        with self._lock:
+            caso = self.obtener(id_caso)
+            if not caso.validacion.aprobado_e_implementado:
+                raise DatosInvalidos(
+                    f"El informe de {id_caso} no puede generarse hasta que todas las recomendaciones "
+                    "estén aprobadas e implementadas en piso de producción."
+                )
+            entradas = self.ledger.listar(id_caso)
+            bitacora_hash = entradas[-1].hash if entradas else None
+            return generar_pdf_caso(caso, bitacora_hash)

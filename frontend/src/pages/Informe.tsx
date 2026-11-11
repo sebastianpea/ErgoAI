@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
@@ -22,18 +23,67 @@ export function Informe() {
   const caso = useQuery({ queryKey: ["caso", id], queryFn: () => api.obtenerCaso(id) });
   const bitacora = useQuery({ queryKey: ["bitacora", id], queryFn: () => api.bitacora(id) });
 
+  const [descargandoExcel, setDescargandoExcel] = useState(false);
+  const [descargandoPdf, setDescargandoPdf] = useState(false);
+  const [errorDescarga, setErrorDescarga] = useState<string | null>(null);
+
+  const handleDescargarExcel = async () => {
+    setDescargandoExcel(true);
+    setErrorDescarga(null);
+    try {
+      await api.descargarExcel(id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorDescarga(msg);
+    } finally {
+      setDescargandoExcel(false);
+    }
+  };
+
+  const handleDescargarPdf = async () => {
+    setDescargandoPdf(true);
+    setErrorDescarga(null);
+    try {
+      await api.descargarPdf(id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorDescarga(msg);
+    } finally {
+      setDescargandoPdf(false);
+    }
+  };
+
   if (caso.isLoading) return <p className="cargando">Cargando…</p>;
   if (caso.error || !caso.data) return <p className="aviso error">{(caso.error as Error)?.message ?? "Caso no encontrado"}</p>;
   const c = caso.data;
 
-  // Invariante 1: nada sale al informe sin validación del especialista (también si se entra por URL).
-  if (!c.validacion.completa) {
+  // Invariante 1: nada sale al informe sin validación total e implementación (también si se entra por URL).
+  const v = c.validacion;
+  const todoListo = Boolean(
+    v.aprobado_e_implementado ?? (
+      v.pendientes === 0 &&
+      v.por_autorizar === 0 &&
+      v.por_implementar === 0 &&
+      !v.falta_ingenieria
+    )
+  );
+
+  if (!todoListo) {
     return (
       <section>
-        <p className="aviso error">
-          El informe de {c.id_caso} no está disponible: el plan de acción aún no está validado por el especialista.
-        </p>
-        <Link className="boton primario" to={`/casos/${id}/plan`}>Ir a plan y validación</Link>
+        <div className="tarjeta corte">
+          <h2>Informe no disponible</h2>
+          <p className="aviso error">
+            El informe oficial de <strong>{c.id_caso}</strong> no puede generarse hasta que todas las recomendaciones estén <strong>aprobadas por Ergonomía, autorizadas por Ingeniería e implementadas en piso</strong>.
+          </p>
+          <div className="resumen-plan" style={{ margin: "1.25rem 0" }}>
+            <div><span className="cifra-valor">{v.pendientes}</span><span className="cifra-texto">Por validar (ergonomía)</span></div>
+            <div><span className="cifra-valor">{v.por_autorizar}</span><span className="cifra-texto">Por autorizar (ingeniería)</span></div>
+            <div><span className="cifra-valor">{v.por_implementar}</span><span className="cifra-texto">Por implementar</span></div>
+            <div><span className="cifra-valor">{v.implementadas}</span><span className="cifra-texto">Implementadas</span></div>
+          </div>
+          <Link className="boton primario" to={`/casos/${id}/plan`}>← Ir al Plan para completar aprobaciones e implementación</Link>
+        </div>
       </section>
     );
   }
@@ -46,10 +96,45 @@ export function Informe() {
 
   return (
     <article className="informe">
-      <div className="no-imprimir acciones">
-        <Link className="boton" to={`/casos/${id}/plan`}>← Plan</Link>
-        <button className="primario" onClick={() => window.print()}>Imprimir / Guardar PDF</button>
+      {/* Barra de Acciones Superior */}
+      <div className="no-imprimir acciones" style={{ marginBottom: "1.25rem", display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+        <Link className="boton" to={`/casos/${id}/plan`}>← Volver al Plan</Link>
+
+        <button
+          type="button"
+          className="boton primario"
+          onClick={handleDescargarExcel}
+          disabled={descargandoExcel}
+          title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
+        >
+          {descargandoExcel ? "Generando Excel…" : "Guardar como Excel"}
+        </button>
+
+        <button
+          type="button"
+          className="boton primario"
+          onClick={handleDescargarPdf}
+          disabled={descargandoPdf}
+          title="Guardar informe oficial en formato Adobe PDF (.pdf)"
+        >
+          {descargandoPdf ? "Generando PDF…" : "Guardar como PDF"}
+        </button>
+
+        <button
+          type="button"
+          className="boton"
+          onClick={() => window.print()}
+          title="Abrir cuadro de diálogo de impresión"
+        >
+          Imprimir
+        </button>
       </div>
+
+      {errorDescarga && (
+        <div className="aviso error no-imprimir" style={{ marginBottom: "1rem" }}>
+          {errorDescarga}
+        </div>
+      )}
 
       <header className="informe-cabecera">
         <div>
@@ -77,85 +162,36 @@ export function Informe() {
         ))}
       </div>
 
-      <h2>2. Ángulos por segmento</h2>
-      <TablaAngulos angulos={c.angulos} />
+      <h2>2. Ángulos medidos</h2>
+      <TablaAngulos angulos={c.angulos} editable={false} />
 
-      <h2>3. Evaluación</h2>
-      <div className="rejilla">
-        {c.reba && <div><h3>REBA</h3><DesgloseReba reba={c.reba} /></div>}
-        {c.nom036 && <div><h3>NOM-036-1-STPS-2018</h3><DesgloseNom036 nom={c.nom036} /></div>}
-      </div>
+      <h2>3. Evaluación REBA</h2>
+      {c.reba ? <DesgloseReba reba={c.reba} /> : <p className="sutil">Sin cálculo REBA disponible.</p>}
 
-      <h2>4. Hallazgos</h2>
-      <ul className="hallazgos">
-        {vigentes.map(h => (
-          <li key={h.id} className={`sev-${h.severidad}`}>
-            {h.mensaje}{h.referencia && <span className="referencia"> · {h.referencia}</span>}
-          </li>
-        ))}
-      </ul>
+      <h2>4. Evaluación NOM-036-1-STPS-2018</h2>
+      {c.nom036 ? <DesgloseNom036 nom={c.nom036} /> : <p className="sutil">Tarea sin evaluación NOM-036.</p>}
 
-      <h2>5. Plan de acción aprobado</h2>
+      <h2>5. Plan de mitigación aprobado e implementado</h2>
       <div className="tabla-scroll">
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Control</th>
-              <th>Acción y Cita Normativa RAG</th>
-              <th>Ajustes</th>
-              <th>Responsable</th>
-              <th>Compromiso</th>
-              <th>Estado</th>
+              <th>#</th><th>Nivel</th><th>Tipo</th><th>Recomendación</th><th>Ajuste de parámetros</th>
+              <th>Responsable</th><th>Compromiso</th><th>Implementación</th>
             </tr>
           </thead>
           <tbody>
-            {aprobadas.map((r, i) => (
+            {aprobadas.map(r => (
               <tr key={r.id}>
-                <td>{i + 1}</td>
+                <td className="mono">{r.id}</td>
+                <td><span className="etiqueta-control">{r.nivel_control}</span></td>
+                <td>{ETIQUETA_TIPO_CAMBIO[r.tipo_cambio]}</td>
                 <td>
-                  <strong>{r.nivel_control === "ingenieria" ? "Ingeniería" : "Administrativo"}</strong>
-                  <br />
-                  <span className="sutil">{ETIQUETA_TIPO_CAMBIO[r.tipo_cambio]}</span>
-                </td>
-                <td>
-                  <div style={{ marginBottom: "6px" }}>
-                    <strong>{r.titulo}.</strong> {r.texto}
-                  </div>
-                  {(r.layer_autocad || r.hoja_excel_jabil || r.tramite_moc) && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", margin: "6px 0" }}>
-                      {r.layer_autocad && (
-                        <span style={{ fontSize: "0.72rem", padding: "2px 6px", borderRadius: "3px", background: "#e0f2fe", color: "#0369a1", fontWeight: 600 }}>
-                          📐 AutoCAD: Layer {r.layer_autocad}
-                        </span>
-                      )}
-                      {r.hoja_excel_jabil && (
-                        <span style={{ fontSize: "0.72rem", padding: "2px 6px", borderRadius: "3px", background: "#dcfce7", color: "#15803d", fontWeight: 600 }}>
-                          📊 Excel: {r.hoja_excel_jabil}
-                        </span>
-                      )}
-                      {r.tramite_moc && (
-                        <span style={{ fontSize: "0.72rem", padding: "2px 6px", borderRadius: "3px", background: "#fef3c7", color: "#b45309", fontWeight: 600 }}>
-                          🛡️ {r.tramite_moc}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <div
-                    className="informe-justificacion-rag"
-                    style={{
-                      marginTop: "8px",
-                      padding: "8px 10px",
-                      background: "#f0f9ff",
-                      borderLeft: "3.5px solid #0284c7",
-                      borderRadius: "4px",
-                      fontSize: "0.82rem",
-                      lineHeight: "1.45",
-                      color: "#0f172a",
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, color: "#0369a1", marginBottom: "3px", fontSize: "0.8rem" }}>
-                      📑 Justificación RAG (16-PE30-6500-00023 / NOM-036) · Párrafo Completo Citado:
+                  <strong>{r.titulo}</strong>
+                  <div className="sutil">{r.texto}</div>
+                  <div className="rec-rag-justificacion-destacada">
+                    <div className="etiqueta-justificacion">
+                      <span>Fundamento Normativo (NOM-036 / Jabil)</span>
                     </div>
                     <div>
                       {r.justificacion_rag || `Referencia: ${r.referencia}`}
@@ -205,6 +241,29 @@ export function Informe() {
       <div className="firmas">
         <div>Especialista en ergonomía</div>
         <div>Ingeniería industrial</div>
+      </div>
+
+      {/* Barra de Acciones Inferior al cierre del informe */}
+      <div className="no-imprimir acciones" style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid var(--borde)", display: "flex", justifyContent: "flex-end", gap: "0.6rem" }}>
+        <button
+          type="button"
+          className="boton primario"
+          onClick={handleDescargarExcel}
+          disabled={descargandoExcel}
+          title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
+        >
+          {descargandoExcel ? "Generando Excel…" : "Guardar como Excel"}
+        </button>
+
+        <button
+          type="button"
+          className="boton primario"
+          onClick={handleDescargarPdf}
+          disabled={descargandoPdf}
+          title="Guardar informe oficial en formato Adobe PDF (.pdf)"
+        >
+          {descargandoPdf ? "Generando PDF…" : "Guardar como PDF"}
+        </button>
       </div>
     </article>
   );

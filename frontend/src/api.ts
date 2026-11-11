@@ -14,7 +14,7 @@ type Ok = { ok: true };
 
 // ---------- Backend real ----------
 
-/** Convierte el `detail` de FastAPI (texto o lista de errores de validación) en un mensaje legible. */
+/** Convierte el `detail` de FastAPI o errores de proxy (Nginx) en un mensaje legible y amigable. */
 function mensajeError(status: number, cuerpo: string): string {
   try {
     const { detail } = JSON.parse(cuerpo);
@@ -23,7 +23,16 @@ function mensajeError(status: number, cuerpo: string): string {
       return detail.map((d: { msg?: string }) => (d.msg ?? "").replace(/^Value error, /, "")).join("; ");
     }
   } catch {
-    // cuerpo no JSON: se usa tal cual
+    // Si la respuesta es una página de error HTML (ej. Nginx 504 Gateway Time-out o 502 Bad Gateway)
+    if (cuerpo.includes("<html") || cuerpo.includes("<!DOCTYPE") || status === 504 || status === 502) {
+      if (status === 504) {
+        return "Tiempo de espera agotado (504 Gateway Timeout). La inferencia de IA o el servidor está tomando más tiempo del esperado en procesar. Espera un momento y vuelve a intentarlo.";
+      }
+      if (status === 502) {
+        return "El backend no está respondiendo (502 Bad Gateway). Verifica que el contenedor del backend esté en ejecución.";
+      }
+      return `Error del servidor web (${status}). Por favor intenta de nuevo.`;
+    }
   }
   return `Error ${status}${cuerpo ? `: ${cuerpo}` : ""}`;
 }
@@ -61,8 +70,46 @@ export interface DatosNuevoCaso {
 }
 export type FotosNuevoCaso = Partial<Record<Vista, File>> & { lateral: File };
 
+export interface ResumenAnguloRapido {
+  segmento: string;
+  grados: number | null;
+  puntaje_reba: number;
+  estado: "ok" | "revisar" | "sin_dato";
+  confianza: number;
+}
+
+export interface AnalisisRapidoResponse {
+  ok: boolean;
+  personas: number;
+  rostro_anonimizado: boolean;
+  reba_final: number;
+  reba_nivel: string;
+  grupo_a: number;
+  grupo_b: number;
+  tabla_c: number;
+  angulos: ResumenAnguloRapido[];
+  imagen_anotada_b64: string | null;
+  tiempo_ms: number;
+  advertencia?: string | null;
+}
+
 const real = {
   estadoVision: () => http<{ disponible: boolean; detalle: string }>("/vision/estado"),
+  /** Analiza una fotografía al instante con YOLOX + RTMPose y calcula el REBA Score. */
+  analizarRapido: async (foto: File, tipoTarea = "levantamiento", cargaKg = 0): Promise<AnalisisRapidoResponse> => {
+    const form = new FormData();
+    form.append("foto", foto);
+    form.append("tipo_tarea", tipoTarea);
+    form.append("carga_kg", cargaKg.toString());
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/vision/analizar-rapido`, { method: "POST", body: form });
+    } catch {
+      throw new Error(`No se pudo conectar con el backend en ${API_URL}. ¿Está en ejecución?`);
+    }
+    if (!res.ok) throw new Error(mensajeError(res.status, await res.text()));
+    return res.json() as Promise<AnalisisRapidoResponse>;
+  },
   /** Sube las fotos; el backend detecta la pose, calcula REBA y propone recomendaciones. */
   crearCaso: async (datos: DatosNuevoCaso, fotos: FotosNuevoCaso) => {
     const form = new FormData();
@@ -113,6 +160,42 @@ const real = {
   bitacora: (idCaso?: string) =>
     http<EntradaBitacora[]>(idCaso ? `/bitacora?id_caso=${seg(idCaso)}` : "/bitacora"),
   verificarIntegridad: () => http<ResultadoIntegridad>("/bitacora/verificar"),
+  descargarExcel: async (idCaso: string) => {
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/casos/${seg(idCaso)}/exportar/excel`);
+    } catch {
+      throw new Error(`No se pudo conectar con el backend (${API_URL}). ¿Está en ejecución?`);
+    }
+    if (!res.ok) throw new Error(mensajeError(res.status, await res.text()));
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Informe_Ergonomico_${idCaso}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+  descargarPdf: async (idCaso: string) => {
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/casos/${seg(idCaso)}/exportar/pdf`);
+    } catch {
+      throw new Error(`No se pudo conectar con el backend (${API_URL}). ¿Está en ejecución?`);
+    }
+    if (!res.ok) throw new Error(mensajeError(res.status, await res.text()));
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Informe_Ergonomico_${idCaso}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
 };
 
 // ---------- Simulación en memoria (no recalcula REBA; eso solo lo hace el backend) ----------
@@ -164,11 +247,25 @@ function validacion(c: CasoMock): Validacion {
     r.nivel_control === "ingenieria" && (r.estado === "aprobada" || r.estado === "editada_aprobada")
     && r.implementacion !== "denegada");
   const falta_ingenieria = riesgoAlto && !ingenieria;
+  const por_autorizar = recs.filter(r => r.implementacion === "pendiente_autorizacion").length;
+  const por_implementar = recs.filter(r => r.implementacion === "por_implementar").length;
+  const implementadas = recs.filter(r => r.implementacion === "implementada").length;
+  const aprobadas = recs.filter(r => (r.estado === "aprobada" || r.estado === "editada_aprobada") && r.implementacion !== "denegada").length;
+
+  const aprobado_e_implementado = (
+    pendientes === 0
+    && !falta_ingenieria
+    && por_autorizar === 0
+    && por_implementar === 0
+    && (implementadas > 0 || aprobadas === 0)
+  );
+
   return {
     pendientes, falta_ingenieria, completa: pendientes === 0 && !falta_ingenieria,
-    por_autorizar: recs.filter(r => r.implementacion === "pendiente_autorizacion").length,
-    por_implementar: recs.filter(r => r.implementacion === "por_implementar").length,
-    implementadas: recs.filter(r => r.implementacion === "implementada").length,
+    por_autorizar,
+    por_implementar,
+    implementadas,
+    aprobado_e_implementado,
   };
 }
 
@@ -189,6 +286,27 @@ const rolEs = (rol: string) => actorActual().rol === rol;
 
 const mock: typeof real = {
   estadoVision: () => copia({ disponible: false, detalle: "Modo simulado: la visión artificial requiere el backend real." }),
+  analizarRapido: () =>
+    copia<AnalisisRapidoResponse>({
+      ok: true,
+      personas: 1,
+      rostro_anonimizado: true,
+      reba_final: 4,
+      reba_nivel: "medio",
+      grupo_a: 3,
+      grupo_b: 2,
+      tabla_c: 4,
+      tiempo_ms: 150,
+      angulos: [
+        { segmento: "tronco", grados: 22.5, puntaje_reba: 2, estado: "ok", confianza: 0.9 },
+        { segmento: "cuello", grados: 15, puntaje_reba: 1, estado: "ok", confianza: 0.9 },
+        { segmento: "brazo", grados: 48, puntaje_reba: 3, estado: "ok", confianza: 0.9 },
+        { segmento: "antebrazo", grados: 85, puntaje_reba: 1, estado: "ok", confianza: 0.9 },
+        { segmento: "muneca", grados: 18, puntaje_reba: 2, estado: "ok", confianza: 0.9 },
+        { segmento: "pierna", grados: 10, puntaje_reba: 1, estado: "ok", confianza: 0.9 },
+      ],
+      imagen_anotada_b64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='400' height='300' fill='%23163E6A'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif'>Simulacion Captura ErgoAI</text></svg>",
+    }),
   crearCaso: () => falla("Crear casos desde fotos requiere el backend real (npm run dev, sin modo simulado)."),
   impacto: () => copia<Impacto>({
     minutos_evaluacion_manual: 45, fuente_referencia_manual: "Modo simulado", casos: [],
@@ -410,6 +528,30 @@ const mock: typeof real = {
       anterior = hash;
     }
     return copia({ ok: true, total: store.bitacora.length, primera_falla: null });
+  },
+
+  descargarExcel: async (idCaso: string) => {
+    const blob = new Blob([`Informe Simulador ErgoAI - Caso ${idCaso}`], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Informe_Ergonomico_${idCaso}_simulado.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  descargarPdf: async (idCaso: string) => {
+    const blob = new Blob([`Informe PDF Simulador ErgoAI - Caso ${idCaso}`], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Informe_Ergonomico_${idCaso}_simulado.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },
 };
 

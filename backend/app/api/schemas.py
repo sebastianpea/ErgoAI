@@ -163,6 +163,7 @@ class Validacion(BaseModel):
     por_autorizar: int = 0
     por_implementar: int = 0
     implementadas: int = 0
+    aprobado_e_implementado: bool = False
 
 
 class CasoResumen(BaseModel):
@@ -508,3 +509,27 @@ class RespuestaRAG(BaseModel):
     resultados: List[FragmentoNormativo]
     tiempo_ms: float
 
+
+# ---------- Análisis Rápido con Cámara / Foto Instantánea ----------
+
+class ResumenAnguloRapido(BaseModel):
+    segmento: str
+    grados: Optional[float] = None
+    puntaje_reba: int
+    estado: Literal["ok", "revisar", "sin_dato"]
+    confianza: float
+
+
+class AnalisisRapidoResponse(BaseModel):
+    ok: bool
+    personas: int
+    rostro_anonimizado: bool
+    reba_final: int
+    reba_nivel: str
+    grupo_a: int
+    grupo_b: int
+    tabla_c: int
+    angulos: List[ResumenAnguloRapido]
+    imagen_anotada_b64: Optional[str] = None
+    tiempo_ms: float
+    advertencia: Optional[str] = None

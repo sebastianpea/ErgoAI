@@ -134,6 +134,17 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
             self.assertEqual(r.status_code, 503)
             self.assertFalse(self.c.get("/vision/estado").json()["disponible"])
 
+    def test_analizar_rapido_foto(self):
+        archivos = {"foto": ("operador.jpg", _foto_jpg(), "image/jpeg")}
+        r = self.c.post("/vision/analizar-rapido", files=archivos, data={"tipo_tarea": "levantamiento", "carga_kg": 10.0})
+        self.assertEqual(r.status_code, 200, r.text)
+        datos = r.json()
+        self.assertTrue(datos["ok"])
+        self.assertGreaterEqual(datos["reba_final"], 1)
+        self.assertIn("imagen_anotada_b64", datos)
+        self.assertTrue(datos["imagen_anotada_b64"].startswith("data:image/jpeg;base64,"))
+        self.assertGreater(len(datos["angulos"]), 0)
+
 
 class TestMunecaDesdeMano(unittest.TestCase):
     def test_muneca_alineada_y_flexionada(self):

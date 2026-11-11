@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Path as RutaParam, Query, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from backend.app.api.schemas import (
     Alerta, EstadoVision, ID_PATRON, ResultadoIntegridad,
@@ -46,6 +46,23 @@ def excel_jabil(id_caso: str):
         xlsx_path,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         filename=f"evaluacion_jabil_{id_caso}.xlsx",
+    )
+
+
+@router.get("/casos/{id_caso}/exportar/excel")
+def exportar_excel(request: Request, id_caso: str = RutaParam(pattern=ID_PATRON)):
+    return StreamingResponse(
+        svc(request).exportar_excel(id_caso),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=Informe_Ergonomico_{id_caso}.xlsx"},
+    )
+
+
+@router.get("/casos/{id_caso}/exportar/pdf")
+def exportar_pdf(request: Request, id_caso: str = RutaParam(pattern=ID_PATRON)):
+    return StreamingResponse(
+        svc(request).exportar_pdf(id_caso), media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Informe_Ergonomico_{id_caso}.pdf"},
     )
 
 

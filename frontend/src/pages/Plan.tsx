@@ -26,6 +26,10 @@ export function Plan() {
   const qc = useQueryClient();
   const sesion = useSesion();
   const [creando, setCreando] = useState(false);
+  const [descargandoExcel, setDescargandoExcel] = useState(false);
+  const [descargandoPdf, setDescargandoPdf] = useState(false);
+  const [errorDescarga, setErrorDescarga] = useState<string | null>(null);
+
   const { data: caso, isLoading, error } = useQuery({ queryKey: ["caso", id], queryFn: () => api.obtenerCaso(id) });
 
   const refrescar = () => {
@@ -34,6 +38,32 @@ export function Plan() {
     qc.invalidateQueries({ queryKey: ["alertas"] });
     qc.invalidateQueries({ queryKey: ["bitacora"] });
     qc.invalidateQueries({ queryKey: ["impacto"] });
+  };
+
+  const handleDescargarExcel = async () => {
+    setDescargandoExcel(true);
+    setErrorDescarga(null);
+    try {
+      await api.descargarExcel(id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorDescarga(msg);
+    } finally {
+      setDescargandoExcel(false);
+    }
+  };
+
+  const handleDescargarPdf = async () => {
+    setDescargandoPdf(true);
+    setErrorDescarga(null);
+    try {
+      await api.descargarPdf(id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorDescarga(msg);
+    } finally {
+      setDescargandoPdf(false);
+    }
   };
 
   const accion = useMutation({
@@ -68,18 +98,54 @@ export function Plan() {
   const v = caso.validacion;
   const ocupado = accion.isPending;
 
+  // El informe formal solo se permite si TODO está aprobado por Ergonomía, autorizado por Ingeniería e implementado
+  const todoListo = Boolean(
+    v.aprobado_e_implementado ?? (
+      v.pendientes === 0 &&
+      v.por_autorizar === 0 &&
+      v.por_implementar === 0 &&
+      !v.falta_ingenieria
+    )
+  );
+
   return (
     <section>
       <Encabezado
         eyebrow="Recomendaciones y validación"
         titulo={<>Plan de acción <span className="ligero">· {caso.id_caso}</span></>}
-        subtitulo="El agente propone, el especialista decide. Los cambios en planta requieren además autorización de Ingeniería."
+        subtitulo="El agente propone, el especialista decide. Los cambios en planta requieren además autorización de Ingeniería e implementación en piso."
         acciones={<>
           <Link className="boton claro" to={`/casos/${id}`}>← Análisis</Link>
-          {v.completa ? (
-            <Link className="boton primario" to={`/casos/${id}/informe`}>Generar informe</Link>
+          {todoListo ? (
+            <>
+              <Link className="boton primario" to={`/casos/${id}/informe`}>Ver informe</Link>
+              <button
+                type="button"
+                className="boton"
+                onClick={handleDescargarExcel}
+                disabled={descargandoExcel}
+                title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
+              >
+                {descargandoExcel ? "Generando Excel…" : "Guardar como Excel"}
+              </button>
+              <button
+                type="button"
+                className="boton"
+                onClick={handleDescargarPdf}
+                disabled={descargandoPdf}
+                title="Guardar informe oficial en formato Adobe PDF (.pdf)"
+              >
+                {descargandoPdf ? "Generando PDF…" : "Guardar como PDF"}
+              </button>
+            </>
           ) : (
-            <button className="primario" disabled title="Completa la validación del plan primero">Generar informe</button>
+            <button
+              className="primario"
+              disabled
+              title="Para generar el informe o exportar, todas las recomendaciones deben estar aprobadas e implementadas en piso."
+            >
+              Generar informe
+            </button>
           )}
         </>}
       />
@@ -91,6 +157,49 @@ export function Plan() {
         <div><span className="cifra-valor">{v.implementadas}</span><span className="cifra-texto">Implementadas</span></div>
       </div>
 
+      {errorDescarga && (
+        <div className="aviso error">
+          {errorDescarga}
+        </div>
+      )}
+
+      {todoListo && (
+        <div className="tarjeta corte" style={{ borderLeft: "4px solid #2E9E5B", marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <p className="eyebrow" style={{ color: "#2E9E5B" }}>Plan de acción completado e implementado</p>
+              <h3 style={{ margin: "0.2rem 0" }}>Todas las recomendaciones fueron aprobadas e implementadas en planta</h3>
+              <p className="sutil" style={{ margin: 0 }}>
+                El caso cumple con todos los requisitos legales de la NOM-036-1-STPS-2018 y el estándar global Jabil.
+              </p>
+            </div>
+            <div className="acciones">
+              <button
+                type="button"
+                className="boton primario"
+                onClick={handleDescargarExcel}
+                disabled={descargandoExcel}
+                title="Guardar expediente completo en formato Microsoft Excel (.xlsx)"
+              >
+                {descargandoExcel ? "Generando Excel…" : "Guardar como Excel"}
+              </button>
+              <button
+                type="button"
+                className="boton primario"
+                onClick={handleDescargarPdf}
+                disabled={descargandoPdf}
+                title="Guardar informe oficial en formato Adobe PDF (.pdf)"
+              >
+                {descargandoPdf ? "Generando PDF…" : "Guardar como PDF"}
+              </button>
+              <Link className="boton" to={`/casos/${id}/informe`}>
+                Ver Informe Web
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {accion.isError && <p className="aviso error">No se guardó la acción: {accion.error.message}</p>}
       {sesion.esIngenieria && (
         <p className="aviso ok">
@@ -98,7 +207,9 @@ export function Plan() {
           {v.por_autorizar === 0 && " En este caso no hay ninguno pendiente."}
         </p>
       )}
-      {v.pendientes > 0 && <p className="aviso">Faltan {v.pendientes} recomendación(es) por validar.</p>}
+      {v.pendientes > 0 && <p className="aviso">Faltan {v.pendientes} recomendación(es) por validar (Ergonomía).</p>}
+      {v.por_autorizar > 0 && <p className="aviso">Faltan {v.por_autorizar} recomendación(es) por autorizar (Ingeniería).</p>}
+      {v.por_implementar > 0 && <p className="aviso">Faltan {v.por_implementar} recomendación(es) por marcar como implementadas en piso.</p>}
       {v.falta_ingenieria && v.pendientes === 0 && (
         <p className="aviso error">
           Riesgo alto o muy alto: se requiere al menos un control de ingeniería aprobado y no denegado (NOM-036-1-STPS-2018).
@@ -121,7 +232,7 @@ export function Plan() {
         }}>
           <div>
             <h3 style={{ margin: "0 0 4px 0", color: "#1e3a8a", display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>✨</span> Generador Inteligente ErgoAI (NOM-036 + Jabil)
+              Generador Inteligente ErgoAI (NOM-036 + Jabil)
             </h3>
             <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155" }}>
               Consulta el corpus normativo en RAM y genera una recomendación estructurada de control con LLM local.
@@ -143,9 +254,9 @@ export function Plan() {
             onClick={() => generarIA.mutate()}
           >
             {generarIA.isPending
-              ? "⏳ Consultando normativa..."
+              ? "Consultando normativa…"
               : v.pendientes === 0
-                ? "🔄 Actualizar fundamentación con ErgoAI"
+                ? "Actualizar fundamentación con ErgoAI"
                 : "Generar Plan de Mitigación con ErgoAI"}
           </button>
         </div>
@@ -161,7 +272,6 @@ export function Plan() {
           alignItems: "center",
           gap: "12px"
         }}>
-          <span style={{ fontSize: "1.4rem" }}>🔄</span>
           <span>ErgoAI está consultando la NOM-036 y estándares Jabil...</span>
         </div>
       )}

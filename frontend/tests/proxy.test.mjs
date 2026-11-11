@@ -99,18 +99,40 @@ test('existing namespaces preserve path/query and document requests; real fronte
 
 test('Nginx matches the API namespaces without rewriting proxy paths and retains SPA fallback', () => {
   const source = readFileSync(new URL('../nginx.conf', import.meta.url), 'utf8');
-  const location = source.match(/location\s+~\s+(\S+)\s*\{([^}]+)\}/);
-  assert.ok(location, 'bounded regex proxy location');
-  const pattern = new RegExp(location[1]);
-  for (const prefix of prefixes) {
-    for (const path of [`/${prefix}`, `/${prefix}/proxy-fixture`]) assert.ok(pattern.test(path), path);
-    assert.equal(pattern.test(`/${prefix}-frontend`), false);
+  const locations = [...source.matchAll(/location\s+(?:(~\*|~|\^~|=)\s+)?(\S+)\s*\{/g)].map((match, i, all) => ({
+    modifier: match[1], path: match[2], body: source.slice(match.index, all[i + 1]?.index ?? source.length),
+  })).filter(location => ['~*', '~', '^~'].includes(location.modifier));
+  // Nginx ^~ prefixes win before ordered regex locations, including the static-extension regex.
+  function select(path) {
+    return locations.find(l => l.modifier === '^~' && path.startsWith(l.path))
+      ?? locations.find(l => l.modifier.startsWith('~') && new RegExp(l.path, l.modifier === '~*' ? 'i' : '').test(path));
   }
-  for (const path of ['/metricas/dashboard', '/metricas/impacto', '/casos/PROXY-FIXTURE/plan']) assert.ok(pattern.test(path), path);
-  for (const path of ['/', '/frontend-proxy-fixture']) assert.equal(pattern.test(path), false);
-  assert.match(location[2], /proxy_pass\s+http:\/\/backend:8000\s*;/);
-  assert.doesNotMatch(location[2], /\brewrite\b/);
-  assert.match(location[2], /proxy_http_version\s+1\.1\s*;/);
-  assert.match(location[2], /proxy_set_header Host \$host;/);
+  for (const path of ['/media/C-001/lateral.jpg', '/media/C-001/lateral.png', '/metricas/dashboard', '/metricas/impacto', '/vision/analizar-rapido', '/casos/C-001/exportar/excel', '/casos/C-001/exportar/pdf']) {
+    const location = select(path);
+    assert.ok(location, path);
+    assert.match(location.body, /proxy_pass\s+http:\/\/backend:8000\s*;/);
+    assert.doesNotMatch(location.body, /\brewrite\b/);
+    assert.match(location.body, /proxy_http_version\s+1\.1\s*;/);
+    assert.match(location.body, /proxy_set_header Host \$host;/);
+    if (!path.startsWith('/media/')) for (const timeout of ['connect', 'send', 'read']) assert.ok(location.body.includes(`proxy_${timeout}_timeout 300s;`));
+  }
+  for (const path of ['/casos/nuevo', '/casos/C-001/plan']) {
+    assert.match(select(path).body, /try_files \$uri \/index\.html;/);
+    assert.doesNotMatch(select(path).body, /proxy_pass/);
+  }
+  // The legacy PDF and the React page share this URL: only HTML navigations rewrite.
+  const informe = select('/casos/C-001/informe');
+  assert.match(informe.body, /if \(\$http_accept ~\* "text\/html"\)/);
+  assert.match(informe.body, /rewrite \^ \/index\.html last;/);
+  assert.match(informe.body, /proxy_pass http:\/\/backend:8000;/);
+  assert.doesNotMatch(informe.body, /try_files/);
+  for (const prefix of ['casos', 'alertas', 'bitacora']) {
+    const location = select(`/${prefix}`);
+    assert.match(location.body, /if \(\$http_accept ~\* "text\/html"\)/);
+    assert.match(location.body, /rewrite \^ \/index\.html last;/);
+    assert.match(location.body, /proxy_pass http:\/\/backend:8000;/);
+  }
+  for (const prefix of prefixes) assert.equal(select(`/${prefix}-frontend`), undefined);
+  assert.match(select('/assets/app.js').body, /try_files \$uri =404;/);
   assert.match(source, /location\s+\/\s*\{\s*try_files \$uri \$uri\/ \/index\.html;/);
 });

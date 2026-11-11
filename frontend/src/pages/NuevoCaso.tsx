@@ -8,6 +8,7 @@ import { ETIQUETA_TAREA } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
 import { Encabezado } from "../components/Encabezado";
 import { CONTEXTO_VACIO, CamposContexto } from "../components/FormContexto";
+import { CapturaCamaraModal } from "../components/CapturaCamaraModal";
 
 const VISTAS: { vista: Vista; titulo: string; ayuda: string; obligatoria: boolean }[] = [
   { vista: "lateral", titulo: "Lateral (costado)", ayuda: "Operador de perfil, de cuerpo completo. De aquí se miden los ángulos REBA.", obligatoria: true },
@@ -15,24 +16,95 @@ const VISTAS: { vista: Vista; titulo: string; ayuda: string; obligatoria: boolea
   { vista: "cenital", titulo: "Aérea (cenital)", ayuda: "Desde arriba: zonas de alcance y objetos sobre la mesa.", obligatoria: false },
 ];
 
-function SelectorFoto({ vista, titulo, ayuda, obligatoria, archivo, onElegir }: {
-  vista: Vista; titulo: string; ayuda: string; obligatoria: boolean; archivo?: File; onElegir: (f?: File) => void;
+function TarjetaSelectorFoto({
+  vista,
+  titulo,
+  ayuda,
+  obligatoria,
+  archivo,
+  onElegir,
+  onAbrirCamara,
+}: {
+  vista: Vista;
+  titulo: string;
+  ayuda: string;
+  obligatoria: boolean;
+  archivo?: File;
+  onElegir: (f?: File) => void;
+  onAbrirCamara: () => void;
 }) {
   const [vistaPrevia, setVistaPrevia] = useState<string>();
+
   useEffect(() => {
-    if (!archivo) { setVistaPrevia(undefined); return; }
+    if (!archivo) {
+      setVistaPrevia(undefined);
+      return;
+    }
     const url = URL.createObjectURL(archivo);
     setVistaPrevia(url);
     return () => URL.revokeObjectURL(url);
   }, [archivo]);
 
   return (
-    <label className={`selector-foto${archivo ? " con-foto" : ""}`}>
-      <span className="eyebrow">{titulo}{obligatoria ? " · obligatoria" : " · opcional"}</span>
-      {vistaPrevia ? <img src={vistaPrevia} alt={`Vista ${vista}`} /> : <span className="foto-vacia">Elegir foto</span>}
-      <span className="sutil">{archivo ? archivo.name : ayuda}</span>
-      <input type="file" accept="image/jpeg,image/png" onChange={e => onElegir(e.target.files?.[0])} />
-    </label>
+    <div className={`selector-foto-tarjeta corte ${archivo ? "con-foto" : ""}`}>
+      <div className="selector-foto-header">
+        <span className="eyebrow">{titulo}</span>
+        <span className={`indicador-obligatoria ${obligatoria ? "obligatoria" : "opcional"}`}>
+          {obligatoria ? "Obligatoria" : "Opcional"}
+        </span>
+      </div>
+
+      <div className="selector-foto-preview">
+        {vistaPrevia ? (
+          <img src={vistaPrevia} alt={`Vista ${vista}`} />
+        ) : (
+          <div className="foto-vacia">
+            <span className="foto-vacia-texto">Sin fotografía</span>
+          </div>
+        )}
+      </div>
+
+      <div className="selector-foto-info">
+        <p className="sutil selector-foto-nombre" title={archivo ? archivo.name : ayuda}>
+          {archivo ? archivo.name : ayuda}
+        </p>
+      </div>
+
+      <div className="selector-foto-acciones">
+        <button
+          type="button"
+          className="boton primario boton-accion-camara"
+          onClick={onAbrirCamara}
+          title={`Tomar fotografía en vivo con la cámara para vista ${vista}`}
+        >
+          {archivo ? "Retomar con cámara" : "Tomar con cámara"}
+        </button>
+
+        <label className="boton boton-accion-archivo" title="Seleccionar fotografía desde disco">
+          {archivo ? "Cambiar archivo" : "Subir archivo"}
+          <input
+            type="file"
+            accept="image/jpeg,image/png"
+            onChange={e => {
+              const f = e.target.files?.[0];
+              if (f) onElegir(f);
+            }}
+            style={{ display: "none" }}
+          />
+        </label>
+
+        {archivo && (
+          <button
+            type="button"
+            className="boton peligro boton-quitar-foto"
+            onClick={() => onElegir(undefined)}
+            title="Quitar esta fotografía"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -46,6 +118,17 @@ export function NuevoCaso() {
   const [contexto, setContexto] = useState<ContextoTarea>(CONTEXTO_VACIO);
   const [referencia, setReferencia] = useState<EvaluacionPrevia>(REFERENCIA_VACIA);
   const [fotos, setFotos] = useState<Partial<Record<Vista, File>>>({});
+
+  // Control del modal de cámara integrado
+  const [modalCamara, setModalCamara] = useState<{
+    abierto: boolean;
+    vista: Vista;
+    modo: "captura_simple" | "diagnostico_rapido";
+  }>({
+    abierto: false,
+    vista: "lateral",
+    modo: "captura_simple",
+  });
 
   const crear = useMutation({
     mutationFn: () => api.crearCaso(
@@ -61,12 +144,26 @@ export function NuevoCaso() {
 
   const listo = esErgonomia && vision.data?.disponible && estacion.trim().length >= 3 && !!fotos.lateral;
 
+  const handleRecibirFotoCamara = (archivo: File, vista: Vista) => {
+    setFotos(prev => ({ ...prev, [vista]: archivo }));
+  };
+
   return (
     <section>
       <Encabezado
         eyebrow="Visión artificial · YOLOX + RTMPose WholeBody-133"
         titulo="Nuevo caso desde fotos"
-        subtitulo="Sube las tomas de la estación. El sistema detecta la postura, calcula REBA y propone recomendaciones; tú revisas y decides."
+        subtitulo="Captura fotos con la cámara en vivo o súbelas desde disco. El sistema detecta la postura, calcula REBA y propone recomendaciones; tú revisas y decides."
+        acciones={
+          <button
+            type="button"
+            className="boton primario"
+            onClick={() => setModalCamara({ abierto: true, vista: "lateral", modo: "diagnostico_rapido" })}
+            title="Abre la cámara web para un diagnóstico ergonómico instantáneo"
+          >
+            Diagnóstico Rápido con Cámara
+          </button>
+        }
       />
 
       {vision.data && (
@@ -78,15 +175,20 @@ export function NuevoCaso() {
 
       <form onSubmit={e => { e.preventDefault(); if (listo) crear.mutate(); }}>
         <div className="tarjeta">
-          <h2>Fotografías</h2>
+          <h2>Fotografías de la Estación</h2>
           <div className="selector-fotos">
             {VISTAS.map(v => (
-              <SelectorFoto key={v.vista} {...v} archivo={fotos[v.vista]}
-                onElegir={f => setFotos(x => ({ ...x, [v.vista]: f }))} />
+              <TarjetaSelectorFoto
+                key={v.vista}
+                {...v}
+                archivo={fotos[v.vista]}
+                onElegir={f => setFotos(x => ({ ...x, [v.vista]: f }))}
+                onAbrirCamara={() => setModalCamara({ abierto: true, vista: v.vista, modo: "captura_simple" })}
+              />
             ))}
           </div>
           <p className="leyenda">
-            Los rostros se difuminan automáticamente antes de guardar la foto. Formatos JPG o PNG, máximo 15 MB.
+            Compatible con cámaras web en Windows y Linux. Los rostros se difuminan automáticamente antes de guardar la foto. Formatos JPG o PNG, máximo 15 MB.
           </p>
         </div>
 
@@ -118,9 +220,19 @@ export function NuevoCaso() {
           <button type="submit" className="primario" disabled={!listo || crear.isPending}>
             {crear.isPending ? "Analizando fotos…" : "Analizar y crear caso"}
           </button>
-          {!fotos.lateral && <span className="sutil">Falta la foto lateral.</span>}
+          {!fotos.lateral && <span className="sutil">Falta la foto lateral (tómala con la cámara o súbela como archivo).</span>}
         </div>
       </form>
+
+      {/* Modal de Cámara Web para Windows y Linux */}
+      {modalCamara.abierto && (
+        <CapturaCamaraModal
+          vistaObjetivo={modalCamara.vista}
+          modo={modalCamara.modo}
+          alCapturarFoto={handleRecibirFotoCamara}
+          alCerrar={() => setModalCamara(prev => ({ ...prev, abierto: false }))}
+        />
+      )}
     </section>
   );
 }

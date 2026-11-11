@@ -214,6 +214,7 @@ export interface Validacion {
   por_autorizar: number; // cambios en planta esperando a ingeniería
   por_implementar: number;
   implementadas: number;
+  aprobado_e_implementado?: boolean;
 }
 
 /** Estudio de referencia de Jabil (puntajes REBA capturados en piso). */
