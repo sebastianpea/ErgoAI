@@ -6,15 +6,15 @@ from __future__ import annotations
 
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from backend.app.core_ergonomics.cambios import CambioPropuesto
-from backend.app.core_ergonomics.modelos import ContextoTarea, Efecto, NivelReba, Segmento
+from backend.app.core_ergonomics.modelos import ContextoTarea, Efecto, Modificadores, NivelReba, Segmento
 from backend.app.settings import USUARIO_POR_DEFECTO
 
 Vista = Literal["lateral", "frontal", "cenital"]
 VISTAS: Tuple[Vista, ...] = ("lateral", "frontal", "cenital")
-TipoTarea = Literal["postura", "levantamiento", "transporte", "empuje_sin_auxiliar", "empuje_con_auxiliar"]
+TipoTarea = Literal["sin_clasificar", "postura", "levantamiento", "transporte", "empuje_sin_auxiliar", "empuje_con_auxiliar"]
 ColorNom = Literal["verde", "amarillo", "naranja", "rojo", "morado"]
 NivelControl = Literal["ingenieria", "administrativo"]
 EstadoRecomendacion = Literal["propuesta", "aprobada", "editada_aprobada", "rechazada"]
@@ -42,7 +42,7 @@ class Angulo(BaseModel):
     lado: Optional[Literal["izq", "der"]]
     vista: Vista
     angulo_grados: Optional[float]
-    puntaje_reba: int
+    puntaje_reba: Optional[int]
     modificadores: List[str]
     estado: Literal["ok", "revisar", "sin_dato"]
     motivo_estado: Optional[str] = None
@@ -230,6 +230,10 @@ class CasoDetalle(BaseModel):
     fecha: str
     imagenes: List[Imagen]
     contexto: ContextoTarea
+    contexto_faltante: List[str] = Field(default_factory=list)
+    assessment_status: Literal["incomplete", "ready", "legacy"] = "legacy"
+    risk_ready: bool = False
+    missing_evidence: List[str] = Field(default_factory=list)
     evaluacion_previa: EvaluacionPrevia
     angulos: List[Angulo]
     reba: Optional[ResultadoReba]
@@ -261,6 +265,8 @@ class CasoAlmacenado(BaseModel):
     fecha: str
     imagenes: List[Imagen]
     contexto: ContextoTarea = Field(default_factory=ContextoTarea)
+    contexto_faltante: List[str] = Field(default_factory=list)
+    evidence_version: int = 0
     evaluacion_previa: EvaluacionPrevia = Field(default_factory=EvaluacionPrevia)
     nom036: Optional[Nom036Captura] = None
     nom036_override: bool = False
@@ -387,7 +393,8 @@ class Impacto(BaseModel):
 
 
 class CorreccionContexto(Actor):
-    contexto: ContextoTarea
+    contexto: ContextoEntrada
+    tipo_tarea: Optional[TipoTarea] = None
     motivo: str = Field(min_length=3, max_length=2000)
 
 
@@ -400,12 +407,62 @@ class AtenderAlerta(Actor):
     pass
 
 
+class ModificadoresEntrada(BaseModel):
+    """Modificadores que pueden quedar desconocidos hasta la revisión de Ergonomía."""
+    model_config = ConfigDict(extra="forbid")
+
+    tronco_torsion_o_inclinacion: Optional[bool] = None
+    cuello_torsion_o_inclinacion: Optional[bool] = None
+    hombro_elevado: Optional[bool] = None
+    brazo_abducido_o_rotado: Optional[bool] = None
+    brazo_apoyado: Optional[bool] = None
+    muneca_desviada_o_torcida: Optional[bool] = None
+
+
+class ContextoEntrada(BaseModel):
+    """Entrada parcial; None significa desconocido, nunca una observación negativa."""
+    model_config = ConfigDict(extra="forbid")
+
+    carga_kg: Optional[float] = Field(None, ge=0)
+    carga_brusca: Optional[bool] = None
+    agarre: Optional[Literal["bueno", "regular", "malo", "inaceptable"]] = None
+    actividad: Optional[int] = Field(None, ge=0, le=3)
+    apoyo_unilateral: Optional[bool] = None
+    muneca_grados: Optional[float] = None
+    altura_trabajo_cm: Optional[float] = Field(None, gt=0)
+    modificadores: ModificadoresEntrada = Field(default_factory=ModificadoresEntrada)
+
+    def desconocidos(self) -> List[str]:
+        resultado = [k for k in ("carga_kg", "carga_brusca", "agarre", "actividad", "apoyo_unilateral")
+                     if getattr(self, k) is None]
+        resultado.extend(f"modificadores.{k}" for k, v in self.modificadores.model_dump().items() if v is None)
+        if self.altura_trabajo_cm is None:
+            resultado.append("altura_trabajo_cm")
+        return resultado
+
+    def normalizar(self) -> ContextoTarea:
+        base = ContextoTarea()
+        mods = self.modificadores.model_dump()
+        return ContextoTarea(
+            carga_kg=self.carga_kg if self.carga_kg is not None else base.carga_kg,
+            carga_brusca=self.carga_brusca if self.carga_brusca is not None else base.carga_brusca,
+            agarre=self.agarre if self.agarre is not None else base.agarre,
+            actividad=self.actividad if self.actividad is not None else base.actividad,
+            apoyo_unilateral=self.apoyo_unilateral if self.apoyo_unilateral is not None else base.apoyo_unilateral,
+            muneca_grados=self.muneca_grados,
+            altura_trabajo_cm=self.altura_trabajo_cm,
+            modificadores=Modificadores(**{
+                k: (v if v is not None else getattr(base.modificadores, k)) for k, v in mods.items()
+            }),
+        )
+
+
 class NuevoCaso(Actor):
     """Datos que acompañan a las fotos al crear un caso (campo `datos` del formulario multipart)."""
     estacion: str = Field(min_length=3, max_length=120)
-    tipo_tarea: TipoTarea = "postura"
+    tipo_tarea: TipoTarea = "sin_clasificar"
     tipo_operacion: Optional[str] = None
-    contexto: ContextoTarea = Field(default_factory=ContextoTarea)
+    contexto: ContextoEntrada = Field(default_factory=ContextoEntrada)
     evaluacion_previa: EvaluacionPrevia = Field(default_factory=EvaluacionPrevia)
 
     @model_validator(mode="before")
@@ -515,7 +572,7 @@ class RespuestaRAG(BaseModel):
 class ResumenAnguloRapido(BaseModel):
     segmento: str
     grados: Optional[float] = None
-    puntaje_reba: int
+    puntaje_reba: Optional[int] = None
     estado: Literal["ok", "revisar", "sin_dato"]
     confianza: float
 
@@ -524,11 +581,14 @@ class AnalisisRapidoResponse(BaseModel):
     ok: bool
     personas: int
     rostro_anonimizado: bool
-    reba_final: int
+    reba_final: Optional[int] = None
     reba_nivel: str
-    grupo_a: int
-    grupo_b: int
-    tabla_c: int
+    grupo_a: Optional[int] = None
+    grupo_b: Optional[int] = None
+    tabla_c: Optional[int] = None
+    assessment_status: Literal["incomplete", "ready"] = "incomplete"
+    risk_ready: bool = False
+    missing_evidence: List[str] = Field(default_factory=list)
     angulos: List[ResumenAnguloRapido]
     imagen_anotada_b64: Optional[str] = None
     tiempo_ms: float

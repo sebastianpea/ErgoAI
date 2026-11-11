@@ -33,6 +33,42 @@ ESQUELETO = {
 }
 
 
+def _contexto_confirmado(**cambios):
+    """Captura manual de la fixture; no son inferencias de la fotografía."""
+    return {
+        "carga_kg": 18, "carga_brusca": False, "agarre": "regular", "actividad": 1,
+        "apoyo_unilateral": False, "altura_trabajo_cm": 95,
+        "modificadores": {
+            "tronco_torsion_o_inclinacion": False, "cuello_torsion_o_inclinacion": False,
+            "hombro_elevado": False, "brazo_abducido_o_rotado": False,
+            "brazo_apoyado": False, "muneca_desviada_o_torcida": False,
+        },
+        **cambios,
+    }
+
+
+def _confirmar_angulos(cliente, id_caso):
+    respuesta = cliente.get(f"/casos/{id_caso}")
+    assert respuesta.status_code == 200, respuesta.text
+    detalle = respuesta.json()
+    for angulo in detalle["angulos"]:
+        if angulo["angulo_grados"] is not None:
+            respuesta = cliente.post(
+                f"/casos/{id_caso}/angulos/{angulo['vista']}/{angulo['segmento']}/confirmar",
+                json=ERGO,
+            )
+            assert respuesta.status_code == 200, respuesta.text
+    respuesta = cliente.get(f"/casos/{id_caso}")
+    assert respuesta.status_code == 200, respuesta.text
+    detalle = respuesta.json()
+    assert detalle["assessment_status"] == "ready", detalle["missing_evidence"]
+    assert detalle["risk_ready"]
+    assert detalle["missing_evidence"] == []
+    assert detalle["reba"] is not None
+    assert all(a["confirmado"] for a in detalle["angulos"] if a["angulo_grados"] is not None)
+    return detalle
+
+
 def _foto_jpg() -> bytes:
     ok, buf = cv2.imencode(".jpg", np.full((720, 1280, 3), 200, np.uint8))
     return buf.tobytes()
@@ -62,7 +98,7 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
 
     def crear(self, datos=None, fotos=None):
         datos = datos or {**ERGO, "estacion": "Línea 7 · Prensa", "tipo_tarea": "levantamiento",
-                          "contexto": {"carga_kg": 18, "agarre": "regular", "actividad": 1}}
+                          "contexto": _contexto_confirmado()}
         fotos = fotos if fotos is not None else {"lateral": ("lateral.jpg", _foto_jpg(), "image/jpeg")}
         return self.c.post("/casos", data={"datos": json.dumps(datos)}, files=fotos)
 
@@ -71,7 +107,9 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         id_caso = r.json()["id"]
         self.assertEqual(id_caso, "C-008")  # después de los 7 casos de ejemplo
-        d = self.c.get(f"/casos/{id_caso}").json()
+        d = _confirmar_angulos(self.c, id_caso)
+        self.assertEqual(d["estacion"], "Línea 7 · Prensa")
+        self.assertEqual(d["contexto"]["altura_trabajo_cm"], 95)
 
         muneca = next(a for a in d["angulos"] if a["segmento"] == "muneca")
         self.assertIsNotNone(muneca["angulo_grados"], "la muñeca se mide con el punto de la mano")
@@ -104,13 +142,15 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
 
     def test_impacto_medido(self):
         id_caso = self.crear().json()["id"]
+        _confirmar_angulos(self.c, id_caso)
         imp = self.c.get("/metricas/impacto").json()
         self.assertEqual([c["id_caso"] for c in imp["casos"]], [id_caso])  # los casos de ejemplo no cuentan
         self.assertIsNotNone(imp["analisis_promedio_s"])
         self.assertIsNone(imp["casos"][0]["validacion_min"])  # aún sin validar
         for r in self.c.get(f"/casos/{id_caso}").json()["recomendaciones"]:
             cuerpo = {**ERGO, "id_caso": id_caso, "id_recomendacion": r["id"], "accion": "aprobar"}
-            self.c.post(f"/casos/{id_caso}/recomendaciones/{r['id']}/decision", json=cuerpo)
+            respuesta = self.c.post(f"/casos/{id_caso}/recomendaciones/{r['id']}/decision", json=cuerpo)
+            self.assertEqual(respuesta.status_code, 200, respuesta.text)
         d = self.c.get(f"/casos/{id_caso}").json()
         self.assertTrue(d["validacion"]["completa"])
         self.assertIsNotNone(d["metricas"]["validado_en"])
@@ -119,11 +159,11 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
         self.assertGreater(imp["ahorro_porcentaje"], 0)
 
     def test_recomendaciones_por_tipo_de_transporte(self):
-        base = {**ERGO, "estacion": "Línea 3 · Almacén", "contexto": {"carga_kg": 8}}
+        base = {**ERGO, "estacion": "Línea 3 · Almacén", "contexto": _contexto_confirmado(carga_kg=8)}
         acarreo = self.crear(datos={**base, "tipo_tarea": "transporte"}).json()["id"]
         carro = self.crear(datos={**base, "tipo_tarea": "empuje_con_auxiliar"}).json()["id"]
-        t1 = [r["titulo"] for r in self.c.get(f"/casos/{acarreo}").json()["recomendaciones"]]
-        t2 = [r["titulo"] for r in self.c.get(f"/casos/{carro}").json()["recomendaciones"]]
+        t1 = [r["titulo"] for r in _confirmar_angulos(self.c, acarreo)["recomendaciones"]]
+        t2 = [r["titulo"] for r in _confirmar_angulos(self.c, carro)["recomendaciones"]]
         self.assertIn("Sustituir el acarreo manual por un auxiliar de transporte", t1)
         self.assertNotIn("Asistencia mecánica para la carga", t1)
         self.assertIn("Adecuar el carro o auxiliar de transporte", t2)
@@ -140,7 +180,10 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         datos = r.json()
         self.assertTrue(datos["ok"])
-        self.assertGreaterEqual(datos["reba_final"], 1)
+        # Esta captura rápida prueba la imagen/pose, no valida riesgo sin contexto confirmado.
+        self.assertIsNone(datos["reba_final"])
+        self.assertFalse(datos["risk_ready"])
+        self.assertEqual(datos["assessment_status"], "incomplete")
         self.assertIn("imagen_anotada_b64", datos)
         self.assertTrue(datos["imagen_anotada_b64"].startswith("data:image/jpeg;base64,"))
         self.assertGreater(len(datos["angulos"]), 0)

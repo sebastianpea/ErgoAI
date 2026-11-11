@@ -349,11 +349,59 @@ class ServicioCasos:
         medidos = self._medir(caso)
         if medidos is None:
             return None
+        if caso.contexto.muneca_grados is not None:
+            medidos["muneca"].grados = caso.contexto.muneca_grados
+            medidos["muneca"].confianza = 1.0
+        if caso.evidence_version > 0:
+            if caso.tipo_tarea == "sin_clasificar" or self._contexto_faltante_reba(caso):
+                return None
+            resultado = self.reba.calcular({s: m.grados for s, m in medidos.items()}, caso.contexto)
+            confirmados = set(caso.angulos_confirmados)
+            for seg, medido in medidos.items():
+                clave = self._clave_angulo("lateral", seg)
+                estado, _ = self._diagnosticar_angulo(
+                    medido.grados, medido.confianza, resultado.segmentos[seg].umbrales,
+                    confirmado=clave in confirmados or (seg == "muneca" and caso.contexto.muneca_grados is not None),
+                )
+                if estado != "ok":
+                    return None
+            return medidos, resultado
         return medidos, self.reba.calcular({s: m.grados for s, m in medidos.items()}, caso.contexto)
 
     @staticmethod
     def _clave_angulo(vista: str, segmento: str) -> str:
         return f"{vista}.{segmento}"
+
+    @staticmethod
+    def _contexto_faltante_reba(caso: CasoAlmacenado) -> List[str]:
+        """A new case must not score placeholder values that stand for unknown evidence."""
+        # Height and task classification are required before presenting a final case risk result,
+        # even though they are not direct REBA matrix inputs.
+        requeridos = {"carga_kg", "carga_brusca", "agarre", "actividad", "apoyo_unilateral", "altura_trabajo_cm"}
+        requeridos.update(f"modificadores.{k}" for k in (
+            "tronco_torsion_o_inclinacion", "cuello_torsion_o_inclinacion", "hombro_elevado",
+            "brazo_abducido_o_rotado", "brazo_apoyado", "muneca_desviada_o_torcida",
+        ))
+        return sorted(requeridos.intersection(caso.contexto_faltante))
+
+    @staticmethod
+    def _missing_evidence(caso: CasoAlmacenado, angulos: List[Angulo]) -> List[str]:
+        missing = set(caso.contexto_faltante)
+        if caso.tipo_tarea == "sin_clasificar":
+            missing.add("tipo_tarea")
+        if caso.evidence_version > 0:
+            if not any(a.vista == "lateral" for a in angulos):
+                missing.update(f"angulo.{s}" for s in SEGMENTOS)
+            else:
+                missing.update(f"angulo.{a.segmento}" for a in angulos
+                               if a.vista == "lateral" and a.estado != "ok" and not a.confirmado)
+        return sorted(missing)
+
+    @classmethod
+    def _assessment_status(cls, caso: CasoAlmacenado, angulos: List[Angulo]) -> str:
+        if caso.evidence_version == 0:
+            return "legacy"
+        return "ready" if not cls._missing_evidence(caso, angulos) else "incomplete"
 
     @staticmethod
     def _diagnosticar_angulo(
@@ -380,19 +428,23 @@ class ServicioCasos:
         return r.estado != "rechazada" and r.implementacion != "denegada" and not _efecto_vacio(r.efecto)
 
     def _construir_angulos(
-        self, caso: CasoAlmacenado, medidos: Dict[Segmento, AnguloMedido], res: ResultadoRebaCalculado,
+        self, caso: CasoAlmacenado, medidos: Dict[Segmento, AnguloMedido],
+        res: Optional[ResultadoRebaCalculado],
     ) -> List[Angulo]:
         ctx = caso.contexto
         confirmados = set(caso.angulos_confirmados)
         angulos: List[Angulo] = []
         for img in caso.imagenes:
             if img.vista == "lateral":
-                medidos_v, res_v = medidos, res
+                medidos_v = medidos
             else:
                 medidos_v = extraer_angulos_vista(img.puntos, img.vista)
-                res_v = self.reba.calcular({s: m.grados for s, m in medidos_v.items()}, ctx)
+            res_v = res if img.vista == "lateral" else (
+                self.reba.calcular({s: m.grados for s, m in medidos_v.items()}, ctx) if res is not None else None
+            )
+            referencia = res_v or self.reba.calcular({s: m.grados for s, m in medidos_v.items()}, ctx)
             for seg in SEGMENTOS:
-                m, ps = medidos_v[seg], res_v.segmentos[seg]
+                m, ps = medidos_v[seg], referencia.segmentos[seg]
                 g, confianza = m.grados, m.confianza
                 confirmado = self._clave_angulo(img.vista, seg) in confirmados
                 if seg == "muneca" and ctx.muneca_grados is not None and (g is None or img.vista == "lateral"):
@@ -400,7 +452,8 @@ class ServicioCasos:
                 estado, motivo = self._diagnosticar_angulo(g, confianza, ps.umbrales, confirmado=confirmado)
                 angulos.append(Angulo(
                     segmento=seg, lado=m.lado, vista=img.vista, angulo_grados=g,
-                    puntaje_reba=ps.puntaje, modificadores=ps.modificadores,
+                    puntaje_reba=res_v.segmentos[seg].puntaje if res_v is not None else None,
+                    modificadores=ps.modificadores if res_v is not None else [],
                     estado=estado, motivo_estado=motivo, confirmado=confirmado,
                     puntaje_previo=caso.evaluacion_previa.segmentos.get(seg),
                 ))
@@ -432,7 +485,8 @@ class ServicioCasos:
         jabil = self.config.get_jabil_standards()
         hallazgos: List[Hallazgo] = []
         limite = jabil["load_limits"]["max_single_person_lift_kg"]
-        if caso.tipo_tarea in TAREAS_CON_LEVANTAMIENTO and ctx.carga_kg > limite:
+        if ("carga_kg" not in caso.contexto_faltante
+                and caso.tipo_tarea in TAREAS_CON_LEVANTAMIENTO and ctx.carga_kg > limite):
             hallazgos.append(Hallazgo(
                 id="JABIL-carga", origen="reglas_jabil", severidad="critico",
                 mensaje=f"Carga de {ctx.carga_kg:g} kg supera el límite de {limite:g} kg por persona",
@@ -459,6 +513,10 @@ class ServicioCasos:
                 metodo=caso.nom036.metodo, total=total, factores=caso.nom036.factores,
                 nivel=color_total(total, self.config.get_nom036_tables()),
             )
+        # New intakes never auto-publish NOM-036: the strategies also need route-specific observations
+        # (equipment, distance, maintenance, etc.) that the photo and current intake form do not collect.
+        if caso.evidence_version > 0:
+            return None
         if caso.tipo_tarea in ("levantamiento", "transporte", "empuje_sin_auxiliar", "empuje_con_auxiliar"):
             from backend.app.api.schemas import FactorNom
             g = grados or {}
@@ -540,24 +598,32 @@ class ServicioCasos:
         hallazgos: List[Hallazgo] = list(caso.hallazgos_vision)
         grados: Dict[Segmento, Optional[float]] = {}
 
+        medidos_disponibles = self._medir(caso)
         calculo = self._calcular_reba(caso)
-        if calculo:
-            medidos, res = calculo
-            grados = {s: m.grados for s, m in medidos.items()}
-            angulos = self._construir_angulos(caso, medidos, res)
-            reba = ResultadoReba(
-                grupo_a=res.grupo_a, grupo_b=res.grupo_b, tabla_c=res.tabla_c, carga=res.carga,
-                agarre=res.agarre, actividad=res.actividad, final=res.final, nivel=res.nivel,
-            )
-            hallazgos.extend(self._auditar_evaluacion_previa(caso, angulos, res))
-            aplicables = [r for r in caso.recomendaciones if self._aplicable(r)]
-            res2 = simular(self.reba, grados, ctx, [r.efecto for r in aplicables])
-            residual = Residual(
-                antes_final=res.final, antes_nivel=res.nivel, despues_final=res2.final, despues_nivel=res2.nivel,
-                segmentos=[SegmentoResidual(segmento=s, antes=res.segmentos[s].puntaje, despues=res2.segmentos[s].puntaje)
-                           for s in SEGMENTOS],
-                recomendaciones_aplicadas=[r.id for r in aplicables],
-            )
+        res_calculado = None
+        if medidos_disponibles is not None:
+            grados = {s: m.grados for s, m in medidos_disponibles.items()}
+            if caso.contexto.muneca_grados is not None:
+                grados["muneca"] = caso.contexto.muneca_grados
+            if calculo:
+                medidos, res = calculo
+                res_calculado = res
+                angulos = self._construir_angulos(caso, medidos, res)
+                reba = ResultadoReba(
+                    grupo_a=res.grupo_a, grupo_b=res.grupo_b, tabla_c=res.tabla_c, carga=res.carga,
+                    agarre=res.agarre, actividad=res.actividad, final=res.final, nivel=res.nivel,
+                )
+                hallazgos.extend(self._auditar_evaluacion_previa(caso, angulos, res))
+                aplicables = [r for r in caso.recomendaciones if self._aplicable(r)]
+                res2 = simular(self.reba, grados, ctx, [r.efecto for r in aplicables])
+                residual = Residual(
+                    antes_final=res.final, antes_nivel=res.nivel, despues_final=res2.final, despues_nivel=res2.nivel,
+                    segmentos=[SegmentoResidual(segmento=s, antes=res.segmentos[s].puntaje, despues=res2.segmentos[s].puntaje)
+                               for s in SEGMENTOS],
+                    recomendaciones_aplicadas=[r.id for r in aplicables],
+                )
+            else:
+                angulos = self._construir_angulos(caso, medidos_disponibles, None)
 
         hallazgos.extend(self._evaluar_reglas_jabil(caso))
         for h in hallazgos:
@@ -566,14 +632,17 @@ class ServicioCasos:
         return CasoDetalle(
             id_caso=caso.id_caso, estacion=caso.estacion, tipo_tarea=caso.tipo_tarea, fecha=caso.fecha,
             imagenes=[Imagen(**{**i.model_dump(), "url": f"/media/{caso.id_caso}/{i.url}"}) for i in caso.imagenes],
-            contexto=ctx, evaluacion_previa=caso.evaluacion_previa, angulos=angulos, reba=reba,
+            contexto=ctx, contexto_faltante=caso.contexto_faltante,
+            assessment_status=self._assessment_status(caso, angulos), risk_ready=reba is not None,
+            missing_evidence=self._missing_evidence(caso, angulos),
+            evaluacion_previa=caso.evaluacion_previa, angulos=angulos, reba=reba,
             nom036=self._calcular_nom036(caso, grados), hallazgos=hallazgos,
             recomendaciones=self._proyectar_recomendaciones(caso, grados, calculo is not None),
-            residual=residual, validacion=self._validacion(caso, reba), metricas=caso.metricas,
+            residual=residual, validacion=self._validacion(caso, reba, self._assessment_status(caso, angulos)), metricas=caso.metricas,
         )
 
     @staticmethod
-    def _validacion(caso: CasoAlmacenado, reba: Optional[ResultadoReba]) -> Validacion:
+    def _validacion(caso: CasoAlmacenado, reba: Optional[ResultadoReba], assessment_status: str = "ready") -> Validacion:
         recs = caso.recomendaciones
         pendientes = sum(r.estado == "propuesta" for r in recs)
         riesgo_alto = reba is not None and reba.nivel in ("alto", "muy_alto")
@@ -588,7 +657,8 @@ class ServicioCasos:
         aprobadas = sum(r.estado in ("aprobada", "editada_aprobada") and r.implementacion != "denegada" for r in recs)
 
         aprobado_e_implementado = (
-            pendientes == 0
+            assessment_status != "incomplete"
+            and pendientes == 0
             and not falta
             and por_autorizar == 0
             and por_implementar == 0
@@ -596,7 +666,8 @@ class ServicioCasos:
         )
 
         return Validacion(
-            pendientes=pendientes, falta_ingenieria=falta, completa=pendientes == 0 and not falta,
+            pendientes=pendientes, falta_ingenieria=falta,
+            completa=assessment_status != "incomplete" and pendientes == 0 and not falta,
             por_autorizar=por_autorizar,
             por_implementar=por_implementar,
             implementadas=implementadas,
@@ -640,6 +711,10 @@ class ServicioCasos:
             estado.reba_initial_score = d.reba.final
             estado.reba_initial_risk_level = banda["risk"]
             estado.reba_initial_action_level = f"{banda['action_level']}: {banda['action_description']}"
+        else:
+            estado.reba_initial_score = None
+            estado.reba_initial_risk_level = None
+            estado.reba_initial_action_level = None
         estado.nom036_alerts = [h.mensaje for h in d.hallazgos if h.origen == "reglas_jabil" and not h.descartado]
         estado.recommendations = [r.model_dump(mode="json") for r in caso.recomendaciones]
         estado.residual_risk_score = d.residual.despues_final if d.residual else None
@@ -833,22 +908,42 @@ class ServicioCasos:
             return actual
 
     def corregir_contexto(self, id_caso: str, c: CorreccionContexto) -> CasoDetalle:
-        """El especialista corrige los datos de la tarea (carga, agarre, modificadores…)."""
+        """El especialista corrige el contexto; los valores nulos siguen siendo evidencia desconocida."""
         _exigir_rol(c, "ergonomia", "corregir los datos de la tarea")
         with self._lock:
             caso = self._cargar(id_caso)
-            antes_txt, despues_txt = describir_contexto(caso.contexto), describir_contexto(c.contexto)
+            antes_txt = describir_contexto(caso.contexto)
+            contexto_nuevo = c.contexto.normalizar()
+            faltantes_nuevos = c.contexto.desconocidos()
+
+            def marcar_desconocidos(textos: Dict[str, str], faltantes: List[str]) -> None:
+                for campo in faltantes:
+                    clave = f"mod.{campo.removeprefix('modificadores.')}" if campo.startswith("modificadores.") else campo
+                    if clave in textos:
+                        textos[clave] = "desconocido"
+
+            marcar_desconocidos(antes_txt, caso.contexto_faltante)
+            despues_txt = describir_contexto(contexto_nuevo)
+            marcar_desconocidos(despues_txt, faltantes_nuevos)
+            # Each evidence field has a canonical description key above; do not append raw dotted paths,
+            # which can be mistaken for task labels in the human-readable audit fallback.
             cambios = [k for k in antes_txt if antes_txt[k] != despues_txt[k]]
-            if not cambios:
+            cambio_tarea = c.tipo_tarea is not None and c.tipo_tarea != caso.tipo_tarea
+            if not cambios and not cambio_tarea:
                 return self._evaluar(caso)
             antes = self._evaluar(caso)
-            caso.contexto = c.contexto
+            caso.contexto = contexto_nuevo
+            caso.contexto_faltante = faltantes_nuevos
+            if c.tipo_tarea is not None:
+                caso.tipo_tarea = c.tipo_tarea
             despues = self._cerrar_mutacion(caso)
             reba = f" (REBA {antes.reba.final} → {despues.reba.final})" if antes.reba and despues.reba else ""
             self.ledger.registrar(
                 c.usuario, "contexto_corregido", f"{id_caso} / datos de la tarea", id_caso,
-                antes="; ".join(f"{k}: {antes_txt[k]}" for k in cambios),
-                despues="; ".join(f"{k}: {despues_txt[k]}" for k in cambios) + reba,
+                antes="; ".join(f"{k}: {antes_txt.get(k, caso.tipo_tarea)}" for k in cambios)
+                or "tipo de tarea pendiente",
+                despues="; ".join(f"{k}: {despues_txt.get(k, c.tipo_tarea or caso.tipo_tarea)}" for k in cambios)
+                + (f"; tipo_tarea: {c.tipo_tarea}" if cambio_tarea else "") + reba,
                 motivo=c.motivo.strip(),
             )
             self._sincronizar(caso, despues, c.usuario)
@@ -1023,9 +1118,11 @@ class ServicioCasos:
         with self._lock:
             caso = self._cargar(id_caso)
             self._verificar_cadenas(id_caso)
-
-            # Limpiar tarjetas AI* extra que se hayan acumulado en pruebas previas
-            caso.recomendaciones = [r for r in caso.recomendaciones if not r.id.startswith("AI")]
+            if caso.evidence_version > 0:
+                if caso.tipo_tarea == "sin_clasificar":
+                    raise DatosInvalidos("Clasifica la tarea antes de generar recomendaciones específicas")
+                if self._calcular_reba(caso) is None:
+                    raise DatosInvalidos("Confirma los datos operativos y los ángulos pendientes antes de calcular el riesgo")
 
             calculo = self._calcular_reba(caso)
             medidos_calc = calculo[0] if calculo else None
@@ -1205,10 +1302,8 @@ class ServicioCasos:
                 and caso.contexto.carga_kg <= limite_kg
             )
 
-            # Seleccionar la tarjeta objetivo existente (primera pendiente o primera del caso) para NUNCA añadir tarjetas extra
+            # Refresh only a pending recommendation; finalized recommendations are immutable history.
             rec_objetivo = next((r for r in caso.recomendaciones if r.estado == "propuesta"), None)
-            if rec_objetivo is None and caso.recomendaciones:
-                rec_objetivo = caso.recomendaciones[0]
 
             base_prop = propuestas_base[0] if propuestas_base else None
             clausula_conforme = self.rag.recuperar_por_condicion("postura_conforme_riesgo_inapreciable")
@@ -1259,7 +1354,6 @@ class ServicioCasos:
 
             if rec_objetivo is not None:
                 rec_objetivo.titulo = titulo_final
-                rec_objetivo.texto_ia = desc_final
                 if rec_objetivo.estado == "propuesta":
                     rec_objetivo.texto = desc_final
                 rec_objetivo.referencia = ref_final
@@ -1278,8 +1372,12 @@ class ServicioCasos:
                 nivel_log = rec_objetivo.nivel_control
                 ref_log = rec_objetivo.referencia
             else:
+                ids = {r.id for r in caso.recomendaciones}
+                num = 1
+                while f"AI{num}" in ids:
+                    num += 1
                 nueva_rec = RecomendacionAlmacenada(
-                    id="R1",
+                    id=f"AI{num}",
                     nivel_control="administrativo" if es_conforme else "ingenieria",
                     tipo_cambio="postura" if es_conforme else "planta",
                     titulo=titulo_final,
@@ -1298,7 +1396,7 @@ class ServicioCasos:
                 nueva_rec.layer_autocad = rec_dump.get("layer_autocad")
                 nueva_rec.tramite_moc = rec_dump.get("tramite_moc")
                 nueva_rec.codigo_jabil = rec_dump.get("codigo_jabil")
-                caso.recomendaciones = [nueva_rec]
+                caso.recomendaciones.append(nueva_rec)
                 id_rec_log = nueva_rec.id
                 titulo_log = nueva_rec.titulo
                 nivel_log = nueva_rec.nivel_control
@@ -1387,14 +1485,18 @@ class ServicioCasos:
             caso = CasoAlmacenado(
                 id_caso=id_caso, estacion=datos.estacion.strip(), tipo_tarea=datos.tipo_tarea,
                 fecha=datetime.now().astimezone().isoformat(timespec="seconds"), imagenes=imagenes,
-                contexto=datos.contexto, evaluacion_previa=datos.evaluacion_previa, hallazgos_vision=hallazgos,
+                contexto=datos.contexto.normalizar(), contexto_faltante=datos.contexto.desconocidos(),
+                evidence_version=1, evaluacion_previa=datos.evaluacion_previa, hallazgos_vision=hallazgos,
             )
             medidos = self._medir(caso)
             self._aplicar_vista_frontal(caso, medidos["brazo"].lado or "izq")
-            medidos, res = self._calcular_reba(caso)  # type: ignore[misc]  (hay foto lateral)
-            propuestas = generar(
-                {s: m.grados for s, m in medidos.items()}, caso.contexto, caso.tipo_tarea, res.final,
-                self.config.get_reba_tables(), self.config.get_jabil_standards(), self.rag)
+            calculo = self._calcular_reba(caso)
+            propuestas = []
+            if calculo and caso.tipo_tarea != "sin_clasificar":
+                medidos, res = calculo
+                propuestas = generar(
+                    {s: m.grados for s, m in medidos.items()}, caso.contexto, caso.tipo_tarea, res.final,
+                    self.config.get_reba_tables(), self.config.get_jabil_standards(), self.rag)
             caso.recomendaciones = [RecomendacionAlmacenada.model_validate({**r, "texto_ia": r["texto"]})
                                     for r in propuestas]
             caso.metricas.creado_en = _ahora()
@@ -1406,9 +1508,10 @@ class ServicioCasos:
                                   despues=f"{caso.estacion} · {len(fotos)} foto(s)")
             self.ledger.registrar(
                 USUARIO_SISTEMA, "analisis_ejecutado", id_caso, id_caso,
-                despues=f"REBA {res.final} · {len(propuestas)} recomendación(es) · {detalle_vision}")
+                despues=(f"REBA {detalle.reba.final}" if detalle.reba else "Evaluación incompleta")
+                + f" · {len(propuestas)} recomendación(es) · {detalle_vision}")
             self._sincronizar(caso, detalle, datos.usuario)
-            log.info("Caso creado desde fotos: %s REBA=%s", id_caso, res.final)
+            log.info("Caso creado desde fotos: %s REBA=%s", id_caso, detalle.reba.final if detalle.reba else "incompleto")
             return id_caso
 
     def _aplicar_vista_frontal(self, caso: CasoAlmacenado, lado: str) -> None:
@@ -1419,18 +1522,29 @@ class ServicioCasos:
         umbrales = self.config.get_reba_tables()["frontal_view_thresholds_deg"]
         m = medir_vista_frontal(frontal.puntos, lado, CONFIANZA_MINIMA)
         mods = caso.contexto.modificadores
-        if m["inclinacion_tronco"] is not None and m["inclinacion_tronco"] > umbrales["trunk_side_bending"]:
+        if (m["inclinacion_tronco"] is not None
+                and m["inclinacion_tronco"] > umbrales["trunk_side_bending"]
+                and "modificadores.tronco_torsion_o_inclinacion" in caso.contexto_faltante):
+            # Positive evidence supports the combined REBA modifier; neutral alignment cannot rule out torsion.
             mods.tronco_torsion_o_inclinacion = True
+            caso.contexto_faltante = [x for x in caso.contexto_faltante
+                                      if x != "modificadores.tronco_torsion_o_inclinacion"]
             caso.hallazgos_vision.append(Hallazgo(
                 id="V-frontal-tronco", origen="vision", severidad="info", vista="frontal",
                 mensaje=(f"Vista frontal: inclinación lateral de tronco de {m['inclinacion_tronco']:g}° "
-                         f"(> {umbrales['trunk_side_bending']:g}°); se marcó el modificador REBA de tronco.")))
-        if m["abduccion_brazo"] is not None and m["abduccion_brazo"] > umbrales["upper_arm_abduction"]:
+                         f"(> {umbrales['trunk_side_bending']:g}°); el modificador REBA requiere revisión.")))
+        if (m["abduccion_brazo"] is not None
+                and m["abduccion_brazo"] > umbrales["upper_arm_abduction"]
+                and "modificadores.brazo_abducido_o_rotado" in caso.contexto_faltante):
+            # Positive evidence supports the combined modifier; neutral alignment cannot rule out rotation.
             mods.brazo_abducido_o_rotado = True
-            caso.hallazgos_vision.append(Hallazgo(
-                id="V-frontal-brazo", origen="vision", severidad="info", vista="frontal",
-                mensaje=(f"Vista frontal: abducción del brazo de {m['abduccion_brazo']:g}° "
-                         f"(> {umbrales['upper_arm_abduction']:g}°); se marcó el modificador REBA de brazo.")))
+            caso.contexto_faltante = [x for x in caso.contexto_faltante
+                                      if x != "modificadores.brazo_abducido_o_rotado"]
+            if mods.brazo_abducido_o_rotado:
+                caso.hallazgos_vision.append(Hallazgo(
+                    id="V-frontal-brazo", origen="vision", severidad="info", vista="frontal",
+                    mensaje=(f"Vista frontal: abducción del brazo de {m['abduccion_brazo']:g}° "
+                             f"(> {umbrales['upper_arm_abduction']:g}°); el modificador REBA requiere revisión.")))
 
     def corregir_referencia(self, id_caso: str, c: CorreccionReferencia) -> CasoDetalle:
         """Carga o corrige el estudio de referencia de Jabil contra el que se audita el análisis."""

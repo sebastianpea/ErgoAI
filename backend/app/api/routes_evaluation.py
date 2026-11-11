@@ -12,8 +12,7 @@ from backend.app.api.schemas import (
 )
 from backend.app.core_ergonomics.cambios import PARAMETROS
 from backend.app.services.casos import Conflicto, DatosInvalidos, NoEncontrado, Prohibido, ServicioCasos
-from backend.app.session_store import AuditIntegrityError, NormativeConfigLoader
-from backend.app.settings import CONFIG_DIR
+from backend.app.session_store import AuditIntegrityError
 from backend.app.vision.estimador import estimador
 from backend.app.vision.annotador import anotar_esqueleto, codificar_imagen_b64
 
@@ -71,9 +70,6 @@ async def analizar_rapido(
     import cv2
     import numpy as np
     from backend.app.core_ergonomics.angle_geometry import extraer_angulos_laterales
-    from backend.app.core_ergonomics.modelos import ContextoTarea
-    from backend.app.core_ergonomics.reba_calculator import RebaCalculator
-
     img_bgr = cv2.imdecode(np.frombuffer(contenido, np.uint8), cv2.IMREAD_COLOR)
     if img_bgr is None:
         raise DatosInvalidos("Formato de imagen inválido. Se espera JPG o PNG.")
@@ -81,31 +77,35 @@ async def analizar_rapido(
     if resultado.personas == 0:
         return AnalisisRapidoResponse(
             ok=False, personas=0, rostro_anonimizado=False,
-            reba_final=0, reba_nivel="sin_dato", grupo_a=0, grupo_b=0, tabla_c=0,
+            reba_final=None, reba_nivel="sin_dato", grupo_a=None, grupo_b=None, tabla_c=None,
+            assessment_status="incomplete", risk_ready=False,
+            missing_evidence=["tipo_tarea", "carga_kg", "agarre", "actividad", "modificadores", "altura_trabajo_cm"],
             angulos=[], imagen_anotada_b64=None,
             tiempo_ms=round((time.perf_counter() - t0) * 1000, 2),
             advertencia="No se detectó a ninguna persona con suficiente claridad en la toma.",
         )
     angulos_medidos = extraer_angulos_laterales(resultado.puntos)
     grados_map = {seg: m.grados for seg, m in angulos_medidos.items()}
-    calc = RebaCalculator(NormativeConfigLoader(CONFIG_DIR).get_reba_tables())
-    res_reba = calc.calcular(grados_map, ContextoTarea(carga_kg=carga_kg))
     img_anotada = anotar_esqueleto(
         resultado.imagen_bgr, resultado.puntos,
-        reba_final=res_reba.final, reba_nivel=res_reba.nivel, angulos=grados_map,
+        reba_final=None, reba_nivel="sin_dato", angulos=grados_map,
     )
+    falta = ["tipo_tarea", "agarre", "actividad", "carga_brusca", "apoyo_unilateral",
+             "modificadores", "altura_trabajo_cm", "frecuencia_duracion"]
+    falta.extend(f"angulo.{seg}" for seg, m in angulos_medidos.items()
+                 if m.grados is None or m.confianza < 0.4)
     return AnalisisRapidoResponse(
         ok=True, personas=resultado.personas, rostro_anonimizado=resultado.rostro_anonimizado,
-        reba_final=res_reba.final, reba_nivel=res_reba.nivel,
-        grupo_a=res_reba.grupo_a, grupo_b=res_reba.grupo_b, tabla_c=res_reba.tabla_c,
+        reba_final=None, reba_nivel="sin_dato", grupo_a=None, grupo_b=None, tabla_c=None,
+        assessment_status="incomplete", risk_ready=False, missing_evidence=falta,
         angulos=[ResumenAnguloRapido(
-            segmento=seg, grados=m.grados,
-            puntaje_reba=res_reba.segmentos[seg].puntaje if seg in res_reba.segmentos else 1,
+            segmento=seg, grados=m.grados, puntaje_reba=None,
             estado="sin_dato" if m.grados is None else ("revisar" if m.confianza < 0.4 else "ok"),
             confianza=m.confianza,
         ) for seg, m in angulos_medidos.items()],
         imagen_anotada_b64=codificar_imagen_b64(img_anotada),
         tiempo_ms=round((time.perf_counter() - t0) * 1000, 2),
+        advertencia="Vista de postura únicamente; faltan datos operativos confirmados para calcular y validar el riesgo.",
     )
 
 

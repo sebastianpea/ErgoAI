@@ -121,8 +121,13 @@ class TestApi(unittest.TestCase):
         self.assertAlmostEqual(tronco["angulo_grados"], 0.0, places=1)
         previo = next(a for a in d["angulos"] if a["segmento"] == "tronco" and a["vista"] == "lateral")
         self.assertNotAlmostEqual(previo["angulo_grados"], tronco["angulo_grados"], places=1)
-        # REBA es tabular: corregir un segmento no garantiza reducir el total.
-        self.assertLessEqual(tronco["puntaje_reba"], previo["puntaje_reba"])
+        # Corregir puntos no confirma el contexto desconocido ni valida el riesgo.
+        self.assertIsNone(previo["puntaje_reba"])
+        self.assertIsNone(tronco["puntaje_reba"])
+        self.assertIsNone(nuevo["reba"])
+        self.assertFalse(nuevo["risk_ready"])
+        self.assertEqual(nuevo["assessment_status"], "incomplete")
+        self.assertTrue({"carga_kg", "agarre", "actividad"}.issubset(nuevo["missing_evidence"]))
         persistido = self.cliente.get("/casos/C-001").json()
         self.assertEqual(persistido["angulos"], nuevo["angulos"])
         self.assertEqual(persistido["imagenes"], nuevo["imagenes"])

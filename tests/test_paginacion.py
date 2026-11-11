@@ -240,18 +240,18 @@ def test_summary_rebuild_only_stale_case(client, workspace, damage):
 
 @pytest.mark.parametrize("mutation", ["points", "context", "reference", "nom036", "finding", "recommendation", "plan", "confirm"])
 def test_all_mutation_consumers_refresh_and_preserve_contracts(tmp_path, mutation):
-    from tests.test_vision import _foto_jpg, _resultado
+    from tests.test_vision import ERGO, _confirmar_angulos, _contexto_confirmado, _foto_jpg, _resultado
     from backend.app.vision.estimador import estimador
 
     with TestClient(create_app(workspace_dir=tmp_path, sembrar=False)) as client:
         with patch.object(estimador, "estado", return_value=(True, "simulado")), \
              patch.object(estimador, "analizar", side_effect=_resultado):
             response = client.post("/casos", data={"datos": json.dumps({
-                "estacion": "Estación real", "tipo_tarea": "levantamiento", "contexto": {"carga_kg": 18}})},
+                **ERGO, "estacion": "Estación real", "tipo_tarea": "levantamiento",
+                "contexto": _contexto_confirmado()})},
                 files={"lateral": ("foto.jpg", _foto_jpg(), "image/jpeg")})
         assert response.status_code == 200 and response.json() == {"ok": True, "id": "C-001"}
-        detail = get_ok(client, "/casos/C-001")
-        assert detail["reba"] is not None
+        detail = _confirmar_angulos(client, "C-001")
         get_ok(client, "/metricas/dashboard")
         if mutation == "points":
             points = detail["imagenes"][0]["puntos"]
@@ -285,7 +285,7 @@ def test_all_mutation_consumers_refresh_and_preserve_contracts(tmp_path, mutatio
             assert response.json() == {"ok": True, "id": "E1"}
         elif mutation == "confirm":
             angle = next(a for a in detail["angulos"] if a["angulo_grados"] is not None)
-            response = client.post(f"/casos/C-001/angulos/lateral/{angle['segmento']}/confirmar", json={})
+            response = client.post(f"/casos/C-001/angulos/lateral/{angle['segmento']}/confirmar", json=ERGO)
             assert next(a for a in response.json()["angulos"] if a["segmento"] == angle["segmento"])["confirmado"]
         else:
             with patch("backend.app.core_agent.llm_factory.LLMFactory.get_llm", return_value=lambda value: value), \

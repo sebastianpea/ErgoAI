@@ -139,5 +139,11 @@ assert response.json() == {'ok': True}
         self.assertEqual(response.status_code, 200, response.text)
         result = response.json()
         self.assertGreaterEqual(result.pop('tiempo_ms'), 0)
-        self.assertEqual(result, dict(ok=False, personas=0, rostro_anonimizado=False, reba_final=0, reba_nivel='sin_dato', grupo_a=0, grupo_b=0, tabla_c=0, angulos=[], imagen_anotada_b64=None, advertencia='No se detectó a ninguna persona con suficiente claridad en la toma.'))
+        self.assertEqual(result, dict(
+            ok=False, personas=0, rostro_anonimizado=False, reba_final=None, reba_nivel='sin_dato',
+            grupo_a=None, grupo_b=None, tabla_c=None, assessment_status='incomplete', risk_ready=False,
+            missing_evidence=['tipo_tarea', 'carga_kg', 'agarre', 'actividad', 'modificadores', 'altura_trabajo_cm'],
+            angulos=[], imagen_anotada_b64=None,
+            advertencia='No se detectó a ninguna persona con suficiente claridad en la toma.',
+        ))
         self.assertEqual(service.method_calls, [unittest.mock.call.exportar_excel('C-001'), unittest.mock.call.exportar_excel('C-001'), unittest.mock.call.exportar_pdf('C-001'), unittest.mock.call.exportar_pdf('C-001')])
