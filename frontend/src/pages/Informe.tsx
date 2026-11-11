@@ -92,7 +92,9 @@ export function Informe() {
     (r.estado === "aprobada" || r.estado === "editada_aprobada") && r.implementacion !== "denegada");
   const vigentes = c.hallazgos.filter(h => !h.descartado);
   const puntaje = new Map<string, number>();
-  for (const a of c.angulos) puntaje.set(a.segmento, Math.max(puntaje.get(a.segmento) ?? 0, a.puntaje_reba));
+  for (const a of c.angulos) {
+    if (a.puntaje_reba !== null) puntaje.set(a.segmento, Math.max(puntaje.get(a.segmento) ?? 0, a.puntaje_reba));
+  }
 
   return (
     <article className="informe">

@@ -114,7 +114,7 @@ export function NuevoCaso() {
   const { esErgonomia } = useSesion();
   const vision = useQuery({ queryKey: ["vision"], queryFn: api.estadoVision, staleTime: 60_000 });
   const [estacion, setEstacion] = useState("");
-  const [tarea, setTarea] = useState<TipoTarea>("levantamiento");
+  const [tarea, setTarea] = useState<TipoTarea>("sin_clasificar");
   const [contexto, setContexto] = useState<ContextoTarea>(CONTEXTO_VACIO);
   const [referencia, setReferencia] = useState<EvaluacionPrevia>(REFERENCIA_VACIA);
   const [fotos, setFotos] = useState<Partial<Record<Vista, File>>>({});
@@ -202,7 +202,8 @@ export function NuevoCaso() {
               </select>
             </label>
           </div>
-          <p className="etiqueta-campo">Datos que no salen de la foto</p>
+          <p className="sutil">El modelo actual mide postura; no distingue de forma validada levantamiento, transporte o empuje. Si no podés confirmarlo, dejalo como “Sin clasificar”; no se generará una evaluación NOM-036 específica.</p>
+          <p className="etiqueta-campo">Datos operativos por confirmar</p>
           <CamposContexto valor={contexto} onChange={setContexto} />
         </div>
 

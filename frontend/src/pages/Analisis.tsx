@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Nom036Captura } from "../api";
 import { FormNom036 } from "../components/FormNom036";
-import type { CasoDetalle, ContextoTarea, EvaluacionPrevia, Punto, Segmento, Vista } from "../types/caso";
+import type { CasoDetalle, ContextoTarea, EvaluacionPrevia, Punto, Segmento, TipoTarea, Vista } from "../types/caso";
 import { FormReferencia } from "../components/FormReferencia";
 import { COLOR_SEMAFORO, ETIQUETA_TAREA, VISTAS, semaforoSegmento } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
@@ -14,6 +14,17 @@ import { Encabezado } from "../components/Encabezado";
 import { FormContexto } from "../components/FormContexto";
 import { ListaHallazgos } from "../components/ListaHallazgos";
 import { AlertasCaso } from "../components/AlertasCaso";
+
+const ETIQUETA_EVIDENCIA: Record<string, string> = {
+  tipo_tarea: "tipo de tarea por confirmar", altura_trabajo_cm: "altura de trabajo por medir",
+  carga_kg: "peso de la carga", carga_brusca: "aplicación brusca de carga", agarre: "calidad del agarre",
+  actividad: "condiciones de actividad REBA", apoyo_unilateral: "apoyo en una pierna",
+};
+const nombreEvidencia = (key: string) => key.startsWith("angulo.")
+  ? `ángulo de ${key.slice("angulo.".length)}`
+  : key.startsWith("modificadores.")
+    ? `condición: ${key.slice("modificadores.".length).replace(/_/g, " ")}`
+    : ETIQUETA_EVIDENCIA[key] ?? key;
 
 export function Analisis() {
   const { id = "" } = useParams();
@@ -37,7 +48,7 @@ export function Analisis() {
     onError: () => setReinicios(n => n + 1), // el punto vuelve a su posición guardada
   });
   const contexto = useMutation({
-    mutationFn: ({ c, motivo }: { c: ContextoTarea; motivo: string }) => api.corregirContexto(id, c, motivo),
+    mutationFn: ({ c, tarea, motivo }: { c: ContextoTarea; tarea: TipoTarea; motivo: string }) => api.corregirContexto(id, c, motivo, tarea),
     onSuccess: aplicar,
   });
   const nom036 = useMutation({
@@ -64,11 +75,11 @@ export function Analisis() {
   const imagen = caso.imagenes.find(i => i.vista === vista);
   const puntajePorSegmento = new Map<string, number>();
   for (const a of caso.angulos.filter(x => x.vista === vista)) {
-    puntajePorSegmento.set(a.segmento, a.puntaje_reba);
+    if (a.puntaje_reba !== null) puntajePorSegmento.set(a.segmento, a.puntaje_reba);
   }
   if (puntajePorSegmento.size === 0) {
     for (const a of caso.angulos) {
-      puntajePorSegmento.set(a.segmento, Math.max(puntajePorSegmento.get(a.segmento) ?? 0, a.puntaje_reba));
+      if (a.puntaje_reba !== null) puntajePorSegmento.set(a.segmento, Math.max(puntajePorSegmento.get(a.segmento) ?? 0, a.puntaje_reba));
     }
   }
   const colorSegmento = (s: string) => COLOR_SEMAFORO[semaforoSegmento(puntajePorSegmento.get(s))];
@@ -86,6 +97,14 @@ export function Analisis() {
       />
 
       {caso.id_caso === id && <AlertasCaso idCaso={id} />}
+      {caso.assessment_status === "legacy" ? (
+        <p className="aviso">Caso histórico: el sistema anterior no registraba qué datos fueron medidos o confirmados. El resultado guardado se conserva como referencia.</p>
+      ) : caso.assessment_status === "incomplete" ? (
+        <div className="aviso error">
+          <strong>{caso.risk_ready ? "Evaluación incompleta" : "No se emite puntaje REBA final"}.</strong>
+          <span> Evidencia pendiente: {caso.missing_evidence.map(nombreEvidencia).join(", ") || "revisión de ángulos"}. Los datos desconocidos no se interpretan como cero, “no” o agarre bueno.</span>
+        </div>
+      ) : null}
 
       <div className="rejilla">
         <div className="tarjeta">
@@ -142,10 +161,11 @@ export function Analisis() {
           Estos datos no salen de la foto (peso, agarre, torsiones…). Si alguno está mal, corrígelo aquí con su justificación.
         </p>
         <FormContexto
-          key={JSON.stringify(caso.contexto)}
-          contexto={caso.contexto} editable={esErgonomia} ocupado={contexto.isPending}
+          key={JSON.stringify([caso.contexto, caso.contexto_faltante, caso.tipo_tarea])}
+          contexto={caso.contexto} contextoFaltante={caso.contexto_faltante} tipoTarea={caso.tipo_tarea}
+          editable={esErgonomia} ocupado={contexto.isPending}
           error={contexto.error?.message}
-          onGuardar={(c, motivo) => contexto.mutate({ c, motivo })}
+          onGuardar={(c, tarea, motivo) => contexto.mutate({ c, tarea, motivo })}
         />
       </div>
 
@@ -170,12 +190,16 @@ export function Analisis() {
         <div className="tarjeta">
           <h2>NOM-036-1-STPS-2018</h2>
           {caso.nom036 && <DesgloseNom036 nom={caso.nom036} />}
-          <FormNom036
-            key={JSON.stringify(caso.nom036)}
-            tipoTarea={caso.tipo_tarea} actual={caso.nom036} editable={esErgonomia}
-            ocupado={nom036.isPending} error={nom036.error?.message}
-            onGuardar={(n, motivo) => nom036.mutate({ n, motivo })}
-          />
+          {caso.tipo_tarea === "sin_clasificar" ? (
+            <p className="sutil">Clasificá la tarea y confirma los datos operativos para habilitar una evaluación NOM-036 específica.</p>
+          ) : (
+            <FormNom036
+              key={JSON.stringify(caso.nom036)}
+              tipoTarea={caso.tipo_tarea} actual={caso.nom036} editable={esErgonomia}
+              ocupado={nom036.isPending} error={nom036.error?.message}
+              onGuardar={(n, motivo) => nom036.mutate({ n, motivo })}
+            />
+          )}
         </div>
       </div>
 

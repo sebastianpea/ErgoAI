@@ -56,7 +56,7 @@ export function TablaAngulos({ angulos, editable = false, ocupado = false, onCon
                   <td>{ETIQUETA_SEGMENTO[a.segmento]}{a.lado ? ` (${a.lado})` : ""}</td>
                   <td>{a.vista}</td>
                   <td>{a.angulo_grados === null ? "—" : `${a.angulo_grados.toFixed(1)}°`}</td>
-                  <td><Semaforo color={semaforoSegmento(a.puntaje_reba)} texto="" valor={a.puntaje_reba} /></td>
+                  <td><Semaforo color={semaforoSegmento(a.puntaje_reba ?? undefined)} texto="" valor={a.puntaje_reba ?? "—"} /></td>
                   <td>{a.modificadores.length ? a.modificadores.join(", ") : "—"}</td>
                   <td>
                     <div className="celda-estado">

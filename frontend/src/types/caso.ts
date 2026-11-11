@@ -2,6 +2,7 @@
 
 export type Vista = "lateral" | "frontal" | "cenital";
 export type TipoTarea =
+  | "sin_clasificar"
   | "postura"
   | "levantamiento"
   | "transporte"
@@ -36,7 +37,7 @@ export interface Angulo {
   lado: "izq" | "der" | null;
   vista: Vista;
   angulo_grados: number | null;
-  puntaje_reba: number;
+  puntaje_reba: number | null;
   modificadores: string[];
   estado: "ok" | "revisar" | "sin_dato";
   motivo_estado?: string | null;
@@ -62,7 +63,7 @@ export interface FactorNom {
   valor: number;
 }
 
-export type MetodoNom036 = Exclude<TipoTarea, "postura">;
+export type MetodoNom036 = Exclude<TipoTarea, "postura" | "sin_clasificar">;
 
 export interface ResultadoNom036 {
   metodo: MetodoNom036;
@@ -99,21 +100,21 @@ export interface Actor {
 export type Agarre = "bueno" | "regular" | "malo" | "inaceptable";
 
 export interface Modificadores {
-  tronco_torsion_o_inclinacion: boolean;
-  cuello_torsion_o_inclinacion: boolean;
-  hombro_elevado: boolean;
-  brazo_abducido_o_rotado: boolean;
-  brazo_apoyado: boolean;
-  muneca_desviada_o_torcida: boolean;
+  tronco_torsion_o_inclinacion: boolean | null;
+  cuello_torsion_o_inclinacion: boolean | null;
+  hombro_elevado: boolean | null;
+  brazo_abducido_o_rotado: boolean | null;
+  brazo_apoyado: boolean | null;
+  muneca_desviada_o_torcida: boolean | null;
 }
 
-/** Datos de la tarea que no salen de la foto; el especialista los puede corregir. */
+/** Datos de tarea: null representa desconocido, no una medición negativa o valor neutro. */
 export interface ContextoTarea {
-  carga_kg: number;
-  carga_brusca: boolean;
-  agarre: Agarre;
-  actividad: number; // 0–3
-  apoyo_unilateral: boolean;
+  carga_kg: number | null;
+  carga_brusca: boolean | null;
+  agarre: Agarre | null;
+  actividad: number | null; // cantidad de condiciones REBA conocidas, 0–3
+  apoyo_unilateral: boolean | null;
   muneca_grados: number | null;
   altura_trabajo_cm: number | null;
   modificadores: Modificadores;
@@ -248,6 +249,10 @@ export interface CasoDetalle {
   fecha: string;
   imagenes: Imagen[];
   contexto: ContextoTarea;
+  contexto_faltante: string[];
+  assessment_status: "incomplete" | "ready" | "legacy";
+  risk_ready: boolean;
+  missing_evidence: string[];
   evaluacion_previa: EvaluacionPrevia;
   angulos: Angulo[];
   reba: ResultadoReba | null;

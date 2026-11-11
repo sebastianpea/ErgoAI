@@ -73,7 +73,7 @@ export type FotosNuevoCaso = Partial<Record<Vista, File>> & { lateral: File };
 export interface ResumenAnguloRapido {
   segmento: string;
   grados: number | null;
-  puntaje_reba: number;
+  puntaje_reba: number | null;
   estado: "ok" | "revisar" | "sin_dato";
   confianza: number;
 }
@@ -82,11 +82,14 @@ export interface AnalisisRapidoResponse {
   ok: boolean;
   personas: number;
   rostro_anonimizado: boolean;
-  reba_final: number;
+  reba_final: number | null;
   reba_nivel: string;
-  grupo_a: number;
-  grupo_b: number;
-  tabla_c: number;
+  grupo_a: number | null;
+  grupo_b: number | null;
+  tabla_c: number | null;
+  assessment_status: "incomplete" | "ready";
+  risk_ready: boolean;
+  missing_evidence: string[];
   angulos: ResumenAnguloRapido[];
   imagen_anotada_b64: string | null;
   tiempo_ms: number;
@@ -95,12 +98,10 @@ export interface AnalisisRapidoResponse {
 
 const real = {
   estadoVision: () => http<{ disponible: boolean; detalle: string }>("/vision/estado"),
-  /** Analiza una fotografía al instante con YOLOX + RTMPose y calcula el REBA Score. */
-  analizarRapido: async (foto: File, tipoTarea = "levantamiento", cargaKg = 0): Promise<AnalisisRapidoResponse> => {
+  /** Mide postura desde una foto; devuelve riesgo pendiente hasta confirmar los factores operativos. */
+  analizarRapido: async (foto: File): Promise<AnalisisRapidoResponse> => {
     const form = new FormData();
     form.append("foto", foto);
-    form.append("tipo_tarea", tipoTarea);
-    form.append("carga_kg", cargaKg.toString());
     let res: Response;
     try {
       res = await fetch(`${API_URL}/vision/analizar-rapido`, { method: "POST", body: form });
@@ -141,8 +142,8 @@ const real = {
     http<CasoDetalle>(`/casos/${seg(id)}/puntos/${vista}`, enviar("PUT", { puntos, ...actorActual() })),
   confirmarAngulo: (id: string, vista: Vista, segmento: Segmento) =>
     http<CasoDetalle>(`/casos/${seg(id)}/angulos/${vista}/${segmento}/confirmar`, enviar("POST", actorActual())),
-  corregirContexto: (id: string, contexto: ContextoTarea, motivo: string) =>
-    http<CasoDetalle>(`/casos/${seg(id)}/contexto`, enviar("PUT", { contexto, motivo, ...actorActual() })),
+  corregirContexto: (id: string, contexto: ContextoTarea, motivo: string, tipo_tarea?: TipoTarea) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/contexto`, enviar("PUT", { contexto, motivo, tipo_tarea, ...actorActual() })),
   revisarHallazgo: (id: string, idHallazgo: string, accion: "descartar" | "restaurar", motivo: string) =>
     http<CasoDetalle>(`/casos/${seg(id)}/hallazgos/${seg(idHallazgo)}/revision`,
       enviar("POST", { accion, motivo, ...actorActual() })),
@@ -291,20 +292,24 @@ const mock: typeof real = {
       ok: true,
       personas: 1,
       rostro_anonimizado: true,
-      reba_final: 4,
-      reba_nivel: "medio",
-      grupo_a: 3,
-      grupo_b: 2,
-      tabla_c: 4,
+      reba_final: null,
+      reba_nivel: "sin_dato",
+      grupo_a: null,
+      grupo_b: null,
+      tabla_c: null,
+      assessment_status: "incomplete",
+      risk_ready: false,
+      missing_evidence: ["datos_operativos", "revision_especialista"],
       tiempo_ms: 150,
       angulos: [
-        { segmento: "tronco", grados: 22.5, puntaje_reba: 2, estado: "ok", confianza: 0.9 },
-        { segmento: "cuello", grados: 15, puntaje_reba: 1, estado: "ok", confianza: 0.9 },
-        { segmento: "brazo", grados: 48, puntaje_reba: 3, estado: "ok", confianza: 0.9 },
-        { segmento: "antebrazo", grados: 85, puntaje_reba: 1, estado: "ok", confianza: 0.9 },
-        { segmento: "muneca", grados: 18, puntaje_reba: 2, estado: "ok", confianza: 0.9 },
-        { segmento: "pierna", grados: 10, puntaje_reba: 1, estado: "ok", confianza: 0.9 },
+        { segmento: "tronco", grados: 22.5, puntaje_reba: null, estado: "ok", confianza: 0.9 },
+        { segmento: "cuello", grados: 15, puntaje_reba: null, estado: "ok", confianza: 0.9 },
+        { segmento: "brazo", grados: 48, puntaje_reba: null, estado: "ok", confianza: 0.9 },
+        { segmento: "antebrazo", grados: 85, puntaje_reba: null, estado: "ok", confianza: 0.9 },
+        { segmento: "muneca", grados: 18, puntaje_reba: null, estado: "ok", confianza: 0.9 },
+        { segmento: "pierna", grados: 10, puntaje_reba: null, estado: "ok", confianza: 0.9 },
       ],
+      advertencia: "Vista de postura únicamente; faltan datos operativos confirmados para calcular y validar el riesgo.",
       imagen_anotada_b64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='400' height='300' fill='%23163E6A'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif'>Simulacion Captura ErgoAI</text></svg>",
     }),
   crearCaso: () => falla("Crear casos desde fotos requiere el backend real (npm run dev, sin modo simulado)."),
@@ -390,11 +395,16 @@ const mock: typeof real = {
     return copia(detalle(c));
   },
 
-  corregirContexto: (id, contexto, motivo) => {
+  corregirContexto: (id, contexto, motivo, tipo_tarea) => {
     const c = buscarCaso(id);
     if (!c) return falla(`Caso ${id} no encontrado`);
     if (!rolEs("ergonomia")) return falla("Solo Ergonomía puede corregir los datos de la tarea");
     c.contexto = contexto;
+    if (tipo_tarea) c.tipo_tarea = tipo_tarea;
+    c.contexto_faltante = [];
+    c.missing_evidence = c.tipo_tarea === "sin_clasificar" ? ["tipo_tarea"] : [];
+    c.assessment_status = c.missing_evidence.length ? "incomplete" : "ready";
+    c.risk_ready = true;
     registrar({ usuario: actorActual().usuario, accion: "contexto_corregido", objetivo: `${id} / datos de la tarea`, id_caso: id, motivo });
     return copia(detalle(c));
   },

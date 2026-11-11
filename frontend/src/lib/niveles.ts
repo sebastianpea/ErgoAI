@@ -49,6 +49,7 @@ export const ETIQUETA_SEGMENTO: Record<Segmento, string> = {
 
 export const ETIQUETA_TAREA: Record<TipoTarea, string> = {
   // Terminología de la rúbrica Jabil: levantamiento, transporte sin auxiliar y transporte con auxiliar.
+  sin_clasificar: "Sin clasificar · requiere revisión",
   postura: "Postura (ensamble)",
   levantamiento: "Levantamiento",
   transporte: "Transporte sin auxiliar (acarreo)",

@@ -14,24 +14,26 @@ function load(file, stubs) {
   new Function('require', 'module', 'exports', code)(name => name in stubs ? stubs[name] : require(name), mod, mod.exports);
   return mod.exports;
 }
-const success = { ok: true, personas: 1, rostro_anonimizado: true, reba_final: 4, reba_nivel: 'medio', grupo_a: 3, grupo_b: 2, tabla_c: 4, tiempo_ms: 12,
-  angulos: [{ segmento: 'tronco', grados: 22.5, puntaje_reba: 2, estado: 'ok', confianza: 0.9 }, { segmento: 'cuello', grados: null, puntaje_reba: 1, estado: 'sin_dato', confianza: 0 }], imagen_anotada_b64: 'data:image/jpeg;base64,AA==' };
+const success = { ok: true, personas: 1, rostro_anonimizado: true, reba_final: null, reba_nivel: 'sin_dato', grupo_a: null, grupo_b: null, tabla_c: null, assessment_status: 'incomplete', risk_ready: false, missing_evidence: ['actividad'], tiempo_ms: 12,
+  advertencia: 'Faltan datos operativos confirmados.', angulos: [{ segmento: 'tronco', grados: 22.5, puntaje_reba: null, estado: 'ok', confianza: 0.9 }, { segmento: 'cuello', grados: null, puntaje_reba: null, estado: 'sin_dato', confianza: 0 }], imagen_anotada_b64: 'data:image/jpeg;base64,AA==' };
 function render(result) {
   let slot = 0;
   const { CapturaCamaraModal } = load('components/CapturaCamaraModal.tsx', {
-    react: { useEffect: () => {}, useRef: () => ({ current: null }), useState: initial => [slot++ === 9 ? result : initial, () => {}] },
+    react: { useEffect: () => {}, useRef: () => ({ current: null }), useState: initial => [slot++ === 7 ? result : initial, () => {}] },
     '../api': { api: {} }, '../lib/niveles': { NIVEL_REBA: { medio: { color: 'amarillo' } }, COLOR_SEMAFORO: { amarillo: '#E0B000' }, ETIQUETA_TAREA: {} },
     'react/jsx-runtime': runtime,
   });
   return renderToStaticMarkup(runtime.jsx(CapturaCamaraModal, { alCerrar: () => {} }));
 }
-test('camera renders the public list/REBA response and missing angles without legacy fields', () => {
+test('camera shows measured angles but no final risk when operational evidence is missing', () => {
   const html = render(success);
-  for (const value of ['22.5', 'tronco', 'cuello', 'medio', 'data:image/jpeg;base64,AA==', '—']) assert.ok(html.includes(value), value);
-  assert.match(html, />4</);
+  for (const value of ['22.5', 'tronco', 'cuello', 'sin_dato', 'data:image/jpeg;base64,AA==', '—', 'pendiente de revisión']) assert.ok(html.includes(value), value);
+  assert.doesNotMatch(html, />4</);
+  assert.doesNotMatch(html, /Dictamen REBA/);
+  assert.match(html, /Análisis de postura/);
 });
 test('no-person response shows warning and retry, not a diagnosis or broken image', () => {
-  const html = render({ ...success, ok: false, personas: 0, reba_final: 0, reba_nivel: 'sin_dato', angulos: [], imagen_anotada_b64: null, advertencia: 'No se detectó a ninguna persona.' });
+  const html = render({ ...success, ok: false, personas: 0, reba_final: null, reba_nivel: 'sin_dato', angulos: [], imagen_anotada_b64: null, advertencia: 'No se detectó a ninguna persona.' });
   assert.match(html, /No se detectó a ninguna persona/);
   assert.match(html, /Tomar otra fotografía/);
   assert.doesNotMatch(html, /Dictamen REBA|<img/);
@@ -47,12 +49,10 @@ test('mock uses the same public response fields; multipart quick-analysis and ca
   globalThis.fetch = async (url, init) => { calls.push([url, init]); return { ok: true, json: async () => success }; };
   try {
     const api = client(false), photo = new Blob(['fixture'], { type: 'image/jpeg' });
-    assert.deepEqual(await api.analizarRapido(photo, 'postura', 8), success);
+    assert.deepEqual(await api.analizarRapido(photo), success);
     await api.crearCaso({ estacion: 'test' }, { lateral: photo });
     assert.deepEqual(calls.map(c => c[0]), ['/api/vision/analizar-rapido', '/api/casos']);
-    assert.deepEqual([...calls[0][1].body.keys()], ['foto', 'tipo_tarea', 'carga_kg']);
-    assert.equal(calls[0][1].body.get('carga_kg'), '8');
-    assert.equal(calls[0][1].body.get('tipo_tarea'), 'postura');
+    assert.deepEqual([...calls[0][1].body.keys()], ['foto']);
     assert.deepEqual([...calls[1][1].body.keys()], ['datos', 'lateral']);
     for (const [, init] of calls) { assert.equal(init.method, 'POST'); assert.equal(init.headers, undefined); }
   } finally { globalThis.fetch = original; }

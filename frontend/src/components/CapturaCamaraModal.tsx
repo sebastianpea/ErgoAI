@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, type AnalisisRapidoResponse } from "../api";
-import type { NivelReba, TipoTarea, Vista } from "../types/caso";
-import { COLOR_SEMAFORO, ETIQUETA_TAREA, NIVEL_REBA } from "../lib/niveles";
+import type { NivelReba, Vista } from "../types/caso";
+import { COLOR_SEMAFORO, NIVEL_REBA } from "../lib/niveles";
 
 interface Props {
   vistaObjetivo?: Vista;
@@ -29,10 +29,6 @@ export function CapturaCamaraModal({
   const [deviceIdSeleccionado, setDeviceIdSeleccionado] = useState<string>("");
   const [errorCamara, setErrorCamara] = useState<string | null>(null);
   const [iniciandoCamara, setIniciandoCamara] = useState<boolean>(true);
-
-  // Parámetros para análisis rápido
-  const [tipoTarea, setTipoTarea] = useState<TipoTarea>("levantamiento");
-  const [cargaKg, setCargaKg] = useState<number>(5.0);
 
   // Estados de captura y análisis
   const [fotoCapturada, setFotoCapturada] = useState<File | null>(null);
@@ -166,7 +162,7 @@ export function CapturaCamaraModal({
     setErrorCamara(null);
 
     try {
-      const res = await api.analizarRapido(archivo, tipoTarea, cargaKg);
+      const res = await api.analizarRapido(archivo);
       setResultado(res);
       detenerCamara();
     } catch (err) {
@@ -285,33 +281,7 @@ export function CapturaCamaraModal({
               </label>
 
               {modo === "diagnostico_rapido" && (
-                <>
-                  <label>
-                    Tipo de Tarea
-                    <select
-                      value={tipoTarea}
-                      onChange={e => setTipoTarea(e.target.value as TipoTarea)}
-                      disabled={analizando}
-                    >
-                      {(Object.keys(ETIQUETA_TAREA) as TipoTarea[]).map(t => (
-                        <option key={t} value={t}>{ETIQUETA_TAREA[t]}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    Carga Manipulada (kg)
-                    <input
-                      type="number"
-                      min="0"
-                      max="150"
-                      step="0.5"
-                      value={cargaKg}
-                      onChange={e => setCargaKg(parseFloat(e.target.value) || 0)}
-                      disabled={analizando}
-                    />
-                  </label>
-                </>
+                <p className="sutil">Esta captura mide postura. La clasificación de tarea y el riesgo requieren datos confirmados en la revisión del caso.</p>
               )}
             </div>
 
@@ -375,12 +345,12 @@ export function CapturaCamaraModal({
 
               {/* Métricas y Ángulos */}
               <div className="tarjeta">
-                <h2>Dictamen REBA</h2>
+                <h2>{resultado.risk_ready ? "Dictamen REBA" : "Análisis de postura"}</h2>
 
                 <div className="cifras" style={{ gridTemplateColumns: "1fr", margin: "0 0 1rem" }}>
                   <div className="cifra" style={{ borderLeftColor: obtenerColorRiesgo(resultado.reba_nivel) }}>
-                    <span className="cifra-valor">{resultado.reba_final}</span>
-                    <span className="cifra-texto">Puntaje REBA Final</span>
+                    <span className="cifra-valor">{resultado.reba_final ?? "—"}</span>
+                    <span className="cifra-texto">{resultado.risk_ready ? "Puntaje REBA Final" : "Riesgo pendiente de revisión"}</span>
                   </div>
                 </div>
 
@@ -417,8 +387,8 @@ export function CapturaCamaraModal({
                         <tr key={ang.segmento}>
                           <td style={{ fontWeight: 500, textTransform: "capitalize" }}>{ang.segmento}</td>
                           <td className="mono" style={{ fontWeight: 600 }}>{ang.grados == null ? "—" : `${ang.grados}°`}</td>
-                          <td style={{ fontWeight: 700, color: ang.puntaje_reba > 1 ? "#D93A3A" : "inherit" }}>
-                            +{ang.puntaje_reba}
+                          <td style={{ fontWeight: 700, color: ang.puntaje_reba != null && ang.puntaje_reba > 1 ? "#D93A3A" : "inherit" }}>
+                            {ang.puntaje_reba == null ? "—" : `+${ang.puntaje_reba}`}
                           </td>
                         </tr>
                       ))}

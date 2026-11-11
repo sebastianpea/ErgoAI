@@ -72,6 +72,7 @@ const casoBase: CasoMock = {
   fecha: "2026-11-06T10:00:00-06:00",
   imagenes: [lateral, frontal, cenital],
   contexto,
+  contexto_faltante: [], assessment_status: "legacy", risk_ready: true, missing_evidence: [],
   evaluacion_previa: { segmentos: { tronco: 2, cuello: 1, piernas: 1, brazo: 3, antebrazo: 1 }, reba_final: 7 },
   metricas: { creado_en: null, analisis_ms: null, primera_decision_en: null, validado_en: null },
   angulos: [
