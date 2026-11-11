@@ -333,8 +333,9 @@ class ServicioCasos:
                             id=f"V-plantilla-{vista}", origen="vision", severidad="info", vista=vista,
                             mensaje="Demostración sintética: puntos de plantilla, no una evaluación de una persona real."))
 
+                    persona_sel = personas[0].id if (personas and (len(personas) == 1 or id_caso != "C-006")) else None
                     imagenes.append({"vista": vista, "url": url_foto, "ancho": w, "alto": h, "puntos": puntos,
-                                     **({"personas": personas} if foto_origen else {})})
+                                     **({"personas": personas, "persona_seleccionada": persona_sel} if foto_origen else {})})
                 recs = [{**r, "texto_ia": r["texto"]} for r in datos.get("recomendaciones", [])]
                 caso = CasoAlmacenado.model_validate({**datos, "imagenes": imagenes, "recomendaciones": recs,
                                                        "hallazgos_vision": hallazgos})
