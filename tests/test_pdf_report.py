@@ -10,11 +10,16 @@ def _pdf_content(content: bytes) -> bytes:
     for match in re.finditer(rb"stream\r?\n(.*?)endstream", content, re.DOTALL):
         stream = match.group(1).strip()
         if stream.endswith(b"~>"):
-            stream = base64.a85decode(stream, adobe=True)
-        try:
-            stream = zlib.decompress(stream)
-        except zlib.error:
-            pass
+            try:
+                stream = base64.a85decode(stream, adobe=True)
+            except Exception:
+                pass
+        for wbits in (0, -15, 15, 32 + 15):
+            try:
+                stream = zlib.decompress(stream, wbits)
+                break
+            except Exception:
+                pass
         streams.append(stream)
     return b"\n".join([content, *streams])
 

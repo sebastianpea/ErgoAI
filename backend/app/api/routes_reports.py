@@ -29,7 +29,7 @@ def catalogo_nom036(request: Request) -> dict:
 
 
 @router.get("/casos/{id_caso}/informe")
-def informe_caso(id_caso: str):
+def informe_caso(id_caso: str = RutaParam(pattern=ID_PATRON)):
     builder = PdfReportBuilder()
     output_path = f"casos_jabil_workspace/{id_caso}/outputs/informe.pdf"
     pdf_path = builder.build(id_caso, output_path)
@@ -37,7 +37,7 @@ def informe_caso(id_caso: str):
 
 
 @router.get("/casos/{id_caso}/excel-jabil")
-def excel_jabil(id_caso: str):
+def excel_jabil(id_caso: str = RutaParam(pattern=ID_PATRON)):
     filler = JabilXlsmFiller()
     template_path = "casos_jabil_workspace/templates/16-PE80-6500-00014-H_base.xlsm"
     output_path = f"casos_jabil_workspace/{id_caso}/outputs/evaluacion_jabil.xlsx"
