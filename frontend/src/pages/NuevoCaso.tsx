@@ -153,7 +153,7 @@ export function NuevoCaso() {
       <Encabezado
         eyebrow="Visión artificial · YOLOX + RTMPose WholeBody-133"
         titulo="Nuevo caso desde fotos"
-        subtitulo="Captura fotos con la cámara en vivo o súbelas desde disco. El sistema detecta la postura, calcula REBA y propone recomendaciones; tú revisas y decides."
+        subtitulo="Sube o captura las fotos. Después selecciona manualmente la persona en cada vista y revisa la evidencia antes de calcular el riesgo; no se asocian identidades entre imágenes."
         acciones={
           <button
             type="button"
@@ -198,7 +198,7 @@ export function NuevoCaso() {
             <label>Estación<input value={estacion} onChange={e => setEstacion(e.target.value)} placeholder="Ej. Línea 2 · Estación 04" required minLength={3} /></label>
             <label>Tipo de tarea
               <select value={tarea} onChange={e => setTarea(e.target.value as TipoTarea)}>
-                {(Object.keys(ETIQUETA_TAREA) as TipoTarea[]).map(t => <option key={t} value={t}>{ETIQUETA_TAREA[t]}</option>)}
+                {(Object.keys(ETIQUETA_TAREA).filter(t => t !== "equipo") as TipoTarea[]).map(t => <option key={t} value={t}>{ETIQUETA_TAREA[t]}</option>)}
               </select>
             </label>
           </div>

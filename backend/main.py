@@ -81,7 +81,8 @@ def create_app(workspace_dir: Optional[Path] = None, config_dir: Optional[Path] 
     for exc_cls, status_code in CodigosError.items():
         def _crear_manejador(codigo: int):
             async def _manejador(_: Request, e: Exception):
-                return JSONResponse(status_code=codigo, content={"detail": str(e)})
+                return JSONResponse(status_code=codigo, content={"detail": str(e)},
+                                    headers={"Cache-Control": "no-store"} if _.url.path.startswith("/media/") else None)
             return _manejador
         app.add_exception_handler(exc_cls, _crear_manejador(status_code))
 

@@ -1,6 +1,6 @@
 # ErgoAI — Arquitectura, Auditoría Anti-Hardcode, Logros y Guía de Ejecución
 
-Este documento constituye la referencia técnica oficial sobre la arquitectura de **ErgoAI**, las decisiones de diseño adoptadas, la auditoría exhaustiva y erradicación de valores fijos (*hardcoded*), los logros funcionales alcanzados y las instrucciones paso a paso para ejecutar y validar el sistema.
+> **Guía histórica, no instrucciones vigentes ni certificación.** Conserva antecedentes de centralización y despliegue; rutas, versiones, puertos, tiempos y resultados abajo pertenecen a ese contexto. Para ejecutar usar [README](../README.md) y [estado actual](ESTADO_ACTUAL.md); el marco rector es [ARCHITECTURE](../ARCHITECTURE.md). SQLite es una alternativa futura condicionada, no implementada.
 
 ---
 
@@ -12,7 +12,7 @@ El sistema integra:
 1. **Pipeline de Visión Computacional 2D (YOLOX + RTMPose/RTMW WholeBody-133)** sobre `onnxruntime` para detección de operarios y extracción de hasta 133 articulaciones corporales y de manos sin requerir GPU obligatoria.
 2. **Motores Biomecánicos Deterministas (REBA y NOM-036 Apéndice I MAC/RAPP)** implementados en Python puro, donde la aritmética y los cruces tabulares son 100% matemáticos y auditables.
 3. **Agente IA con RAG en Memoria RAM (BM25 Lexical Retriever) y Ceguera Inducida**: un orquestador con LangChain que recupera cláusulas normativas de forma offline en microsegundos (< 1 ms) y alimenta al LLM bajo el principio de que **el LLM es redactor técnico, jamás calculador**.
-4. **Persistencia Cero Base de Datos (Zero Database) con Trazabilidad Criptográfica SHA-256**: almacenamiento atómico en sistema de archivos (`write-replace` con `fsync`) y bitácora inmutable de solo inserción con encadenamiento criptográfico.
+4. **Persistencia Cero Base de Datos (Zero Database) con Trazabilidad Criptográfica SHA-256**: almacenamiento atómico en sistema de archivos (`write-replace` con `fsync`) y bitácora con integridad verificable con encadenamiento criptográfico.
 5. **Frontend Moderno en React 18 + TypeScript + Vite**: con segregación de roles (Ergonomía vs. Ingeniería de Procesos) y proxy reverso transparente.
 
 ---
@@ -98,7 +98,7 @@ flowchart TD
 
     subgraph "Persistencia y Auditoría"
         ZeroDB["File-System Session Store (Atomic Write-Replace)"]
-        Ledger["Bitácora Inmutable SHA-256 (Hash-Chaining)"]
+        Ledger["Bitácora Verificable SHA-256 (Hash-Chaining)"]
     end
 
     Foto --> ONNX --> Geometria
@@ -121,7 +121,7 @@ En auditorías legales ante la Secretaría del Trabajo y Previsión Social (STPS
 Inyectar un manual normativo completo de 80 páginas en la ventana de contexto de un LLM pequeño (como `qwen2.5`) satura la atención del modelo y provoca contaminación cruzada (por ejemplo, recomendar el mantenimiento de ruedas de un carrito cuando el operario está realizando un levantamiento de cajas). La **Ceguera Inducida** filtra el corpus normativo en RAM en función de la tarea activa (`Levantamiento`, `Transporte`, `Empuje`), aislando exclusivamente los fragmentos pertinentes.
 
 ### 3. Cero Bases de Datos (*Zero Database Architecture*)
-La eliminación de dependencias de motores como PostgreSQL, SQLite o Redis previene cuellos de botella de red, migraciones de esquema complejas y fallas de conexión en estaciones de trabajo aisladas de planta. Los casos se almacenan en carpetas estructuradas con archivos JSON guardados mediante el patrón atómico *Write-Replace* (`tempfile` + `os.fsync` + `os.replace`), garantizando que un fallo de energía jamás corrompa un expediente. La bitácora encadenada con hashes SHA-256 asegura que cualquier alteración no autorizada sea detectada inmediatamente.
+La eliminación de dependencias de motores como PostgreSQL, SQLite o Redis previene cuellos de botella de red, migraciones de esquema complejas y fallas de conexión en estaciones de trabajo aisladas de planta. Los casos se almacenan en carpetas estructuradas con archivos JSON guardados mediante el patrón atómico *Write-Replace* (`tempfile` + `os.fsync` + `os.replace`), con atomicidad por archivo, sin transacciones entre archivos, coordinación multiproceso ni garantía ante todo corte de energía. SHA-256 detecta inconsistencias, no impide reescribir y recalcular la cadena ni constituye firma digital.
 
 ### 4. Patrón *Strategy* para NOM-036-1-STPS-2018
 El Apéndice I de la NOM-036 establece 5 metodologías de evaluación distintas según la naturaleza física de la actividad (Levantamiento MAC, Transporte MAC, Equipo MAC, Empuje sin auxiliar RAPP y Empuje con auxiliar RAPP). Cada una tiene matrices de puntuación, factores de postura y zonas de alcance independientes. El patrón *Strategy* implementa clases concretas para cada modalidad, seleccionadas en tiempo de ejecución por `EnrutadorNom036` a partir de `nom036_mac_rapp_tables.json`.
@@ -130,18 +130,18 @@ El Apéndice I de la NOM-036 establece 5 metodologías de evaluación distintas 
 
 ## 4. Cosas que se Lograron
 
-1. **Erradicación del 100% del Hardcoding**:
+1. **Centralización de Configuración**:
    - Variables de entorno centralizadas y tolerantes a alias en `settings.py`.
    - Bundle estático del frontend completamente desvinculado de dominios absolutos (`dist` sin `localhost:8000`).
-   - Umbrales ergonómicos y corporativos extraídos en su totalidad a catálogos JSON versionados.
-2. **Portabilidad Total de Pruebas**:
-   - La suite completa de **61 pruebas automatizadas** pasa con éxito al 100% ejecutándose con `pytest` o `unittest` desde cualquier carpeta del repositorio.
+   - Tablas y parámetros centralizados en JSON versionados; persisten constantes y defaults en calculadoras, pendientes de revisión normativa.
+2. **Pruebas Automatizadas**:
+   - Los resultados requieren ejecución con entorno y comando registrados; no se mantienen conteos históricos como evidencia actual. Usar pytest desde raíz; unittest no descubre las funciones pytest.
 3. **Inferencia de Pose Top-Down en Hardware Estándar**:
    - Detección precisa de ángulos articulares corporales y de muñeca utilizando modelos ONNX sin requerir GPU de servidor.
 4. **Resiliencia y Conexión Automática con el Agente IA**:
    - El sistema valida la disponibilidad de Ollama, resuelve automáticamente discrepancias entre la red de Docker y la máquina local, y ejecuta el pipeline de LangChain con validación estricta Pydantic.
-5. **Auditoría Criptográfica Certificada**:
-   - Verificación de integridad de la cadena SHA-256 en tiempo constante, cumpliendo los criterios de no-repudio y trazabilidad industrial.
+5. **Auditoría de Integridad**:
+   - La verificación SHA-256 recorre eventos (coste lineal); no aporta certificación ni no-repudio. Requiere protección de acceso y respaldos.
 
 ---
 
@@ -205,7 +205,7 @@ python scripts/preparar_entorno_ia.py
 Este script ejecuta automáticamente:
 1. **Descarga de Modelos de Visión**: Descarga los archivos ONNX oficiales (`yolox_tiny` y `rtmw_dw_l_m`) a la carpeta `models/` (~150 MB) si aún no existen.
 2. **Descarga y Verificación de Ollama**: Detecta si Ollama está en ejecución, verifica el modelo `qwen2.5` y lo descarga automáticamente (`ollama pull qwen2.5`) si falta.
-3. **Prueba de Inferencia End-to-End**: Corre una evaluación sintética para certificar que el LLM y el RAG responden adecuadamente.
+3. **Prueba de Inferencia End-to-End**: Corre una evaluación sintética de respuesta del LLM y RAG; no certifica exactitud normativa.
 
 ---
 
@@ -360,14 +360,11 @@ npm run dev:mock
 
 ### Opción 5: Ejecución de Pruebas y Verificación Integral
 
-Para validar la integridad matemática, criptográfica y de API (62 pruebas automatizadas):
+Ejemplos históricos de comprobaciones; usar los comandos vigentes del [índice actual](ESTADO_ACTUAL.md#ejecución-y-comprobaciones), sin asumir conteos ni resultados:
 
 ```bash
 # Ejecutar suite completa con pytest
 .venv/bin/pytest
-
-# O mediante unittest tradicional
-cd ErgoAI && ../.venv/bin/python -m unittest discover -s tests -p "test_*.py" -v
 
 # Probar el Agente Ergonómico con Ceguera Inducida y LLM
 cd ErgoAI && ../.venv/bin/python test_agent.py
@@ -382,6 +379,6 @@ cd ErgoAI/frontend && npm run build
 
 | Servicio | Puerto Predeterminado | Variable de Entorno | Propósito |
 | :--- | :--- | :--- | :--- |
-| **Frontend Web** | `5173` (Dev) / `80` (Docker) | `FRONTEND_PORT` / `VITE_PORT` | Interfaz React interactiva para especialistas |
+| **Frontend Web** | `5180` (Vite sin variables) / host `5173` → `80` (Docker) | `FRONTEND_PORT` (Compose); ver índice para Vite y proxy | Interfaz React interactiva para especialistas |
 | **API Backend** | `8000` | `BACKEND_PORT` / `PORT` | API REST FastAPI, cálculos y endpoints RAG |
 | **Motor LLM** | `11434` | `OLLAMA_PORT` / `OLLAMA_BASE_URL` | Servidor de modelos de lenguaje locales (Ollama) |

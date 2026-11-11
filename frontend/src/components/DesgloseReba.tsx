@@ -1,6 +1,7 @@
 import type { ResultadoNom036, ResultadoReba } from "../types/caso";
 import { ETIQUETA_COLOR_NOM, ETIQUETA_TAREA, NIVEL_REBA } from "../lib/niveles";
 import { Semaforo } from "./Semaforo";
+import { PaginationControls, usePagination } from "./PaginationControls";
 
 export function DesgloseReba({ reba }: { reba: ResultadoReba }) {
   const filas: [string, number][] = [
@@ -11,12 +12,14 @@ export function DesgloseReba({ reba }: { reba: ResultadoReba }) {
     ["Agarre", reba.agarre],
     ["Actividad", reba.actividad],
   ];
+  const pagination = usePagination(filas.length);
   const nivel = NIVEL_REBA[reba.nivel];
   return (
     <div>
+      <PaginationControls {...pagination} label="desglose REBA" />
       <dl className="desglose">
-        {filas.map(([k, v]) => (
-          <div key={k}><dt>{k}</dt><dd>{v}</dd></div>
+        {filas.map(([k, v], i) => (
+          <div key={k} className={pagination.rowClass(i)}><dt>{k}</dt><dd>{v}</dd></div>
         ))}
       </dl>
       <div className="total">
@@ -27,15 +30,17 @@ export function DesgloseReba({ reba }: { reba: ResultadoReba }) {
 }
 
 export function DesgloseNom036({ nom }: { nom: ResultadoNom036 }) {
+  const pagination = usePagination(nom.factores.length);
   return (
     <div>
       <p className="sutil">Método: {ETIQUETA_TAREA[nom.metodo]}</p>
+      <PaginationControls {...pagination} label="factores NOM-036" />
       <div className="tabla-scroll">
         <table>
           <thead><tr><th>Factor</th><th>Valor</th><th>Color</th></tr></thead>
           <tbody>
-            {nom.factores.map(f => (
-              <tr key={f.codigo}>
+            {nom.factores.map((f, i) => (
+              <tr key={f.codigo} className={pagination.rowClass(i)}>
                 <td>{f.etiqueta}</td>
                 <td>{f.valor}</td>
                 <td><Semaforo color={f.color} texto={ETIQUETA_COLOR_NOM[f.color]} /></td>

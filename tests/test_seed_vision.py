@@ -41,10 +41,9 @@ def test_seed_real_photo_dimensions_points_and_privacy(tmp_path, available):
             assert (entry["ancho"], entry["alto"]) == (480, 640)
             assert entry["puntos"] == ([{"id": 5, "x": 123., "y": 234., "confianza": .9, "corregido": False}] if available else [])
             response = client.get(entry["url"])
-            assert response.status_code == 200
-            decoded = cv2.imdecode(np.frombuffer(response.content, np.uint8), cv2.IMREAD_COLOR)
-            assert decoded.shape == (640, 480, 3)
-            assert not decoded.any()
+            assert response.status_code == 422
+            assert response.json() == {"detail": "Imagen no disponible por privacidad: requiere revisión del rostro de todas las personas."}
+            assert response.headers["cache-control"] == "no-store"
             stored = cv2.imread(str(tmp_path / "ws" / "C-001" / "inputs" / "synthetic.jpg"))
             assert not stored.any()
         if not available:

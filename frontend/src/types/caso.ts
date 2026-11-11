@@ -24,12 +24,20 @@ export interface Punto {
   corregido: boolean; // true si el especialista lo movió
 }
 
+export interface Persona {
+  id: string; // local a esta imagen; nunca una identidad entre vistas
+  puntos: Punto[];
+  caja?: [number, number, number, number] | null;
+}
+
 export interface Imagen {
   vista: Vista;
   url: string;
   ancho: number;
   alto: number;
   puntos: Punto[];
+  personas?: Persona[]; // ausente en datos históricos/mock
+  persona_seleccionada?: string | null;
 }
 
 export interface Angulo {
@@ -63,7 +71,7 @@ export interface FactorNom {
   valor: number;
 }
 
-export type MetodoNom036 = Exclude<TipoTarea, "postura" | "sin_clasificar">;
+export type MetodoNom036 = Exclude<TipoTarea, "postura" | "sin_clasificar"> | "equipo";
 
 export interface ResultadoNom036 {
   metodo: MetodoNom036;

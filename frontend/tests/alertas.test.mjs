@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { probe as pageProbe, visible } from './pagination.test.mjs';
 
 const require = createRequire(new URL('../package.json', import.meta.url));
 const ts = require('typescript');
@@ -69,7 +70,12 @@ function probe(alertState = { data: [alert()] }, caseState = { data: caseData },
   stubs['../components/DesgloseReba'] = { DesgloseReba: () => 'REBA vigente', DesgloseNom036: () => null };
   const Alertas = load('pages/Alertas.tsx', stubs).Alertas;
   const Analisis = load('pages/Analisis.tsx', stubs).Analisis;
-  const cards = () => Alertas();
+  const cards = () => {
+    let tree;
+    function Capture() { tree = Alertas(); return null; }
+    renderToStaticMarkup(runtime.jsx(Capture, {}));
+    return tree;
+  };
   const renderCards = tree => renderToStaticMarkup(runtime.jsx(StaticRouter, { location: '/alertas', children: tree }));
   const renderCase = (entry = '/casos/C%2Funo%20%23') => renderToStaticMarkup(runtime.jsx(StaticRouter, {
     location: entry, children: runtime.jsx(router.Routes, { children:
@@ -93,7 +99,7 @@ test('cards contain a brief understandable description, never full narrative or 
 test('actual Ver caso Link destination and route props expose exact complete linked detail without attending', () => {
   const p = probe();
   const tree = p.cards();
-  const link = nodes(tree, router.Link).find(n => text(n) === 'Ver caso');
+  const link = nodes(tree, router.Link).find(n => text(n).startsWith('Ver caso'));
   assert.ok(link);
   assert.ok(p.renderCase().includes(detail), 'valid case route must expose complete literal alert detail');
   p.queries.length = 1; // retain the card observer before following the Link's actual destination
@@ -177,4 +183,29 @@ test('alert list retains loading, error and empty states', () => {
     assert.ok(p.renderCards(p.cards()).includes(expected));
     assert.deepEqual(p.attended, []); assert.deepEqual(p.invalidations, []);
   }
+});
+
+test('alerts sort globally before paging, preserve attend action, case link and invalidations', () => {
+  const invalidated = [], attended = [];
+  const data = Array.from({ length: 12 }, (_, i) => ({ id_alerta: `A${i}`, id_caso: `C/${i}`, estado: i === 0 ? 'atendida' : 'nueva', nivel_urgencia: i === 11 ? 'CRITICO' : 'BAJO', tipo_evento: 'ANGULO_POR_REVISAR', estacion: `Estación ${i}`, timestamp: '2025-01-01' }));
+  const before = structuredClone(data);
+  const p = pageProbe('pages/Alertas.tsx', 'Alertas', {}, {
+    'react-router-dom': { Link: ({ to, children, ...rest }) => ({ type: 'a', props: { ...rest, href: to, children } }) },
+    '@tanstack/react-query': {
+      useQuery: () => ({ data }),
+      useQueryClient: () => ({ invalidateQueries: value => invalidated.push(value.queryKey) }),
+      useMutation: options => ({ mutate: id => { attended.push(id); options.onSuccess(); } }),
+    },
+  });
+  assert.equal(visible(p.tree, 'article').length, 5);
+  assert.match(text(visible(p.tree, 'article')[0]), /Estación 11/);
+  assert.equal(nodes(visible(p.tree, 'article')[0], 'a')[0].props.href, '/casos/C%2F11');
+  assert.match(text(p.tree), /11 alertas pendientes en total/);
+  p.click('Siguiente');
+  const article = visible(p.tree, 'article')[0];
+  nodes(article, 'button')[0].props.onClick();
+  assert.equal(attended[0], 'A5');
+  assert.deepEqual(invalidated, [['alertas'], ['bitacora']]);
+  p.click('Anterior'); assert.match(text(visible(p.tree, 'article')[0]), /Estación 11/);
+  assert.deepEqual(data, before);
 });

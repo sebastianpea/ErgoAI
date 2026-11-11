@@ -31,14 +31,14 @@ def generar_pdf_caso(caso: CasoDetalle, bitacora_hash: str | None = None) -> io.
 
     styles = getSampleStyleSheet()
 
-    # Colores corporativos Jabil
-    c_navy = colors.HexColor("#163E6A")
+    # Colores corporativos oficiales Jabil (jabil_brand_identity_manual.md)
+    c_navy = colors.HexColor("#002B49")
     c_cyan = colors.HexColor("#3CB4E5")
-    c_dark = colors.HexColor("#1F2937")
-    c_gray = colors.HexColor("#60605B")
+    c_dark = colors.HexColor("#1A1A1A")
+    c_gray = colors.HexColor("#6C757D")
     c_light = colors.HexColor("#F4F6F8")
-    c_border = colors.HexColor("#E1E5EA")
-    c_green = colors.HexColor("#2E9E5B")
+    c_border = colors.HexColor("#E2E8F0")
+    c_green = colors.HexColor("#008A5E")
     c_red = colors.HexColor("#D93A3A")
 
     # Estilos tipográficos

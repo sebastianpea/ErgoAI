@@ -1,0 +1,21 @@
+{
+  "lev_03_caja_lateral_perfil_C.jpg": {
+    "tronco": 0.0,
+    "cuello": -11.8,
+    "piernas": 13.2
+  },
+  "sr_03_recorte_hombros_operarioC.jpg": {
+    "tronco": 3.6,
+    "brazo": 1.9,
+    "antebrazo": 99.4,
+    "muneca": 17.7,
+    "piernas": 6.2
+  },
+  "cen_02_vista_cenital_oblicua_25deg.jpg": {
+    "tronco": 16.5,
+    "cuello": 40.7,
+    "brazo": -23.6,
+    "antebrazo": 116.3,
+    "muneca": 2.5
+  }
+}

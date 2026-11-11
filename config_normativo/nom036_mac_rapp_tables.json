@@ -87,6 +87,21 @@
         { "codigo": "obstaculos", "etiqueta": "Obstáculos en la ruta", "opciones": { "verde": 0, "amarillo": 2, "rojo": 3 } }
       ]
     },
+    "equipo": {
+      "hoja": "Equipo (3)",
+      "captura_libre": true,
+      "factores": [
+        { "codigo": "peso_equipo_operadores", "etiqueta": "Peso de la carga y número de operadores" },
+        { "codigo": "distancia_manos_espalda", "etiqueta": "Distancia horizontal manos–espalda" },
+        { "codigo": "region_vertical", "etiqueta": "Región vertical del levantamiento" },
+        { "codigo": "torsion_flexion_lateral", "etiqueta": "Torsión y flexión lateral del torso" },
+        { "codigo": "restricciones_posturales", "etiqueta": "Restricciones posturales" },
+        { "codigo": "acoplamiento_mano_carga", "etiqueta": "Acoplamiento mano-carga (elementos de sujeción)" },
+        { "codigo": "superficie_trabajo", "etiqueta": "Superficie de trabajo" },
+        { "codigo": "factores_ambientales", "etiqueta": "Otros factores ambientales" },
+        { "codigo": "comunicacion_coordinacion_control", "etiqueta": "Comunicación, coordinación y control" }
+      ]
+    },
     "empuje_sin_auxiliar": {
       "hoja": "sin auxiliar (4)",
       "captura_libre": true,

@@ -2,7 +2,7 @@
 import type {
   CambioPropuesto, CasoDetalle, CasoResumen, ColorNom, ContextoTarea, Decision, EntradaBitacora, EvaluacionPrevia,
   FactorNom, Impacto, MetodoNom036, MetricasDashboard,
-  NuevaRecomendacion, PaginaCasos, Punto, Segmento,
+  NuevaRecomendacion, PaginaCasos, Persona, Punto, Segmento,
   Recomendacion, ResultadoIntegridad, TipoTarea, Validacion, ValorCambio, Vista,
 } from "./types/caso";
 import type { Alerta } from "./types/alerta";
@@ -79,6 +79,7 @@ export interface ResumenAnguloRapido {
 }
 
 export interface AnalisisRapidoResponse {
+  poses: Persona[];
   ok: boolean;
   personas: number;
   rostro_anonimizado: boolean;
@@ -138,8 +139,10 @@ const real = {
     http<PaginaCasos>(`/casos/pagina?page=${page}&page_size=${page_size}`),
   metricasDashboard: () => http<MetricasDashboard>("/metricas/dashboard"),
   obtenerCaso: (id: string) => http<CasoDetalle>(`/casos/${seg(id)}`),
-  corregirPuntos: (id: string, vista: Vista, puntos: Punto[]) =>
-    http<CasoDetalle>(`/casos/${seg(id)}/puntos/${vista}`, enviar("PUT", { puntos, ...actorActual() })),
+  seleccionarPersona: (id: string, vista: Vista, persona_id: string | null) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/persona/${vista}`, enviar("PUT", { persona_id, ...actorActual() })),
+  corregirPuntos: (id: string, vista: Vista, puntos: Punto[], persona_id?: string | null) =>
+    http<CasoDetalle>(`/casos/${seg(id)}/puntos/${vista}`, enviar("PUT", { puntos, persona_id, ...actorActual() })),
   confirmarAngulo: (id: string, vista: Vista, segmento: Segmento) =>
     http<CasoDetalle>(`/casos/${seg(id)}/angulos/${vista}/${segmento}/confirmar`, enviar("POST", actorActual())),
   corregirContexto: (id: string, contexto: ContextoTarea, motivo: string, tipo_tarea?: TipoTarea) =>
@@ -289,6 +292,7 @@ const mock: typeof real = {
   estadoVision: () => copia({ disponible: false, detalle: "Modo simulado: la visión artificial requiere el backend real." }),
   analizarRapido: () =>
     copia<AnalisisRapidoResponse>({
+      poses: [],
       ok: true,
       personas: 1,
       rostro_anonimizado: true,
@@ -366,6 +370,7 @@ const mock: typeof real = {
     return c ? copia(detalle(c)) : falla(`Caso ${id} no encontrado`);
   },
 
+  seleccionarPersona: () => falla("Seleccionar personas requiere el backend real."),
   corregirPuntos: (id, vista, puntos) => {
     const c = buscarCaso(id);
     if (!c) return falla(`Caso ${id} no encontrado`);

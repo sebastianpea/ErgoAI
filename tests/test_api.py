@@ -36,7 +36,10 @@ class TestApi(unittest.TestCase):
         self.assertEqual(d["nom036"]["total"], sum(f["valor"] for f in d["nom036"]["factores"]))
         self.assertTrue(any(h["origen"] == "reglas_jabil" for h in d["hallazgos"]))
         self.assertFalse(d["validacion"]["completa"])
-        self.assertEqual(self.cliente.get(d["imagenes"][0]["url"]).status_code, 200)
+        media = self.cliente.get(d["imagenes"][0]["url"])
+        self.assertEqual(media.status_code, 422)
+        self.assertEqual(media.json(), {"detail": "Imagen no disponible por privacidad: requiere revisión del rostro de todas las personas."})
+        self.assertEqual(media.headers["cache-control"], "no-store")
 
     def test_caso_inexistente_y_traversal(self):
         self.assertEqual(self.cliente.get("/casos/NOPE").status_code, 404)

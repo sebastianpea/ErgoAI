@@ -1,5 +1,7 @@
 # Especificaciones Integrales del Proyecto: ErgoAI - Asistente Inteligente y Validación de Evaluaciones Ergonómicas (Track 4 - Jabil)
 
+> **Requisitos y propuestas históricas.** Las citas se conservan; las interpretaciones normativas deben cotejarse con originales. Las secciones 3 y 4 proponen un stack y un árbol, no describen la implementación. Ver [estado actual](docs/ESTADO_ACTUAL.md) y [marco rector](ARCHITECTURE.md).
+
 Este documento integra de manera exhaustiva todas las especificaciones técnicas, metodológicas, operativas, normativas y de arquitectura exigidas y demostradas a través del análisis secuencial de los tres formatos oficiales del proyecto:
 1. **Formato 1 (`16-PE80-6500-00014-H.xlsm`)**: Herramienta oficial de Jabil para Evaluación de Ergonomía en Ingeniería de Procesos (NOM-036-1-STPS-2018 / MAC, RULA/REBA, EAWS, Antropometría).
 2. **Formato 2 (`16-PE30-6500-00023.pdf`)**: Instrucción de Trabajo de Administración y Control de Layouts (Estándares de diseño de estación, distancias de alcance, alturas, Ley Silla, límites de carga, ruteos y aprobaciones MOC).
@@ -154,7 +156,7 @@ Define las reglas exactas del reto competitivo para el desarrollo del agente int
 ## 2. Lo que Explícitamente se Prohíbe o No se Debe Hacer (Anti-Patrones y Restricciones)
 
 ### 2.1 Prohibiciones Técnicas y de Competencia (Rúbrica Track 4)
-1.  **PROHIBIDO implementar o depender de un motor de Base de Datos (SQL / NoSQL)**: La rúbrica especifica explícitamente: *"El equipo no genera una base de datos: solo implementa el método para evaluar la postura"*. No se debe levantar SQL Server, PostgreSQL, MySQL, MongoDB ni SQLite como requisito del sistema.
+1.  **Persistencia actual por archivos, sin DBMS requerido**: Se conserva la cita: *"El equipo no genera una base de datos: solo implementa el método para evaluar la postura"*. No se deduce de ella una prohibición definitiva de SQLite: su admisibilidad sigue pendiente de aclaración y cualquier incorporación requiere autorización.
 2.  **PROHIBIDO emitir recomendaciones finales sin validación humana (Human-in-the-Loop)**: Ninguna recomendación generada por la IA puede convertirse en acción de piso ni exportarse como informe definitivo sin pasar por el módulo de revisión, edición y aprobación del especialista con registro de trazabilidad (penalización directa en el Criterio 6).
 3.  **PROHIBIDO limitar las recomendaciones a Medidas Administrativas en casos de Riesgo Alto o Muy Alto**: Proponer únicamente "capacitar al operador", "dar pausas" o "rotar personal" cuando el riesgo es Alto/Muy Alto impide obtener el puntaje máximo en el Criterio 3. Siempre deben proponerse primero **Controles de Ingeniería y Rediseño de Estación**.
 4.  **PROHIBIDO omitir el cálculo matemático del Riesgo Residual**: Mencionar el riesgo residual de forma descriptiva sin recalcular el nuevo puntaje REBA / NOM-036 esperado y compararlo contra el inicial penaliza el Criterio 7.
@@ -178,7 +180,7 @@ Define las reglas exactas del reto competitivo para el desarrollo del agente int
 
 ## 3. Arquitectura Sugerida del Proyecto (3 Capas: Backend, Frontend y Persistencia Sin BD)
 
-Dado que el proyecto exige alta precisión en visión computacional (estimación de ángulos articulares en 3 vistas: frontal, lateral y aérea), exactitud determinista en los métodos **REBA** y **NOM-036-1 / Jabil `16-PE80-6500-00014-H`**, generación inteligente de recomendaciones con IA, validación *Human-in-the-Loop* con trazabilidad, y **ausencia total de base de datos**, se propone una **Arquitectura Modular Desacoplada Basada en Estado en Memoria y Almacenamiento de Sesiones JSON/Archivos (Stateless Engine + File-Based Audit Trail)**.
+Dado que el proyecto exige alta precisión en visión computacional (estimación de ángulos articulares en 3 vistas: frontal, lateral y aérea), exactitud determinista en los métodos **REBA** y **NOM-036-1 / Jabil `16-PE80-6500-00014-H`**, generación inteligente de recomendaciones con IA, validación *Human-in-the-Loop* con trazabilidad, y **persistencia actual por archivos**, se propone una **Arquitectura Modular Desacoplada Basada en Estado en Memoria y Almacenamiento de Sesiones JSON/Archivos (Stateless Engine + File-Based Audit Trail)**.
 
 ### 3.1 División en 3 Puntos Clave
 
@@ -190,7 +192,7 @@ Dado que el proyecto exige alta precisión en visión computacional (estimación
         *   **MediaPipe Pose Heavy / YOLOv11-Pose + OpenCV**: Extracción de 33 keypoints 3D/2D en las vistas **Frontal** (abducción de hombro, inclinación lateral de tronco/cuello, asimetría), **Lateral/Costado** (flexión/extensión de cuello, tronco, hombro, codo, muñeca y rodilla) y **Aérea/Superior** (rotación/torsión de tronco, ángulo de apertura y zona de alcance en mesa `1 a 5` en mm).
         *   **Geometría Vectorial (`NumPy` / `SciPy`)**: Cálculo exacto de ángulos mediante producto punto en planos anatómicos proyectados y calibración de homografía para estimar distancias horizontales manos-espalda baja (`cm`) y zonas de alcance (`150 mm - 1500 mm`).
     2.  **Motor Determinista de Evaluación Ergonómica (`ergo_calculators`)**:
-        *   *Nota crítica*: **Nunca dejar que un LLM calcule puntajes REBA o NOM-036 por su cuenta** (evita alucinaciones y garantiza 20/20 pts en el Criterio 1 y 15/15 pts en el Criterio 2).
+        *   *Nota crítica*: **Nunca dejar que un LLM calcule puntajes REBA o NOM-036 por su cuenta** (separa cálculo de generación; no garantiza exactitud normativa, precisión ni puntos de la rúbrica).
         *   **Calculadora REBA Exacta (`reba_engine.py`)**: Tablas oficiales A, B y C codificadas de forma determinista con los umbrales de ángulo de Jabil, ajustes por abducción, rotación, acoplamiento, carga y actividad muscular.
         *   **Calculadora NOM-036-1 & Jabil XLSM (`nom036_jabil_engine.py`)**: Réplica exacta en código Python de las fórmulas de las hojas `Mov`, `Levantamiento (1)`, `Transporte (2)`, `Equipo (3)`, `sin auxiliar (4)`, `con auxiliar (5)` y `EAWS` del archivo `16-PE80-6500-00014-H.xlsm`, además de las reglas de `16-PE30-6500-00023.pdf` (límite 14 kg, Ley Silla, alturas 95-125 cm).
         *   **Simulador de Riesgo Residual (`residual_risk_simulator.py`)**: Función matemática que proyecta la corrección de ángulos (ej. llevar flexión de tronco de `48°` a `10°` al elevar la mesa a `105 cm`, o reducir carga efectiva a `0 kg` con lifter) y recalcula automáticamente el **REBA Residual** y **NOM-036 Residual**.
@@ -215,9 +217,9 @@ Dado que el proyecto exige alta precisión en visión computacional (estimación
     5.  **Comparador Dinámico de Riesgo Residual e Impacto (Antes vs. Después)**: Gráficos de radar y barras (`Chart.js` / `ECharts`) que muestran la caída del puntaje REBA (ej. de `11 - Muy Alto` a `3 - Bajo`) y el cronómetro de ahorro de tiempo (ej. de `45 min` manual a `18 seg` con ErgoAI).
 
 #### Punto 3: Base de Datos ¿Es necesaria? -> Estrategia de Persistencia Sin Base de Datos
-*   **Veredicto**: **NO se debe usar Base de Datos**, por mandato expreso de la rúbrica (*"El equipo no genera una base de datos: solo implementa el método para evaluar la postura"*).
+*   **Decisión operativa**: usar archivos ahora. La cita de la rúbrica no resuelve por sí sola la admisibilidad de SQLite; queda como alternativa futura, no implementada ni autorizada.
 *   **Cómo resolver la Trazabilidad (Criterio 6) y los 6 Casos sin Base de Datos**:
-    *   Se implementa un **Sistema de Archivos de Sesión Inmutables (`File-System Session Store`)** basado en archivos `.json` estructurados y firmados con hash SHA-256 en una carpeta local `/workspace_sessions/`.
+    *   Se implementa un **Sistema de Archivos de Sesión (`File-System Session Store`)** basado en archivos `.json` estructurados con integridad verificable por hash SHA-256 (no firma digital) en una carpeta local `/workspace_sessions/`.
     *   Cada vez que se evalúa uno de los 6 casos o el especialista edita/aprueba una recomendación, el backend guarda instantáneamente en memoria y vuelca a un archivo `case_01_audit_trail.json` el historial exacto con `timestamp_utc`, `id_especialista`, `recomendacion_original_ia`, `recomendacion_editada_humano`, `accion (APPROVED | EDITED | REJECTED)`, `riesgo_inicial` y `riesgo_residual`.
     *   Las reglas normativas (tablas REBA, tablas NOM-036-1 y parámetros Jabil `16-PE30-6500-00023`) viven en archivos de configuración estáticos y auditables (`/config/reba_tables.json`, `/config/nom036_rules.json`, `/config/jabil_layout_standards.json`).
 

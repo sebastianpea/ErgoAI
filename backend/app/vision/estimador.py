@@ -53,6 +53,13 @@ class PuntoDetectado:
 
 
 @dataclass
+class PersonaDetectada:
+    id: str
+    puntos: List[PuntoDetectado] = field(default_factory=list)
+    caja: Optional[Tuple[float, float, float, float]] = None
+
+
+@dataclass
 class ResultadoFoto:
     imagen_bgr: np.ndarray          # ya reducida y protegida por máscara sólida
     personas: int
@@ -61,6 +68,7 @@ class ResultadoFoto:
     rostro_anonimizado: bool = False
     por_respaldo: bool = False  # el detector no vio a la persona; se estimó sobre la imagen completa
     regiones_privacidad: Optional[List[Tuple[int, int, int, int]]] = None  # [] indica cierre completo
+    poses: List[PersonaDetectada] = field(default_factory=list)
 
 
 def reducir(img: np.ndarray) -> np.ndarray:
@@ -116,7 +124,7 @@ class EstimadorPose:
                              to_openpose=False, backend="onnxruntime", device=VISION_DEVICE)
 
     def analizar(self, img_bgr: np.ndarray | str) -> ResultadoFoto:
-        """Detecta personas, elige al operador (la de mayor tamaño) y anonimiza rostros."""
+        """Conserva cada detección por separado; el operador se elige manualmente por imagen."""
         if not isinstance(img_bgr, np.ndarray):
             import cv2
             leida = cv2.imread(str(img_bgr))
@@ -145,21 +153,31 @@ class EstimadorPose:
 
         regiones = localizar_cabezas(img, cajas, kpts, scores, VISION_CONFIANZA_KEYPOINT) or []
         img = proteger_imagen(img, regiones)
-        areas = (cajas[:, 2] - cajas[:, 0]) * (cajas[:, 3] - cajas[:, 1])
-        p = int(np.argmax(areas))
         h, w = img.shape[:2]
-        puntos = [
-            PuntoDetectado(
-                id=nuestro,
-                x=float(np.clip(kpts[p, wb, 0], 0, w)), y=float(np.clip(kpts[p, wb, 1], 0, h)),
-                confianza=round(float(np.clip(scores[p, wb], 0.0, 1.0)), 3),
-            )
-            for nuestro, wb in MAPA_PUNTOS.items()
-        ]
-        x1, y1, x2, y2 = (float(v) for v in cajas[p])
-        return ResultadoFoto(imagen_bgr=img, personas=len(cajas), puntos=puntos,
-                             caja=None if respaldo else (x1, y1, x2 - x1, y2 - y1),
-                             rostro_anonimizado=True, por_respaldo=respaldo, regiones_privacidad=regiones)
+        poses = []
+        # IDs locales persistidos con la imagen; no son identidades entre vistas o nuevas inferencias.
+        for p, caja in enumerate(cajas):
+            x1, y1, x2, y2 = (float(v) for v in caja)
+            puntos = []
+            for nuestro, wb in MAPA_PUNTOS.items():
+                x, y = (float(v) for v in kpts[p, wb])
+                confianza = float(scores[p, wb])
+                if (not np.isfinite([x, y, confianza]).all()
+                        or not VISION_CONFIANZA_KEYPOINT <= confianza <= 1
+                        or not 0 <= x <= w or not 0 <= y <= h
+                        or not x1 <= x <= x2 or not y1 <= y <= y2):
+                    continue
+                puntos.append(PuntoDetectado(nuestro, x, y, confianza))
+            # Una extremidad colapsada no autoriza superponer sus articulaciones.
+            ambiguos = {a.id for a in puntos for b in puntos
+                        if a.id != b.id and abs(a.x - b.x) <= 1 and abs(a.y - b.y) <= 1}
+            puntos = [punto for punto in puntos if punto.id not in ambiguos]
+            # Sin caja detectada no hay evidencia suficiente para atribuir una pose a una persona.
+            poses.append(PersonaDetectada(f"persona-{p + 1}", [] if respaldo else puntos,
+                                          None if respaldo else (x1, y1, x2 - x1, y2 - y1)))
+        return ResultadoFoto(imagen_bgr=img, personas=len(cajas),
+                             rostro_anonimizado=True, por_respaldo=respaldo,
+                             regiones_privacidad=regiones, poses=poses)
 
 
 estimador = EstimadorPose()

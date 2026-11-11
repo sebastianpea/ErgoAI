@@ -36,6 +36,7 @@ function Show-Menu() {
     Write-Host "  7. Build produccion frontend"            -ForegroundColor Cyan
     Write-Host "  8. Limpiar temporales"                   -ForegroundColor Cyan
     Write-Host "  9. Listar modelos Ollama"                -ForegroundColor Cyan
+    Write-Host " 10. Recrear todo desde 0 (reset workspace + levantar)" -ForegroundColor Yellow
     Write-Host "  0. Salir del script"                     -ForegroundColor Red
     Write-Host ""
     Write-Host "Puertos: Backend=$BackendPort | Frontend=$FrontendPort" -ForegroundColor Gray
@@ -254,6 +255,33 @@ function Action-Clean() {
     Log "Limpieza completa."
 }
 
+function Action-ResetAll() {
+    Log "Recreando todo el sistema desde cero..."
+    Action-Down
+    Start-Sleep -Seconds 2
+
+    Log "Limpiando workspace de datos y runtime (casos_jabil_workspace)..."
+    $ws = Join-Path $root "casos_jabil_workspace"
+    if (Test-Path $ws) {
+        Remove-Item $ws -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    New-Item -ItemType Directory -Path $ws -Force | Out-Null
+
+    Log "Limpiando temporales y cache de frontend..."
+    Action-Clean
+    $viteCache = Join-Path $root "frontend\node_modules\.vite"
+    if (Test-Path $viteCache) { Remove-Item $viteCache -Recurse -Force -ErrorAction SilentlyContinue }
+    $frontendDist = Join-Path $root "frontend\dist"
+    if (Test-Path $frontendDist) { Remove-Item $frontendDist -Recurse -Force -ErrorAction SilentlyContinue }
+
+    Log "Reconstruyendo bundle del frontend..."
+    try { Action-Build } catch { Log "AVISO: no se pudo compilar frontend/dist" }
+
+    Log "Levantando backend y frontend desde cero (re-sembrando datos)..."
+    Action-Up
+    Log "¡Sistema recreado y levantado desde cero con exito!"
+}
+
 function Action-Ollama() {
     if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
         Log "Ollama no esta instalado."
@@ -272,7 +300,7 @@ function Press-AnyKey() {
 # Bucle principal interactivo
 while ($true) {
     Show-Menu
-    $opcion = Read-Host "Seleccione una opcion (0-9)"
+    $opcion = Read-Host "Seleccione una opcion (0-10)"
     Write-Host ""
 
     switch ($opcion) {
@@ -285,6 +313,9 @@ while ($true) {
         "7"  { Action-Build }
         "8"  { Action-Clean }
         "9"  { Action-Ollama }
+        "10" { Action-ResetAll }
+        "r"  { Action-ResetAll }
+        "R"  { Action-ResetAll }
         "0"  { Log "Saliendo del script..."; break }
         default { Log "Opcion invalida: '$opcion'. Intente de nuevo." }
     }

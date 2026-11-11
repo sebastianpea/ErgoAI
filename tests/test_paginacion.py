@@ -256,7 +256,9 @@ def test_all_mutation_consumers_refresh_and_preserve_contracts(tmp_path, mutatio
         if mutation == "points":
             points = detail["imagenes"][0]["puntos"]
             points[5]["x"] -= 20
-            response = client.put("/casos/C-001/puntos/lateral", json={"puntos": points})
+            response = client.put("/casos/C-001/puntos/lateral", json={
+                "persona_id": detail["imagenes"][0]["persona_seleccionada"], "puntos": points,
+            })
             assert response.json()["imagenes"][0]["puntos"][5]["corregido"]
         elif mutation == "context":
             context = {**detail["contexto"], "carga_kg": 0, "actividad": 0}

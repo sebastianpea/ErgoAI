@@ -23,7 +23,7 @@ function load(file, stubs = {}, cache = new Map()) {
   new Function('require', 'module', 'exports', code)(name => {
     if (name in stubs) return stubs[name];
     if (name === 'react/jsx-runtime') return runtime;
-    if (name.endsWith('.webp')) return 'logo.webp';
+    if (name.endsWith('.webp') || name.endsWith('.svg')) return 'logo.svg';
     if (name.startsWith('.')) {
       const base = resolve(dirname(path), name);
       for (const ext of ['.ts', '.tsx']) {

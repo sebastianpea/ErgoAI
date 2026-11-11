@@ -1,8 +1,10 @@
 # Documentación Técnica — ErgoAI (Track 4 - Jabil X-RAIC 2026)
 
+> **Informe condensado histórico.** No certifica resultados actuales; comandos y descripción son antecedentes. Consultar [estado actual y ejecución vigente](ESTADO_ACTUAL.md) y [README](../README.md).
+
 **Versión:** 1.0  
 **Fecha:** Noviembre 2026  
-**Extensión:** ≤10 cuartillas (criterio 9 de la rúbrica)
+**Extensión objetivo:** ≤10 cuartillas; pendiente de verificar en el entregable maquetado.
 
 ---
 
@@ -54,13 +56,13 @@ Todos los datos se almacenan en archivos JSON bajo `casos_jabil_workspace/caso_<
 - `audit_trail.json`: registro append-only con encadenamiento SHA-256 (hash chaining).
 - `inputs/`: fotografías del caso.
 
-Escritura atómica (write-temp → fsync → os.replace). No se usa SQLite, PostgreSQL, MongoDB ni ningún motor DBMS.
+Escritura atómica por archivo (write-temp → fsync → os.replace), sin transacciones entre archivos ni coordinación multiproceso. Los hashes no son firmas ni impiden recalcular una cadena reescrita. No se usa DBMS; SQLite queda condicionado a autorización futura.
 
 ---
 
 ## 5. Agente IA y RAG
 
-- **RAG en memoria:** BM25 lexical retriever sobre `config_normativo/jabil_reglas.json` y `nom036_knowledge_base.md`.
+- **RAG actual:** `InMemoryRAG` indexa `normative_rag_clauses` de `jabil_standards_00023.json`; `knowledge_retriever.py` consulta reglas etiquetadas de `jabil_reglas.json`. El Markdown no es fuente numérica del cálculo.
 - **Ceguera inducida:** El contexto normativo se poda según el tipo de prueba activa para evitar contaminación cruzada.
 - **LLM:** Compatible con Ollama (local), Gemini u OpenAI vía `LLMFactory`. Fallback determinista si el proveedor no está disponible.
 
@@ -106,7 +108,7 @@ npm run dev
 ollama pull qwen2.5
 ```
 
-Puerto backend: 8000. Puerto frontend: 5173. Swagger: `http://localhost:8000/docs`.
+Los comandos históricos sin variables no alinean necesariamente el proxy. Para backend 8000 y frontend 5173 seguir la [ejecución vigente](ESTADO_ACTUAL.md#ejecución-y-comprobaciones).
 
 ---
 
@@ -127,14 +129,14 @@ Cubre: API, REBA, NOM-036, RAG, visión, persistencia SHA-256, flujo de especial
 | Criterio | Puntos | Estado |
 |----------|--------|--------|
 | Puntaje REBA exacto (6 casos) | 20 | Implementado (determinista) |
-| Estimación angular ≥90% | 15 | Implementado (multi-vista) |
+| Estimación angular ≥90% | 15 | Pendiente de validación documentada con referencias expertas |
 | Informe y recomendaciones NOM-036 | 15 | Implementado (PDF + XLSM) |
 | Diseño del agente modular | 8 | Implementado (routers separados) |
 | Originalidad/diferenciación | 7 | Implementado (XLSM oficial Jabil + sanduíche what-if) |
 | Validación especialista + trazabilidad | 6 | Implementado (Human-in-the-loop + SHA-256) |
 | Riesgo residual recalculado | 4 | Implementado (simulador) |
 | Medición de impacto tiempos | 5 | Implementado (métricas en caso) |
-| Documentación técnica ≤10 cuartillas | 10 | Este documento |
+| Documentación técnica ≤10 cuartillas | 10 | Pendiente de comprobar maquetación |
 
 ---
 

@@ -1,9 +1,11 @@
 # Documentación Técnica — ErgoAI (Track 4 - Jabil X-RAIC 2026)
 
+> **Instantánea histórica, no inventario ni evidencia vigente.** Ramas, árbol de carpetas, comandos y conteos corresponden al informe original. Para decisiones y ejecución usar [estado actual](docs/ESTADO_ACTUAL.md) y [README](README.md). No certifica cumplimiento ni precisión.
+
 **Versión:** 1.0  
 **Estado:** Proyecto funcional (prototipo competitivo)  
 **Fecha:** Noviembre 2026  
-**Rama activa:** `ergoai-unificado` (fusión de `develop` + `front-end` sobre `main`)
+**Rama del informe:** `ergoai-unificado` (fusión de `develop` + `front-end` sobre `main`)
 
 ---
 
@@ -18,7 +20,7 @@ ErgoAI es una plataforma de evaluación biomecánica y ergonómica industrial di
 - **Frontend React + TypeScript + Vite** con identidad visual Jabil
 - **Generación de entregables oficiales** (informe PDF y formulario XLSM de Jabil `16-PE80-6500-00014-H.xlsm`)
 
-El proyecto cumple la restricción crítica de la rúbrica Track 4: **"El equipo no genera una base de datos: solo implementa el método para evaluar la postura"**.
+El diseño por archivos toma como referencia la cita de la rúbrica Track 4, sin resolver la admisibilidad futura de SQLite: **"El equipo no genera una base de datos: solo implementa el método para evaluar la postura"**.
 
 ---
 
@@ -52,14 +54,14 @@ El sistema sigue una arquitectura en 3 capas desacoplada:
 │    ├── inputs/          (fotos del caso)                     │
 │    ├── outputs/         (informe.pdf, evaluacion_jabil.xlsx)│
 │    ├── session_state.json (estado mutable del caso)          │
-│    └── audit_trail.json   (bitácora inmutable SHA-256)       │
+│    └── audit_trail.json   (bitácora verificable SHA-256)       │
 │  config_normativo/      (reglas deterministas, SSOT)         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. Estructura de Carpetas Actual
+## 3. Estructura de Carpetas del Informe Histórico
 
 ```
 C:\Dev\ErgoAI\
@@ -233,7 +235,8 @@ Todos los modelos Pydantic que definen el contrato entre frontend y backend:
 ### 5.2 Páginas principales
 | Página | Ruta | Responsabilidad |
 |--------|------|-----------------|
-| Bandeja | `/` | Listado de casos con métricas de impacto y alertas |
+| Dashboard | `/` | Resumen de métricas |
+| Bandeja | `/casos` | Listado de casos |
 | Análisis | `/casos/:id` | Visor de esqueleto, corrección de puntos, ángulos, datos de tarea, referencia Jabil, NOM-036, REBA, generación de plan IA |
 | Plan | `/casos/:id/plan` | Recomendaciones, aprobar/editar/rechazar, autorizar ingeniería, implementar, riesgo residual |
 | Informe | `/casos/:id/informe` | Informe imprimible con resultados |
@@ -264,11 +267,11 @@ casos_jabil_workspace/<caso_id>/
 
 ### 6.3 Escritura atómica
 - Patrón Write-Replace: se escribe en archivo temporal, `os.fsync()`, luego `os.replace()`
-- Evita corrupción ante cortes de energía o escrituras concurrentes
+- Atomicidad por archivo, no entre archivos ni ante todo fallo de energía; los locks no coordinan múltiples procesos.
 
 ### 6.4 Cadena criptográfica SHA-256
 - Cada evento de auditoría encadena su hash con el del evento anterior (`previous_event_hash`)
-- Cualquier alteración manual del JSON invalida la cadena y es detectable
+- Detecta inconsistencias al recorrer eventos; no firma digitalmente ni impide que un atacante reescriba y recalcule toda la cadena.
 - Verificación: endpoint `/bitacora/verificar` y método `verify_case_audit_integrity`
 
 ### 6.5 Catálogos normativos (SSOT)
@@ -335,7 +338,7 @@ El LLM **nunca calcula puntajes biomecánicos**. Toda la aritmética ocurre en m
 3. Estimación de pose (RTMPose)
 4. Extracción de ángulos (angle_geometry)
 5. Detección de oclusión y múltiples personas (hallazgos de visión)
-6. Difuminado de rostros y eliminación de metadatos EXIF al guardar
+6. Máscaras sólidas de cabeza o imagen completa ante incertidumbre y eliminación de metadatos EXIF al guardar; ver [privacidad](docs/VISION_Y_PRIVACIDAD.md).
 
 ### 8.3 Limitaciones conocidas
 - Precisión no validada con fotos reales de Jabil (pendiente de validación con dataset oficial)
@@ -350,7 +353,7 @@ El LLM **nunca calcula puntajes biomecánicos**. Toda la aritmética ocurre en m
 ### 9.1 Arquitectura
 - **LLM:** Qwen2.5 vía Ollama (local), compatible con Gemini/OpenAI
 - **Factory:** `LLMFactory.get_llm()` (agnóstico por variable de entorno `LLM_PROVIDER`)
-- **RAG:** `InMemoryRAG` con BM25 lexical retriever sobre `jabil_reglas.json` y `nom036_knowledge_base.md`
+- **RAG actual:** `InMemoryRAG` indexa `normative_rag_clauses` de `jabil_standards_00023.json`; `knowledge_retriever.py` consulta reglas etiquetadas de `jabil_reglas.json`. El Markdown es referencia de trabajo, no autoridad numérica.
 - **Ceguera inducida:** El contexto normativo se poda dinámicamente según `tipo_prueba` para evitar contaminación cruzada
 
 ### 9.2 Rol del LLM
@@ -406,7 +409,7 @@ Variables opcionales: `BACKEND_PORT`, `FRONTEND_PORT`
 
 ## 12. Pruebas (pytest)
 
-Suite completa con 89 pruebas (77 passing, 7 skipped por falta de modelos ONNX/Ollama, 1 failing por entorno Ollama no disponible).
+El informe original consignaba conteos no conciliados; no constituyen evidencia del árbol actual. Registrar resultados con comando y entorno en cada ejecución.
 
 ### Archivos de prueba
 | Archivo | Qué prueba |
@@ -474,7 +477,7 @@ ollama pull qwen2.5
 ### Opción C: Docker Compose
 ```bash
 docker compose up --build -d
-# Frontend: http://localhost:80 (Nginx)
+# Frontend: http://localhost:5173 (host por defecto; Nginx interno 80)
 # Backend: http://localhost:8000
 # Ollama: http://localhost:11434
 ```
@@ -501,14 +504,14 @@ docker compose up --build -d
 | Criterio | Puntos | Estado |
 |----------|--------|--------|
 | Puntaje REBA exacto (6 casos) | 20 | Implementado (determinista) |
-| Estimación angular ≥90% | 15 | Implementado (multi-vista) |
+| Estimación angular ≥90% | 15 | Pendiente de validación documentada con referencias expertas |
 | Informe y recomendaciones NOM-036 | 15 | Implementado (PDF + XLSM) |
 | Diseño del agente modular verificable | 8 | Implementado (routers separados, motores independientes) |
 | Originalidad y diferenciación | 7 | Implementado (XLSM oficial Jabil + sanduíche what-if implícito en recomendaciones) |
 | Validación del especialista + trazabilidad | 6 | Implementado (Human-in-the-loop + SHA-256) |
 | Recálculo y comparación Riesgo Residual | 4 | Implementado (simulador) |
 | Medición de impacto en tiempos | 5 | Implementado (métricas en caso) |
-| Documentación técnica ≤10 cuartillas | 10 | Implementado (este archivo + docs/arquitectura_diagramas.mmd) |
+| Documentación técnica ≤10 cuartillas | 10 | Pendiente de comprobar en el entregable maquetado |
 
 ---
 
@@ -527,7 +530,7 @@ docker compose up --build -d
 - `main` — rama base estable
 - `origin/develop` — rama paralela con agente/RAG y deshardcodeo
 - `origin/front-end` — rama con motor REBA, visión, frontend, NOM-036
-- `ergoai-unificado` — **rama local actual** con fusión de `develop` + `front-end` sobre `main`, todos los conflictos resueltos, exporters, rutas separadas, tests y scripts de control
+- `ergoai-unificado` — **rama local del informe** con fusión de `develop` + `front-end` sobre `main`, todos los conflictos resueltos, exporters, rutas separadas, tests y scripts de control
 
 **Nota:** El merge se realizó en rama local `ergoai-unificado`. No se hizo push al remoto general. Para subir: `git push origin ergoai-unificado`.
 

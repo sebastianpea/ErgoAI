@@ -8,13 +8,14 @@ from pydantic import ValidationError
 from backend.app.api.schemas import (
     Actor, Alerta, AnalisisRapidoResponse, ResumenAnguloRapido, CasoDetalle, CasoResumen, CorreccionContexto, CorreccionPuntos,
     Decision, EstadoVision, ID_PATRON, Impacto, NuevaRecomendacion, NuevoCaso, Ok,
-    MetricasDashboard, PaginaCasos, ResultadoIntegridad, RevisionHallazgo, Segmento, TipoTarea, Vista,
+    MetricasDashboard, PaginaCasos, ResultadoIntegridad, RevisionHallazgo, SeleccionPersona, Segmento, TipoTarea, Vista,
 )
 from backend.app.core_ergonomics.cambios import PARAMETROS
 from backend.app.services.casos import Conflicto, DatosInvalidos, NoEncontrado, Prohibido, ServicioCasos
 from backend.app.session_store import AuditIntegrityError
 from backend.app.vision.estimador import estimador
-from backend.app.vision.annotador import anotar_esqueleto, codificar_imagen_b64
+from backend.app.vision.annotador import codificar_imagen_b64
+from backend.app.vision.privacidad import REVISION_PRIVACIDAD, validar_regiones
 
 router = APIRouter()
 
@@ -84,14 +85,15 @@ async def analizar_rapido(
             tiempo_ms=round((time.perf_counter() - t0) * 1000, 2),
             advertencia="No se detectó a ninguna persona con suficiente claridad en la toma.",
         )
-    angulos_medidos = extraer_angulos_laterales(resultado.puntos)
-    grados_map = {seg: m.grados for seg, m in angulos_medidos.items()}
-    img_anotada = anotar_esqueleto(
-        resultado.imagen_bgr, resultado.puntos,
-        reba_final=None, reba_nivel="sin_dato", angulos=grados_map,
-    )
-    falta = ["tipo_tarea", "agarre", "actividad", "carga_brusca", "apoyo_unilateral",
+    # Sin selección explícita no atribuir mediciones a la persona más grande ni a otra vista.
+    poses = ServicioCasos._personas_foto(resultado)
+    angulos_medidos = extraer_angulos_laterales([])
+    privacidad_ok = (resultado.rostro_anonimizado and
+                     validar_regiones(resultado.imagen_bgr, resultado.regiones_privacidad) is not None)
+    falta = ["persona", "tipo_tarea", "agarre", "actividad", "carga_brusca", "apoyo_unilateral",
              "modificadores", "altura_trabajo_cm", "frecuencia_duracion"]
+    if not privacidad_ok:
+        falta.append("privacidad")
     falta.extend(f"angulo.{seg}" for seg, m in angulos_medidos.items()
                  if m.grados is None or m.confianza < 0.4)
     return AnalisisRapidoResponse(
@@ -103,9 +105,11 @@ async def analizar_rapido(
             estado="sin_dato" if m.grados is None else ("revisar" if m.confianza < 0.4 else "ok"),
             confianza=m.confianza,
         ) for seg, m in angulos_medidos.items()],
-        imagen_anotada_b64=codificar_imagen_b64(img_anotada),
+        poses=poses,
+        imagen_anotada_b64=codificar_imagen_b64(resultado.imagen_bgr) if privacidad_ok else None,
         tiempo_ms=round((time.perf_counter() - t0) * 1000, 2),
-        advertencia="Vista de postura únicamente; faltan datos operativos confirmados para calcular y validar el riesgo.",
+        advertencia=("Selecciona manualmente la persona en cada vista de un caso para medir su postura; no se asocian identidades entre imágenes. "
+                     + (REVISION_PRIVACIDAD if not privacidad_ok else "Faltan datos operativos y revisión del especialista.")),
     )
 
 
@@ -131,7 +135,13 @@ async def crear_caso(
 
 @router.put("/casos/{id_caso}/puntos/{vista}", response_model=CasoDetalle)
 def corregir_puntos(request: Request, cuerpo: CorreccionPuntos, vista: Vista, id_caso: str = RutaParam(pattern=ID_PATRON)):
-    return svc(request).corregir_puntos(id_caso, vista, cuerpo.puntos, cuerpo)
+    return svc(request).corregir_puntos(id_caso, vista, cuerpo.puntos, cuerpo, cuerpo.persona_id)
+
+
+@router.put("/casos/{id_caso}/persona/{vista}", response_model=CasoDetalle)
+def seleccionar_persona(request: Request, cuerpo: SeleccionPersona, vista: Vista,
+                         id_caso: str = RutaParam(pattern=ID_PATRON)):
+    return svc(request).seleccionar_persona(id_caso, vista, cuerpo.persona_id, cuerpo)
 
 
 @router.post("/casos/{id_caso}/angulos/{vista}/{segmento}/confirmar", response_model=CasoDetalle)

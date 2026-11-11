@@ -125,7 +125,7 @@ export function FormContexto({ contexto, contextoFaltante = [], tipoTarea, edita
       <fieldset disabled={!editable || ocupado} className="sin-borde">
         <label className="campo-bloque">Tipo de tarea
           <select value={tarea} onChange={e => setTarea(e.target.value as TipoTarea)}>
-            {(Object.keys(ETIQUETA_TAREA) as TipoTarea[]).map(t => <option key={t} value={t}>{ETIQUETA_TAREA[t]}</option>)}
+            {(Object.keys(ETIQUETA_TAREA).filter(t => t !== "equipo") as TipoTarea[]).map(t => <option key={t} value={t}>{ETIQUETA_TAREA[t]}</option>)}
           </select>
         </label>
         <CamposContexto valor={c} onChange={setC} />

@@ -51,6 +51,15 @@ def _confirmar_angulos(cliente, id_caso):
     respuesta = cliente.get(f"/casos/{id_caso}")
     assert respuesta.status_code == 200, respuesta.text
     detalle = respuesta.json()
+    for imagen in detalle["imagenes"]:
+        personas = imagen.get("personas", [])
+        assert len(personas) == 1, "la fixture debe seleccionar explícitamente una única persona"
+        respuesta = cliente.put(
+            f"/casos/{id_caso}/persona/{imagen['vista']}",
+            json={**ERGO, "persona_id": personas[0]["id"]},
+        )
+        assert respuesta.status_code == 200, respuesta.text
+        detalle = respuesta.json()
     for angulo in detalle["angulos"]:
         if angulo["angulo_grados"] is not None:
             respuesta = cliente.post(
@@ -187,6 +196,31 @@ class TestCrearCasoDesdeFotos(unittest.TestCase):
         self.assertIn("imagen_anotada_b64", datos)
         self.assertTrue(datos["imagen_anotada_b64"].startswith("data:image/jpeg;base64,"))
         self.assertGreater(len(datos["angulos"]), 0)
+
+
+class TestPosesPorPersona(unittest.TestCase):
+    def test_preserva_poses_sin_recortar_ni_apilar_puntos(self):
+        engine = mod_estimador.EstimadorPose()
+        engine._detector = lambda img: np.array([[0, 0, 90, 100], [100, 0, 200, 100]])
+        points = np.full((2, 133, 2), np.nan)
+        scores = np.zeros((2, 133))
+        for person, offset in [(0, 0), (1, 100)]:
+            for joint, xy in {5: (20, 20), 7: (30, 40), 9: (40, 60), 11: (-1, 70),
+                              13: (50, 80), 15: (50, 80), 6: (60, 20)}.items():
+                points[person, joint] = (xy[0] + offset, xy[1])
+                scores[person, joint] = 0.9
+            scores[person, 6] = 0.1
+        engine._pose = lambda img, bboxes: (points, scores)
+        img = np.random.default_rng(4).integers(0, 255, (100, 200, 3), dtype=np.uint8)
+        with mock.patch.object(engine, '_cargar'), mock.patch.object(mod_estimador, 'localizar_cabezas', return_value=[]):
+            result = engine.analizar(img)
+            again = engine.analizar(img)
+        self.assertEqual(len(result.poses), 2)
+        self.assertEqual([p.id for p in result.poses], [p.id for p in again.poses])
+        self.assertEqual(result.puntos, [], 'no implicit largest-person target')
+        for pose in result.poses:
+            self.assertEqual([p.id for p in pose.puntos], [5, 7, 9])
+        self.assertEqual(result.poses[1].puntos[0].x, 120)
 
 
 class TestMunecaDesdeMano(unittest.TestCase):

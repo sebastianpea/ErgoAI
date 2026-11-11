@@ -5,7 +5,7 @@ import { api } from "../api";
 import { USE_MOCK } from "../lib/config";
 import { PERFILES, cambiarRol, useSesion } from "../lib/sesion";
 import type { Rol } from "../types/caso";
-import logoJabil from "../assets/jabil-logo.webp";
+import logoJabil from "../assets/jabil-logo.svg";
 
 /** Sin login en el prototipo: el rol activo define qué acciones se muestran y queda en la bitácora. */
 function SelectorRol() {

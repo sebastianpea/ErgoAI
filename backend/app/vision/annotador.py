@@ -9,6 +9,8 @@ from __future__ import annotations
 import base64
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple
 
+from backend.app.settings import VISION_UMBRAL_DIBUJO
+
 if TYPE_CHECKING:
     import numpy as np
 
@@ -56,7 +58,7 @@ def anotar_esqueleto(
     reba_final: Optional[int] = None,
     reba_nivel: Optional[str] = None,
     angulos: Optional[Mapping[str, Optional[float]]] = None,
-    confianza_minima: float = 0.25,
+    confianza_minima: float = VISION_UMBRAL_DIBUJO,
 ) -> np.ndarray:
     """
     Dibuja el esqueleto biomecánico, banner informativo superior y etiquetas angulares.
@@ -80,24 +82,31 @@ def anotar_esqueleto(
     nivel_str = (reba_nivel or "medio").lower()
     color_nivel = COLORES_REBA_BGR.get(nivel_str, (70, 180, 40))
 
-    # Grosor de trazos proporcional al tamaño de la imagen
-    grosor_linea = max(2, int(round(min(h, w) * 0.004)))
-    radio_nodo = max(4, int(round(min(h, w) * 0.007)))
+    # Tamaños relativos: torso/extremidades dominan; manos y rasgos faciales quedan discretos.
+    escala = min(h, w) / 1000.0
+    grosor_cuerpo = max(2, int(round(2 * escala)))
+    grosor_distal = max(1, int(round(escala)))
+    radio_cuerpo = max(3, int(round(4 * escala)))
+    radio_mano = max(2, int(round(2.5 * escala)))
+    radio_cara = max(1, int(round(1.5 * escala)))
+    puntos_cara = {0, 1, 2, 3, 4}
+    puntos_mano = {17, 18}
 
-    # 1. Dibujar los huesos (aristas)
+    # 1. Dibujar conexiones sólo cuando ambos landmarks superan el umbral.
     for a, b, _ in HUESOS:
         if a in pts_dict and b in pts_dict:
             pt1 = (pts_dict[a][0], pts_dict[a][1])
             pt2 = (pts_dict[b][0], pts_dict[b][1])
-            cv2.line(canvas, pt1, pt2, (20, 20, 20), grosor_linea + 2, cv2.LINE_AA)
-            cv2.line(canvas, pt1, pt2, color_nivel, grosor_linea, cv2.LINE_AA)
+            grosor = grosor_distal if a in puntos_mano or b in puntos_mano else grosor_cuerpo
+            cv2.line(canvas, pt1, pt2, (20, 20, 20), grosor + 2, cv2.LINE_AA)
+            cv2.line(canvas, pt1, pt2, color_nivel, grosor, cv2.LINE_AA)
 
-    # 2. Dibujar las articulaciones (nodos)
+    # 2. Articulaciones en capas: cara (puntos), cuerpo y manos (nodos pequeños).
     for pid, (x, y, conf) in pts_dict.items():
-        # Fondo oscuro para contraste
-        cv2.circle(canvas, (x, y), radio_nodo + 1, (20, 20, 20), -1, cv2.LINE_AA)
-        cv2.circle(canvas, (x, y), radio_nodo, (255, 255, 255), -1, cv2.LINE_AA)
-        cv2.circle(canvas, (x, y), max(2, radio_nodo - 2), color_nivel, -1, cv2.LINE_AA)
+        radio = radio_cara if pid in puntos_cara else radio_mano if pid in puntos_mano else radio_cuerpo
+        cv2.circle(canvas, (x, y), radio + 1, (20, 20, 20), -1, cv2.LINE_AA)
+        cv2.circle(canvas, (x, y), radio, (255, 255, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, (x, y), max(1, radio - 2), color_nivel, -1, cv2.LINE_AA)
 
     # 3. Banner superior con dictamen REBA
     banner_h = max(46, int(round(h * 0.075)))

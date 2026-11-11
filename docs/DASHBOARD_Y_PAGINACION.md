@@ -64,6 +64,43 @@ se interpreta como 1 y un tamaño no ofrecido como 10. El contrato API admite
 cualquier entero `page >= 1` y `page_size` entre 1 y 100. Las páginas posteriores
 al final devuelven `items: []`, sin cambiar datos.
 
+## Revisar colecciones de un caso
+
+Hallazgos, ángulos por segmento, desglose REBA, factores NOM-036 (consulta y
+captura), segmentos residuales y alertas muestran **cinco elementos por página**.
+Los controles **Anterior / Siguiente** usan botones nativos (Tab y Enter/Espacio),
+indican página y cantidad total y se omiten cuando todo cabe en una página.
+Cada colección tiene su propia navegación identificada; cambiar vista angular o
+método NOM-036 vuelve a la primera página. No se guarda esta página en la URL.
+
+La paginación es solo de presentación: las filas permanecen montadas, sin
+recortar el caso ni sus arrays. Justificaciones y factores editados se conservan
+al ir y volver. Los factores desconocidos siguen **Sin confirmar**, no pasan a
+verde/cero; el total, los pendientes y la validación de guardado consideran
+todas las páginas. Cambiar de método conserva las capturas separadas por hoja.
+No se cambian tablas, factores, puntajes ni reglas de NOM-036.
+
+Las alertas se ordenan por estado y urgencia **antes** de paginar; su contador de
+pendientes es global. La escala de las barras residuales y los totales REBA/NOM
+usan toda la colección. Los agregados del Dashboard no cambian.
+
+El informe (`.informe`) y la impresión muestran **todas las filas**, sin controles
+de página; imprimir ángulos incluye todas las vistas, incluso si se filtró una.
+PDF/Excel siguen recibiendo el expediente completo mediante las APIs anteriores.
+Esto reduce el volumen visible, no el tamaño de descarga ni el DOM: no es
+paginación de servidor ni virtualización. La conciliación de tablas NOM-036 con
+fuentes oficiales sigue pendiente de una unidad separada.
+
+Pruebas enfocadas (compilación en memoria, sin navegador):
+
+```text
+node --test frontend/tests/pagination.test.mjs frontend/tests/alertas.test.mjs frontend/tests/nom036.test.mjs frontend/tests/dashboard.test.mjs
+```
+
+La cobertura incluye navegación, límites, estado/validación entre páginas,
+acciones existentes, totales globales y reglas CSS para informe/impresión.
+No sustituye comprobar el diseño, teclado y paginado impreso en un navegador.
+
 ## Contrato e integración
 
 ```ts

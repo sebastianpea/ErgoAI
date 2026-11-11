@@ -84,9 +84,13 @@ test('existing namespaces preserve path/query and document requests; real fronte
       const path = `/${prefix}/proxy-fixture?pagina=2`;
       assert.deepEqual(await snapshot(origin, path), expected(path), path);
     }
-    // /casos has always been proxied, including browser navigations: do not change that contract here.
-    for (const path of ['/casos', '/casos/PROXY-FIXTURE/plan', '/casos/PROXY-FIXTURE/informe']) {
-      assert.deepEqual(await snapshot(origin, path, 'text/html'), expected(path), path);
+    // Rutas compartidas entre frontend SPA y backend API:
+    // Peticiones de datos (API) se proxifican al backend; navegaciones de navegador (text/html) cargan la SPA index.html
+    for (const path of ['/casos', '/casos/PROXY-FIXTURE/plan', '/casos/PROXY-FIXTURE/informe', '/alertas', '/bitacora']) {
+      const response = await snapshot(origin, path, 'text/html');
+      assert.equal(response.status, 200);
+      assert.equal(response.type, 'text/html');
+      assert.match(response.body, /<body>Proxy test SPA<\/body>/);
     }
     for (const path of ['/', '/frontend-proxy-fixture']) {
       const response = await snapshot(origin, path, 'text/html');

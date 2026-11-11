@@ -41,3 +41,13 @@ def test_vision_precision_within_reba_range():
                 correct += 1
     assert total > 0
     assert correct / total >= .90, f"Precisión real {correct}/{total} inferior a 90%"
+
+
+def test_empty_workstation_has_no_detected_persons():
+    image = cv2.imread(str(DATASET_DIR / "control_estacion_vacia.jpg"))
+    assert image is not None
+    result = estimador.analizar(image)
+    assert result.personas == 0
+    assert len(result.puntos) == 0
+    assert result.rostro_anonimizado
+

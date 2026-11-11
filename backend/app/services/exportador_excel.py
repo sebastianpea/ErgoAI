@@ -19,8 +19,8 @@ def generar_excel_caso(caso: CasoDetalle, bitacora_hash: str | None = None) -> i
     # Eliminar hoja por defecto
     wb.remove(wb.active)
 
-    # Paleta de estilos oficiales Jabil
-    NAVY_FILL = PatternFill(start_color="163E6A", end_color="163E6A", fill_type="solid")
+    # Paleta de estilos oficiales Jabil (jabil_brand_identity_manual.md)
+    NAVY_FILL = PatternFill(start_color="002B49", end_color="002B49", fill_type="solid")
     CYAN_FILL = PatternFill(start_color="3CB4E5", end_color="3CB4E5", fill_type="solid")
     LIGHT_GRAY_FILL = PatternFill(start_color="F4F6F8", end_color="F4F6F8", fill_type="solid")
     OK_FILL = PatternFill(start_color="E3F4EA", end_color="E3F4EA", fill_type="solid")
@@ -28,16 +28,16 @@ def generar_excel_caso(caso: CasoDetalle, bitacora_hash: str | None = None) -> i
 
     FONT_TITLE = Font(name="Roboto", size=14, bold=True, color="FFFFFF")
     FONT_HEADER = Font(name="Roboto", size=11, bold=True, color="FFFFFF")
-    FONT_SUBTITLE = Font(name="Roboto", size=11, bold=True, color="163E6A")
-    FONT_REGULAR = Font(name="Roboto", size=10, bold=False, color="1F2937")
-    FONT_BOLD = Font(name="Roboto", size=10, bold=True, color="1F2937")
-    FONT_MUTED = Font(name="Roboto", size=9, italic=True, color="60605B")
+    FONT_SUBTITLE = Font(name="Roboto", size=11, bold=True, color="002B49")
+    FONT_REGULAR = Font(name="Roboto", size=10, bold=False, color="1A1A1A")
+    FONT_BOLD = Font(name="Roboto", size=10, bold=True, color="1A1A1A")
+    FONT_MUTED = Font(name="Roboto", size=9, italic=True, color="6C757D")
 
     THIN_BORDER = Border(
-        left=Side(style="thin", color="E1E5EA"),
-        right=Side(style="thin", color="E1E5EA"),
-        top=Side(style="thin", color="E1E5EA"),
-        bottom=Side(style="thin", color="E1E5EA"),
+        left=Side(style="thin", color="E2E8F0"),
+        right=Side(style="thin", color="E2E8F0"),
+        top=Side(style="thin", color="E2E8F0"),
+        bottom=Side(style="thin", color="E2E8F0"),
     )
 
     # =========================================================================

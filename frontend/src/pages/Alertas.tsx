@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { PaginationControls, usePagination } from "../components/PaginationControls";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
@@ -19,6 +20,7 @@ const RESUMEN_EVENTO = {
 export function Alertas() {
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["alertas"], queryFn: api.listarAlertas });
+  const pagination = usePagination(data?.length ?? 0);
   const atender = useMutation({
     mutationFn: api.atenderAlerta,
     onSuccess: () => {
@@ -43,9 +45,11 @@ export function Alertas() {
       />
       {atender.isError && <p className="aviso error">No se pudo atender la alerta: {atender.error.message}</p>}
       {alertas.length === 0 && <p className="sutil">Sin alertas.</p>}
+      <p role="status">{alertas.filter(a => a.estado !== "atendida").length} alertas pendientes en total.</p>
+      <PaginationControls {...pagination} label="alertas" />
       <div className="lista-alertas">
         {alertas.map((a, i) => (
-          <article key={a.id_alerta} className={`tarjeta alerta corte entrar ${a.estado}`}
+          <article key={a.id_alerta} className={`tarjeta alerta corte entrar ${a.estado} ${pagination.rowClass(i)}`}
             style={{ "--i": i } as CSSProperties}>
             <div className="caso-cabecera">
               <strong>{ETIQUETA_EVENTO[a.tipo_evento]}</strong>
@@ -55,7 +59,7 @@ export function Alertas() {
             <p>{RESUMEN_EVENTO[a.tipo_evento]}</p>
             <p className="sutil">{a.estacion} · {formatearFecha(a.timestamp)} · {a.estado}</p>
             <div className="acciones">
-              {a.id_caso && <Link className="boton" to={`/casos/${encodeURIComponent(a.id_caso)}`}>Ver caso</Link>}
+              {a.id_caso && <Link className="boton verde" to={`/casos/${encodeURIComponent(a.id_caso)}`}>Ver caso <span aria-hidden>›</span></Link>}
               {a.estado !== "atendida" && (
                 <button disabled={atender.isPending} onClick={() => atender.mutate(a.id_alerta)}>Marcar atendida</button>
               )}

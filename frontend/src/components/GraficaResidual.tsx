@@ -1,9 +1,11 @@
 import type { Residual } from "../types/caso";
 import { COLOR_SEMAFORO, ETIQUETA_SEGMENTO, NIVEL_REBA } from "../lib/niveles";
 import { Semaforo } from "./Semaforo";
+import { PaginationControls, usePagination } from "./PaginationControls";
 
 /** Barras antes/después por segmento, sin librerías. */
 export function GraficaResidual({ residual }: { residual: Residual }) {
+  const pagination = usePagination(residual.segmentos.length);
   const max = Math.max(4, ...residual.segmentos.flatMap(s => [s.antes, s.despues]));
   const antes = NIVEL_REBA[residual.antes_nivel];
   const despues = NIVEL_REBA[residual.despues_nivel];
@@ -21,9 +23,10 @@ export function GraficaResidual({ residual }: { residual: Residual }) {
         <span className="sutil">{textoCambio}</span>
       </div>
 
+      <PaginationControls {...pagination} label="segmentos residuales" />
       <div className="barras">
-        {residual.segmentos.map(s => (
-          <div key={s.segmento} className="barra-fila">
+        {residual.segmentos.map((s, i) => (
+          <div key={s.segmento} className={`barra-fila ${pagination.rowClass(i)}`}>
             <span className="barra-etiqueta">{ETIQUETA_SEGMENTO[s.segmento]}</span>
             <div className="barra-par">
               <div className="barra-valor" style={{ width: `${(s.antes / max) * 100}%`, background: COLOR_SEMAFORO.gris }}>{s.antes}</div>

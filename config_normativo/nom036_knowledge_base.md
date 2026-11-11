@@ -1,6 +1,8 @@
 # Base de Conocimiento Normativo NOM-036-1-STPS-2018
 **Factores de Riesgo Ergonómico en el Trabajo - Parte 1: Manejo manual de cargas**
 
+> **Referencia de trabajo no certificada.** No es texto legal oficial ni fuente para puntuar. El cálculo consume `nom036_mac_rapp_tables.json`; discrepancias requieren cotejo con originales y especialista, no copiar valores de este Markdown. Ver [estado actual y validaciones pendientes](../docs/ESTADO_ACTUAL.md).
+
 ---
 
 ## 1. Objetivo y Campo de Aplicación (Capítulo 1 y 2)
@@ -36,6 +38,8 @@
 ---
 
 ## 4. Apéndice I: Método de Evaluación de Levantamiento y Transporte de Carga (MAC)
+> **Advertencia MAC:** este resumen mezcla peso/frecuencia con bandas totales y difiere del JSON operativo: región vertical `[0, 1, 3]` frente al crítico 6 aquí; torsión máxima 2 frente a 3 aquí. No se ha establecido cuál interpretación es correcta sin originales. No usar estos valores para cambiar cálculos o certificar cumplimiento.
+
 * **Factores Críticos Evaluados**:
   1. **Peso de la carga y frecuencia de levantamiento**: Rango de 0 a 6 puntos (Verde: <=4, Amarillo: 5-12, Rojo: 13-20, Morado: >=21).
   2. **Distancia horizontal entre manos y espalda baja**:

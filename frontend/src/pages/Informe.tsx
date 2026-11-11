@@ -10,7 +10,7 @@ import { SkeletonEditor } from "../components/SkeletonEditor";
 import { TablaAngulos } from "../components/TablaAngulos";
 import { DesgloseNom036, DesgloseReba } from "../components/DesgloseReba";
 import { GraficaResidual } from "../components/GraficaResidual";
-import logoJabil from "../assets/jabil-logo.webp";
+import logoJabil from "../assets/jabil-logo.svg";
 
 function minutosEntre(desde: string | null, hasta: string | null): string {
   if (!desde || !hasta) return "—";
@@ -154,7 +154,7 @@ export function Informe() {
       <div className="fotos-informe">
         {c.imagenes.map(img => (
           <figure key={img.vista}>
-            <SkeletonEditor imagen={img} editable={false}
+            <SkeletonEditor imagen={img} editable={false} mostrar={true}
               colorSegmento={s => COLOR_SEMAFORO[semaforoSegmento(
                 c.angulos.find(a => a.vista === img.vista && a.segmento === s)?.puntaje_reba ?? puntaje.get(s)
               )]}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Nom036Captura } from "../api";
@@ -8,6 +8,7 @@ import { FormReferencia } from "../components/FormReferencia";
 import { COLOR_SEMAFORO, ETIQUETA_TAREA, VISTAS, semaforoSegmento } from "../lib/niveles";
 import { useSesion } from "../lib/sesion";
 import { SkeletonEditor } from "../components/SkeletonEditor";
+import { PersonaSelector } from "../components/PersonaSelector";
 import { TablaAngulos } from "../components/TablaAngulos";
 import { DesgloseNom036, DesgloseReba } from "../components/DesgloseReba";
 import { Encabezado } from "../components/Encabezado";
@@ -31,6 +32,8 @@ export function Analisis() {
   const qc = useQueryClient();
   const { esErgonomia } = useSesion();
   const [vista, setVista] = useState<Vista>("lateral");
+  const [mostrar, setMostrar] = useState(false);
+  useEffect(() => setMostrar(false), [id]);
   const [reinicios, setReinicios] = useState(0); // fuerza a re-montar el editor si el guardado falla
   const { data: caso, isLoading, error } = useQuery({ queryKey: ["caso", id], queryFn: () => api.obtenerCaso(id) });
 
@@ -43,9 +46,13 @@ export function Analisis() {
   };
 
   const corregir = useMutation({
-    mutationFn: (puntos: Punto[]) => api.corregirPuntos(id, vista, puntos),
+    mutationFn: (puntos: Punto[]) => api.corregirPuntos(id, vista, puntos, caso?.imagenes.find(i => i.vista === vista)?.persona_seleccionada),
     onSuccess: aplicar,
     onError: () => setReinicios(n => n + 1), // el punto vuelve a su posición guardada
+  });
+  const seleccionar = useMutation({
+    mutationFn: (persona: string | null) => api.seleccionarPersona(id, vista, persona),
+    onSuccess: aplicar,
   });
   const contexto = useMutation({
     mutationFn: ({ c, tarea, motivo }: { c: ContextoTarea; tarea: TipoTarea; motivo: string }) => api.corregirContexto(id, c, motivo, tarea),
@@ -77,11 +84,6 @@ export function Analisis() {
   for (const a of caso.angulos.filter(x => x.vista === vista)) {
     if (a.puntaje_reba !== null) puntajePorSegmento.set(a.segmento, a.puntaje_reba);
   }
-  if (puntajePorSegmento.size === 0) {
-    for (const a of caso.angulos) {
-      if (a.puntaje_reba !== null) puntajePorSegmento.set(a.segmento, Math.max(puntajePorSegmento.get(a.segmento) ?? 0, a.puntaje_reba));
-    }
-  }
   const colorSegmento = (s: string) => COLOR_SEMAFORO[semaforoSegmento(puntajePorSegmento.get(s))];
   const v = caso.validacion;
 
@@ -111,24 +113,29 @@ export function Analisis() {
           <h2>Esqueleto detectado</h2>
           <div className="pestanas">
             {VISTAS.map(vv => (
-              <button key={vv} className={vv === vista ? "activa" : ""} onClick={() => setVista(vv)}>{vv}</button>
+              <button key={vv} className={vv === vista ? "activa" : ""} disabled={corregir.isPending || seleccionar.isPending} onClick={() => { setVista(vv); setMostrar(false); }}>{vv}</button>
             ))}
           </div>
-          {imagen ? (
+          {imagen ? (<>
+            <PersonaSelector imagen={imagen} mostrar={mostrar} onMostrar={setMostrar}
+              disabled={!esErgonomia || corregir.isPending || seleccionar.isPending}
+              onSeleccionar={persona => seleccionar.mutate(persona)} />
             <SkeletonEditor
               key={`${caso.id_caso}-${vista}-${reinicios}`}
               imagen={imagen}
-              editable={esErgonomia}
-              colorSegmento={colorSegmento}
-              cajas={caso.hallazgos.filter(h => h.vista === vista && !h.descartado)}
+              mostrar={mostrar}
+              editable={esErgonomia && !corregir.isPending && !seleccionar.isPending}
+              colorSegmento={imagen.persona_seleccionada ? colorSegmento : undefined}
+              cajas={imagen.persona_seleccionada ? [] : caso.hallazgos.filter(h => h.vista === vista && !h.descartado)}
               onCommit={puntos => corregir.mutate(puntos)}
             />
-          ) : (
+            {seleccionar.isError && <p className="aviso error">{seleccionar.error.message}</p>}
+          </>) : (
             <p className="sutil">Sin foto para esta vista.</p>
           )}
           <p className="leyenda">
             {esErgonomia
-              ? "Corrige un punto arrastrándolo o con Tab y flechas (Mayús: 10 píxeles). Punteado naranja = confianza baja o desconocida; azul marino = corregido."
+              ? "Corrige un punto arrastrándolo o con Tab y flechas (Mayús: 10 píxeles). Activa el esqueleto y selecciona una persona antes de editar. Azul marino = corregido."
               : "Solo Ergonomía puede corregir el esqueleto."}
             {" Las conexiones solo se muestran entre puntos fiables o corregidos dentro de la imagen. Los puntos ausentes o fuera de la imagen no permiten inferir una postura."}
             {corregir.isPending && " Guardando…"}

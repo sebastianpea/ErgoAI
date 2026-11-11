@@ -1,8 +1,10 @@
 # Plan de Implementación ErgoAI — Track 4 Jabil
 
-Rama: `ergoai-unificado` (cambios staged, sin commit aún)  
+> **Plan histórico, no lista vigente de tareas ni evidencia de ejecución.** Ramas, rutas, resultados y acciones de commit abajo corresponden a su contexto original; no son instrucciones para esta limpieza. Consultar [estado actual](docs/ESTADO_ACTUAL.md) y [README](README.md).
+
+Rama histórica: `ergoai-unificado` (cambios staged, sin commit aún)
 Metodología: ODD (Organic Driven Development), test-first RED → GREEN → REFACTOR, work-unit commits.  
-Runner: `pytest` (backend), `unittest discover -s tests -p "test_*.py"` fallback.
+Runner: `pytest` (backend); `unittest discover` no sustituye la suite porque no descubre funciones pytest.
 
 ## Fase 0 — Baseline y verificación del merge
 
@@ -186,7 +188,7 @@ Criterio de aceptación: archivo Markdown existe y tiene sección de ejecución 
 Objetivo: verificar que todos los cambios funcionan juntos y no hay regresiones.
 
 Tareas:
-1. Ejecutar suite completa: `.venv\Scripts\python -m pytest` (o `unittest discover`).
+1. Ejecutar suite completa: `.venv\Scripts\python -m pytest` (sin sustituir por `unittest discover`).
 2. Ejecutar `python test_agent.py` para verificar agente IA + RAG.
 3. Ejecutar `cd frontend && npm run build` para verificar TypeScript.
 4. Corregir fallos encontrados en fases anteriores.

@@ -29,12 +29,45 @@ class Punto(BaseModel):
     corregido: bool = False
 
 
+class Persona(BaseModel):
+    id: str = Field(pattern=ID_PATRON)
+    puntos: List[Punto] = Field(max_length=19)
+    caja: Optional[Tuple[float, float, float, float]] = None
+
+    @model_validator(mode="after")
+    def _unicos(self) -> "Persona":
+        if len({p.id for p in self.puntos}) != len(self.puntos):
+            raise ValueError("IDs de puntos duplicados")
+        return self
+
+
 class Imagen(BaseModel):
     vista: Vista
     url: str
     ancho: int = Field(gt=0)
     alto: int = Field(gt=0)
-    puntos: List[Punto]
+    puntos: List[Punto] = Field(default_factory=list)
+    personas: List[Persona] = Field(default_factory=list)
+    persona_seleccionada: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _historica(cls, datos):
+        if isinstance(datos, dict) and "personas" not in datos:
+            puntos = datos.get("puntos", [])
+            datos = {**datos, "personas": [{"id": "legacy", "puntos": puntos}] if puntos else [],
+                     "persona_seleccionada": "legacy" if puntos else None}
+        return datos
+
+    @model_validator(mode="after")
+    def _proyectar(self) -> "Imagen":
+        ids = [p.id for p in self.personas]
+        if len(ids) != len(set(ids)):
+            raise ValueError("IDs de personas duplicados en la imagen")
+        if self.persona_seleccionada is not None and self.persona_seleccionada not in ids:
+            raise ValueError("Persona no encontrada en la imagen")
+        self.puntos = next((p.puntos for p in self.personas if p.id == self.persona_seleccionada), [])
+        return self
 
 
 class Angulo(BaseModel):
@@ -69,7 +102,7 @@ class FactorNom(BaseModel):
 
 
 class ResultadoNom036(BaseModel):
-    metodo: Literal["levantamiento", "transporte", "empuje_sin_auxiliar", "empuje_con_auxiliar"]
+    metodo: Literal["levantamiento", "transporte", "equipo", "empuje_sin_auxiliar", "empuje_con_auxiliar"]
     total: int
     nivel: ColorNom
     factores: List[FactorNom]
@@ -254,7 +287,7 @@ class RecomendacionAlmacenada(RecomendacionBase):
 
 
 class Nom036Captura(BaseModel):
-    metodo: Literal["levantamiento", "transporte", "empuje_sin_auxiliar", "empuje_con_auxiliar"]
+    metodo: Literal["levantamiento", "transporte", "equipo", "empuje_sin_auxiliar", "empuje_con_auxiliar"]
     factores: List[FactorNom]
 
 
@@ -302,7 +335,11 @@ class Actor(BaseModel):
     rol: Rol = "ergonomia"
 
 
-class CorreccionPuntos(Actor):
+class SeleccionPersona(Actor):
+    persona_id: Optional[str] = Field(None, pattern=ID_PATRON)
+
+
+class CorreccionPuntos(SeleccionPersona):
     puntos: List[Punto] = Field(max_length=19)
 
 
@@ -578,6 +615,7 @@ class ResumenAnguloRapido(BaseModel):
 
 
 class AnalisisRapidoResponse(BaseModel):
+    poses: List[Persona] = Field(default_factory=list)
     ok: bool
     personas: int
     rostro_anonimizado: bool

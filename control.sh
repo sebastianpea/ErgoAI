@@ -49,6 +49,7 @@ show_menu() {
     printf "${C_CYAN}  7.${C_RESET} Build produccion frontend\n"
     printf "${C_CYAN}  8.${C_RESET} Limpiar temporales\n"
     printf "${C_CYAN}  9.${C_RESET} Listar modelos Ollama\n"
+    printf "${C_YELLOW} 10.${C_RESET} Recrear todo desde 0 (reset workspace + levantar)\n"
     printf "${C_RED}  0.${C_RESET} Salir del script\n"
     printf "\n"
     printf "${C_GRAY}Puertos: Backend=$BACKEND_PORT | Frontend=$FRONTEND_PORT${C_RESET}\n"
@@ -386,6 +387,27 @@ action_clean() {
     log "Limpieza completa."
 }
 
+action_reset_all() {
+    log "Recreando todo el sistema desde cero..."
+    action_down
+    sleep 2
+
+    log "Limpiando workspace de datos y runtime (casos_jabil_workspace)..."
+    rm -rf "$ROOT/casos_jabil_workspace"
+    mkdir -p "$ROOT/casos_jabil_workspace"
+
+    log "Limpiando temporales y cache de frontend..."
+    action_clean
+    rm -rf "$ROOT/frontend/dist" "$ROOT/frontend/node_modules/.vite"
+
+    log "Reconstruyendo bundle del frontend..."
+    action_build || log "AVISO: no se pudo compilar frontend/dist (se usara dev server si esta disponible)"
+
+    log "Levantando backend y frontend desde cero (re-sembrando datos)..."
+    action_up
+    log "¡Sistema recreado y levantado desde cero con exito!"
+}
+
 action_ollama() {
     if ! command -v ollama >/dev/null 2>&1; then
         log "Ollama no esta instalado. El agente IA opera con fallback normativo o proveedor cloud (LLM_PROVIDER en .env)."
@@ -400,7 +422,7 @@ action_ollama() {
 # Bucle principal interactivo
 while true; do
     show_menu
-    printf "${C_YELLOW}Seleccione una opcion (0-9): ${C_RESET}"
+    printf "${C_YELLOW}Seleccione una opcion (0-10): ${C_RESET}"
     read -r opcion || break
     printf "\n"
 
@@ -414,6 +436,7 @@ while true; do
         7)  action_build ;;
         8)  action_clean ;;
         9)  action_ollama ;;
+        10|r|R) action_reset_all ;;
         0)  log "Saliendo del script..."; break ;;
         *)  log "Opcion invalida: '$opcion'. Intente de nuevo." ;;
     esac

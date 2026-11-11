@@ -49,7 +49,7 @@ export function Dashboard() {
       </div>
       {data.total_casos === 0 && <div className="tarjeta" role="status">
         <p>No hay casos en auditoría.</p>
-        <Link className="boton" to="/casos/nuevo">Crear el primer caso desde fotos</Link>
+        <Link className="boton verde" to="/casos/nuevo">Crear el primer caso desde fotos <span aria-hidden>›</span></Link>
       </div>}
       <div className="dashboard-graficas">
         <GraficaDashboard titulo="Distribución de riesgo REBA · todos los casos" datos={riesgos} />

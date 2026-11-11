@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { api, type FactorCatalogo, type Nom036Captura } from "../api";
 import type { ColorNom, FactorNom, MetodoNom036, ResultadoNom036, TipoTarea } from "../types/caso";
 import { ETIQUETA_COLOR_NOM, ETIQUETA_TAREA } from "../lib/niveles";
+import { PaginationControls, usePagination } from "./PaginationControls";
 
-const METODOS: MetodoNom036[] = ["levantamiento", "transporte", "empuje_con_auxiliar", "empuje_sin_auxiliar"];
+const METODOS: MetodoNom036[] = ["levantamiento", "transporte", "equipo", "empuje_con_auxiliar", "empuje_sin_auxiliar"];
 const COLORES: ColorNom[] = ["verde", "amarillo", "naranja", "rojo", "morado"];
 
 interface Props {
@@ -38,6 +39,7 @@ export function FormNom036({ tipoTarea, actual, editable, ocupado, error, onGuar
     const color = v?.color && (libre ? COLORES.includes(v.color) : v.color in opciones) ? v.color : undefined;
     return { codigo: f.codigo, etiqueta: f.etiqueta, color, valor: libre ? v?.valor : color ? opciones[color] : undefined };
   }), [hoja, valores, libre, metodo]);
+  const pagination = usePagination(filas.length);
   const confirmados: FactorNom[] = filas.flatMap(f =>
     f.color !== undefined && f.valor !== undefined && Number.isFinite(f.valor) && Number.isInteger(f.valor) && f.valor >= 0 && (!libre || f.valor <= 50)
       ? [{ ...f, color: f.color, valor: f.valor }] : []);
@@ -63,7 +65,7 @@ export function FormNom036({ tipoTarea, actual, editable, ocupado, error, onGuar
     }}>
       <div className="campos">
         <label>Método (hoja)
-          <select value={metodo} onChange={e => setMetodo(e.target.value as MetodoNom036)}>
+          <select value={metodo} onChange={e => { setMetodo(e.target.value as MetodoNom036); pagination.changePage(1); }}>
             {METODOS.map(m => {
               const h = catalogo.data?.[m];
               return <option key={m} value={m}>{ETIQUETA_TAREA[m]}{typeof h === "object" ? ` · ${h.hoja}` : ""}</option>;
@@ -76,14 +78,17 @@ export function FormNom036({ tipoTarea, actual, editable, ocupado, error, onGuar
       </div>
       <p className="sutil">Confirma cada factor con datos observados o con la hoja oficial. Sin confirmar no significa verde ni cero; el total queda pendiente hasta completar todos los factores.</p>
       {libre && <p className="sutil">Captura los valores tal como aparecen en la hoja oficial {hoja.hoja}.</p>}
+      {metodo === "equipo" && <p className="sutil">Registra la evidencia de los nueve factores de AI.4 con el especialista. Esta captura no certifica las fórmulas ni el cumplimiento normativo.</p>}
+      <p role="status">{filas.length - confirmados.length} factores sin confirmar en total.</p>
+      <PaginationControls {...pagination} label="captura NOM-036" />
       <div className="tabla-scroll">
         <table className="tabla-cambios">
           <thead><tr><th>Factor</th><th>Color</th><th>Valor</th></tr></thead>
           <tbody>
-            {filas.map(f => {
+            {filas.map((f, i) => {
               const opciones = hoja.factores.find(x => x.codigo === f.codigo)?.opciones ?? {};
               return (
-                <tr key={f.codigo}>
+                <tr key={f.codigo} className={pagination.rowClass(i)}>
                   <td>{f.etiqueta}</td>
                   <td>
                     <select aria-label={`Color: ${f.etiqueta}`} value={f.color ?? ""} onChange={e => set(f.codigo, { color: e.target.value ? e.target.value as ColorNom : undefined })}>

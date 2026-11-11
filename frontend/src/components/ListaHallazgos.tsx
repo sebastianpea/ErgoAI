@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Hallazgo } from "../types/caso";
+import { PaginationControls, usePagination } from "./PaginationControls";
 
 interface Props {
   hallazgos: Hallazgo[];
@@ -12,17 +13,20 @@ interface Props {
 export function ListaHallazgos({ hallazgos, editable, ocupado, onRevisar }: Props) {
   const [abierto, setAbierto] = useState<string | null>(null);
   const [motivo, setMotivo] = useState("");
+  const pagination = usePagination(hallazgos.length);
 
   if (hallazgos.length === 0) return <p className="sutil">Sin hallazgos.</p>;
 
   const cerrar = () => { setAbierto(null); setMotivo(""); };
 
   return (
+    <>
+    <PaginationControls {...pagination} label="hallazgos" />
     <ul className="hallazgos">
-      {hallazgos.map(h => {
+      {hallazgos.map((h, i) => {
         const accion = h.descartado ? "restaurar" : "descartar";
         return (
-          <li key={h.id} className={`sev-${h.severidad}${h.descartado ? " descartado" : ""}`}>
+          <li key={h.id} className={`sev-${h.severidad}${h.descartado ? " descartado" : ""} ${pagination.rowClass(i)}`}>
             <span className="origen">{h.origen.replace(/_/g, " ")}{h.descartado && " · descartado"}</span>
             <span className="hallazgo-mensaje">{h.mensaje}</span>
             {h.referencia && <span className="referencia"> · {h.referencia}</span>}
@@ -50,5 +54,6 @@ export function ListaHallazgos({ hallazgos, editable, ocupado, onRevisar }: Prop
         );
       })}
     </ul>
+    </>
   );
 }

@@ -22,17 +22,18 @@ interface Props {
   colorSegmento?: (segmento: string) => string;
   cajas?: Hallazgo[]; // recuadros de objetos detectados
   confianzaMinima?: number;
+  mostrar?: boolean;
 }
 
 export function SkeletonEditor({
-  imagen, editable = true, onCommit, colorSegmento, cajas = [], confianzaMinima = 0.4,
+  imagen, editable = true, onCommit, colorSegmento, cajas = [], confianzaMinima = 0.4, mostrar = false,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [puntos, setPuntos] = useState<Punto[]>(imagen.puntos);
   const puntosRef = useRef(puntos);
   const [arrastrando, setArrastrando] = useState<number | null>(null);
   // Comparar valores, no referencias: un refetch idéntico no debe borrar una edición local.
-  const origen = JSON.stringify([imagen.url, imagen.vista, imagen.ancho, imagen.alto,
+  const origen = JSON.stringify([imagen.url, imagen.vista, imagen.ancho, imagen.alto, imagen.persona_seleccionada,
     imagen.puntos.map(p => [p.id, p.x, p.y, p.confianza, p.corregido])]);
   const [origenAnterior, setOrigenAnterior] = useState(origen);
   if (origen !== origenAnterior) {
@@ -46,7 +47,14 @@ export function SkeletonEditor({
     && p.x >= 0 && p.y >= 0 && p.x <= imagen.ancho && p.y <= imagen.alto;
   const fiable = (p: Punto) => p.corregido || (Number.isFinite(p.confianza)
     && p.confianza >= confianzaMinima && p.confianza <= 1);
-  const porId = useMemo(() => new Map(puntos.map(p => [p.id, p])), [puntos]);
+  const todas = !!imagen.personas?.length && !imagen.persona_seleccionada;
+  const puedeEditar = editable && mostrar && !todas;
+  const grupos = todas ? imagen.personas! : [{ id: imagen.persona_seleccionada ?? 'legacy', puntos }];
+  const porPersona = useMemo(() => grupos.map(persona => ({ ...persona,
+    puntos: persona.puntos.filter(p => dentroDeImagen(p) && fiable(p)
+      && !persona.puntos.some(q => q.id !== p.id && dentroDeImagen(q) && fiable(q)
+        && Math.abs(p.x - q.x) <= 1 && Math.abs(p.y - q.y) <= 1)),
+  })), [grupos, confianzaMinima, imagen.ancho, imagen.alto]);
   const r = Math.max(imagen.ancho, imagen.alto) * 0.008;
 
   const actualizar = (siguiente: Punto[]) => {
@@ -65,7 +73,7 @@ export function SkeletonEditor({
   };
 
   const alMover = (e: React.PointerEvent) => {
-    if (!editable || arrastrando === null) return;
+    if (!puedeEditar || arrastrando === null) return;
     const p = aCoordenadasImagen(e);
     if (!p) return;
     actualizar(puntosRef.current.map(k => (k.id === arrastrando ? { ...k, ...p, corregido: true } : k)));
@@ -74,11 +82,11 @@ export function SkeletonEditor({
   const alSoltar = () => {
     if (arrastrando === null) return;
     setArrastrando(null);
-    if (editable) onCommit?.(puntosRef.current);
+    if (puedeEditar) onCommit?.(puntosRef.current);
   };
 
   const alTecla = (e: React.KeyboardEvent, k: Punto) => {
-    if (!editable) return;
+    if (!puedeEditar) return;
     const direccion: Record<string, [number, number]> = {
       ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
     };
@@ -106,7 +114,7 @@ export function SkeletonEditor({
     >
       <image href={urlImagen(imagen.url)} width={imagen.ancho} height={imagen.alto} />
 
-      {cajas.filter(h => h.caja).map(h => {
+      {mostrar && cajas.filter(h => h.caja).map(h => {
         const [x, y, w, hgt] = h.caja!;
         return (
           <g key={h.id}>
@@ -116,8 +124,9 @@ export function SkeletonEditor({
         );
       })}
 
+      {mostrar && porPersona.map(persona => <g key={persona.id} aria-label={`Esqueleto ${persona.id}`}>
       {ARISTAS.map(({ a, b, segmento }) => {
-        const p = porId.get(a), q = porId.get(b);
+        const p = persona.puntos.find(p => p.id === a), q = persona.puntos.find(p => p.id === b);
         if (!p || !q || !dentroDeImagen(p) || !dentroDeImagen(q) || !fiable(p) || !fiable(q)) return null;
         return (
           <line key={`${a}-${b}`} x1={p.x} y1={p.y} x2={q.x} y2={q.y}
@@ -126,20 +135,20 @@ export function SkeletonEditor({
         );
       })}
 
-      {puntos.filter(dentroDeImagen).map(k => {
+      {persona.puntos.map(k => {
         const baja = !fiable(k);
         return (
           <circle key={k.id} cx={k.x} cy={k.y} r={arrastrando === k.id ? r * 1.5 : r}
             fill={baja ? "white" : k.corregido ? "var(--jabil-navy)" : "var(--jabil-cyan)"}
             stroke={baja ? "#E8790C" : "white"} strokeWidth={r * 0.35}
             strokeDasharray={baja ? `${r * 0.6} ${r * 0.4}` : undefined}
-            style={{ cursor: editable ? "grab" : "default" }}
-            tabIndex={editable ? 0 : undefined}
-            role={editable ? "button" : undefined}
-            aria-label={`Punto ${k.id}. Confianza ${Number.isFinite(k.confianza) ? `${(k.confianza * 100).toFixed(0)}%` : "desconocida"}${k.corregido ? ". Corregido" : ""}${editable ? ". Mover con flechas; Mayús para 10 píxeles." : ""}`}
+            style={{ cursor: puedeEditar ? "grab" : "default" }}
+            tabIndex={puedeEditar ? 0 : undefined}
+            role={puedeEditar ? "button" : undefined}
+            aria-label={`Punto ${k.id}. Confianza ${Number.isFinite(k.confianza) ? `${(k.confianza * 100).toFixed(0)}%` : "desconocida"}${k.corregido ? ". Corregido" : ""}${puedeEditar ? ". Mover con flechas; Mayús para 10 píxeles." : ""}`}
             onKeyDown={e => alTecla(e, k)}
             onPointerDown={e => {
-              if (!editable) return;
+              if (!puedeEditar) return;
               (e.target as Element).setPointerCapture(e.pointerId);
               setArrastrando(k.id);
             }}>
@@ -147,6 +156,7 @@ export function SkeletonEditor({
           </circle>
         );
       })}
+      </g>)}
     </svg>
   );
 }

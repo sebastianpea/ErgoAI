@@ -28,7 +28,7 @@ from backend.app.api.schemas import (
     CorreccionNom036, CorreccionReferencia, Decision, Descarte, Hallazgo, Imagen, Implementacion, Impacto,
     NuevaRecomendacion, Nom036Captura, NuevoCaso, Punto, Recomendacion, RecomendacionAlmacenada, Residual,
     ResultadoIntegridad, ResultadoNom036, ResultadoReba, RevisionHallazgo, SegmentoResidual, Validacion, VISTAS,
-    MetricasDashboard, PaginaCasos, Vista,
+    MetricasDashboard, PaginaCasos, Persona, Vista,
 )
 from backend.app.core_ergonomics.angle_geometry import (
     extraer_angulos_laterales, extraer_angulos_vista, medir_vista_frontal, segmentos_de_punto,
@@ -53,7 +53,10 @@ from backend.app.settings import (
     TOLERANCIA_UMBRAL_GRADOS, USUARIO_SISTEMA,
 )
 from backend.app.vision.estimador import VisionNoDisponible, estimador, reducir
-from backend.app.vision.privacidad import AVISO_PRIVACIDAD, localizar_cabezas, proteger_imagen
+from backend.app.vision.privacidad import (
+    AVISO_PRIVACIDAD, POLITICA_PRIVACIDAD, REVISION_PRIVACIDAD,
+    localizar_cabezas, proteger_imagen, validar_regiones,
+)
 
 log = logging.getLogger("ergoai.casos")
 
@@ -197,14 +200,14 @@ class ServicioCasos:
     def _guardar_foto_protegida(self, id_caso: str, archivo: str, imagen, regiones=None) -> None:
         import cv2
         regiones = localizar_cabezas(imagen) if regiones is None else regiones
-        regiones = regiones or []
+        regiones = validar_regiones(imagen, regiones) or []
         segura = proteger_imagen(imagen, regiones)
         ruta = self.mgr.get_case_dir(id_caso) / "inputs" / archivo
         if not cv2.imwrite(str(ruta), segura, [cv2.IMWRITE_JPEG_QUALITY, CALIDAD_JPEG]):
             raise RuntimeError(f"No se pudo guardar la foto {archivo}")
         # Vincular sólo a los bytes protegidos: no confiar en marcas de privacidad de archivos antiguos.
         self.mgr.write_json_atomic(ruta.with_name(ruta.name + ".privacidad.json"), {
-            "politica": 2, "sha256": hashlib.sha256(ruta.read_bytes()).hexdigest(), "regiones": regiones,
+            "politica": POLITICA_PRIVACIDAD, "sha256": hashlib.sha256(ruta.read_bytes()).hexdigest(), "regiones": regiones,
         })
 
     def imagen_media_protegida(self, id_caso: str, archivo: str):
@@ -220,12 +223,18 @@ class ServicioCasos:
         if metadata.is_file():
             try:
                 datos = json.loads(metadata.read_text(encoding="utf-8"))
-                if (isinstance(datos, dict) and datos.get("politica") == 2
-                        and datos.get("sha256") == hashlib.sha256(contenido).hexdigest()):
-                    regiones = datos.get("regiones", [])
-            except (ValueError, OSError):
-                pass
-        # Sin evidencia vinculada a estos bytes, volver a detectar; nunca devolver el original.
+                if (not isinstance(datos, dict) or datos.get("politica") != POLITICA_PRIVACIDAD
+                        or datos.get("sha256") != hashlib.sha256(contenido).hexdigest()):
+                    raise DatosInvalidos(REVISION_PRIVACIDAD)
+                regiones = datos.get("regiones", [])
+            except (ValueError, OSError) as exc:
+                raise DatosInvalidos(REVISION_PRIVACIDAD) from exc
+        else:
+            # Sólo originales sin sidecar: nunca reinterpretar máscaras antiguas como blur.
+            regiones = localizar_cabezas(imagen)
+        regiones = validar_regiones(imagen, regiones)
+        if regiones is None:
+            raise DatosInvalidos(REVISION_PRIVACIDAD)
         return proteger_imagen(imagen, regiones)
 
     def _ids(self) -> List[str]:
@@ -292,11 +301,12 @@ class ServicioCasos:
                         if img is None:
                             raise DatosInvalidos(f"No se pudo leer la foto semilla {foto_origen.name}")
                         img = reducir(img)
-                        puntos, regiones = [], None
+                        puntos, regiones, personas = [], None, []
                         try:
                             resultado = estimador.analizar(img)
                             img = resultado.imagen_bgr
                             regiones = resultado.regiones_privacidad
+                            personas = self._personas_foto(resultado)
                             puntos = [vars(p) for p in resultado.puntos] if resultado.personas else []
                         except VisionNoDisponible:
                             log.warning("Semilla sin pose disponible: %s", foto_origen.name)
@@ -323,7 +333,8 @@ class ServicioCasos:
                             id=f"V-plantilla-{vista}", origen="vision", severidad="info", vista=vista,
                             mensaje="Demostración sintética: puntos de plantilla, no una evaluación de una persona real."))
 
-                    imagenes.append({"vista": vista, "url": url_foto, "ancho": w, "alto": h, "puntos": puntos})
+                    imagenes.append({"vista": vista, "url": url_foto, "ancho": w, "alto": h, "puntos": puntos,
+                                     **({"personas": personas} if foto_origen else {})})
                 recs = [{**r, "texto_ia": r["texto"]} for r in datos.get("recomendaciones", [])]
                 caso = CasoAlmacenado.model_validate({**datos, "imagenes": imagenes, "recomendaciones": recs,
                                                        "hallazgos_vision": hallazgos})
@@ -341,13 +352,23 @@ class ServicioCasos:
 
     # ================= Evaluación =================
 
+    @staticmethod
+    def _personas_foto(resultado) -> List[Persona]:
+        if resultado.poses:
+            return [Persona(id=p.id, puntos=[Punto(**vars(k)) for k in p.puntos], caja=p.caja)
+                    for p in resultado.poses]
+        # Compatibilidad de integraciones anteriores: nunca duplicar una pose para inventar personas.
+        if resultado.personas == 1:
+            return [Persona(id="persona-1", puntos=[Punto(**vars(p)) for p in resultado.puntos], caja=resultado.caja)]
+        return []
+
     def _medir(self, caso: CasoAlmacenado) -> Optional[Dict[Segmento, AnguloMedido]]:
         lateral = next((i for i in caso.imagenes if i.vista == "lateral"), None)
         return extraer_angulos_laterales(lateral.puntos) if lateral else None
 
     def _calcular_reba(self, caso: CasoAlmacenado) -> Optional[tuple[Dict[Segmento, AnguloMedido], ResultadoRebaCalculado]]:
         medidos = self._medir(caso)
-        if medidos is None:
+        if medidos is None or any(i.personas and i.persona_seleccionada is None for i in caso.imagenes):
             return None
         if caso.contexto.muneca_grados is not None:
             medidos["muneca"].grados = caso.contexto.muneca_grados
@@ -368,6 +389,17 @@ class ServicioCasos:
             return medidos, resultado
         return medidos, self.reba.calcular({s: m.grados for s, m in medidos.items()}, caso.contexto)
 
+    def _proponer_recomendaciones(self, caso: CasoAlmacenado) -> List[dict]:
+        calculo = self._calcular_reba(caso)
+        if calculo is None or caso.tipo_tarea == "sin_clasificar":
+            return []
+        medidos, resultado = calculo
+        return generar(
+            {segmento: medicion.grados for segmento, medicion in medidos.items()},
+            caso.contexto, caso.tipo_tarea, resultado.final,
+            self.config.get_reba_tables(), self.config.get_jabil_standards(), self.rag,
+        )
+
     @staticmethod
     def _clave_angulo(vista: str, segmento: str) -> str:
         return f"{vista}.{segmento}"
@@ -387,6 +419,8 @@ class ServicioCasos:
     @staticmethod
     def _missing_evidence(caso: CasoAlmacenado, angulos: List[Angulo]) -> List[str]:
         missing = set(caso.contexto_faltante)
+        missing.update(f"persona.{i.vista}" for i in caso.imagenes
+                       if i.personas and i.persona_seleccionada is None)
         if caso.tipo_tarea == "sin_clasificar":
             missing.add("tipo_tarea")
         if caso.evidence_version > 0:
@@ -587,6 +621,8 @@ class ServicioCasos:
                 copia = copia or caso.model_copy(deep=True)
                 segura = copia.imagenes[indice]
                 segura.ancho, segura.alto, segura.puntos = w, h, []
+                for persona in segura.personas:
+                    persona.puntos = []
                 copia.hallazgos_vision.append(Hallazgo(
                     id=f"V-geometria-{imagen.vista}", origen="vision", severidad="advertencia", vista=imagen.vista,
                     mensaje="Geometría incompatible o no verificable con los píxeles: puntos ocultos; requiere revisión, no se reescala la plantilla."))
@@ -846,13 +882,46 @@ class ServicioCasos:
         with self._lock:
             return self._evaluar(self._cargar(id_caso))
 
-    def corregir_puntos(self, id_caso: str, vista: Vista, puntos: List[Punto], actor: Actor) -> CasoDetalle:
+    def seleccionar_persona(self, id_caso: str, vista: Vista, persona_id: Optional[str], actor: Actor) -> CasoDetalle:
+        _exigir_rol(actor, "ergonomia", "seleccionar la persona")
+        with self._lock:
+            caso = self._cargar(id_caso)
+            img = next((i for i in caso.imagenes if i.vista == vista), None)
+            if img is None:
+                raise NoEncontrado(f"El caso {id_caso} no tiene imagen {vista}")
+            persona = next((p for p in img.personas if p.id == persona_id), None)
+            if persona_id is not None and persona is None:
+                raise DatosInvalidos("Persona no encontrada en la imagen")
+            if img.persona_seleccionada == persona_id:
+                return self._evaluar(caso)
+            # Un plan decidido no se puede reasignar silenciosamente a otra persona.
+            if any(r.estado != "propuesta" for r in caso.recomendaciones) or caso.nom036 is not None:
+                raise Conflicto("Crea otro caso para cambiar la persona de una evaluación ya decidida")
+            anterior = img.persona_seleccionada
+            img.persona_seleccionada = persona_id
+            img.puntos = persona.puntos if persona else []
+            caso.angulos_confirmados = [k for k in caso.angulos_confirmados if not k.startswith(f"{vista}.")]
+            # Las propuestas sin decidir dependían de la pose anterior; no se reutilizan para otro objetivo.
+            caso.recomendaciones = [RecomendacionAlmacenada.model_validate({**propuesta, "texto_ia": propuesta["texto"]})
+                                    for propuesta in self._proponer_recomendaciones(caso)]
+            despues = self._cerrar_mutacion(caso)
+            self.ledger.registrar(actor.usuario, "persona_seleccionada", f"{id_caso} / {vista}", id_caso,
+                                  antes=anterior or "Todas", despues=persona_id or "Todas")
+            self._sincronizar(caso, despues, actor.usuario)
+            return despues
+
+    def corregir_puntos(self, id_caso: str, vista: Vista, puntos: List[Punto], actor: Actor,
+                        persona_id: Optional[str] = None) -> CasoDetalle:
         _exigir_rol(actor, "ergonomia", "corregir el esqueleto")
         with self._lock:
             caso = self._cargar(id_caso)
             img = next((i for i in caso.imagenes if i.vista == vista), None)
             if img is None:
                 raise NoEncontrado(f"El caso {id_caso} no tiene imagen {vista}")
+            if img.persona_seleccionada is None or (persona_id is not None and persona_id != img.persona_seleccionada):
+                raise DatosInvalidos("Selecciona la persona de esta imagen antes de corregir sus puntos")
+            if persona_id is None and img.persona_seleccionada != "legacy":
+                raise DatosInvalidos("Indica persona_id para corregir los puntos")
             nuevos = {p.id: p for p in puntos}
             if len(nuevos) != len(puntos) or set(nuevos) != {p.id for p in img.puntos}:
                 raise DatosInvalidos("Los puntos deben ser exactamente los del esqueleto, sin repetir")
@@ -897,6 +966,11 @@ class ServicioCasos:
             if clave not in caso.angulos_confirmados:
                 caso.angulos_confirmados.append(clave)
                 caso.angulos_confirmados.sort()
+                if not caso.recomendaciones:
+                    caso.recomendaciones = [
+                        RecomendacionAlmacenada.model_validate({**propuesta, "texto_ia": propuesta["texto"]})
+                        for propuesta in self._proponer_recomendaciones(caso)
+                    ]
                 despues = self._cerrar_mutacion(caso)
                 self.ledger.registrar(
                     actor.usuario, "angulo_confirmado", f"{id_caso} / {vista} / {segmento}", id_caso,
@@ -1414,7 +1488,7 @@ class ServicioCasos:
     def crear_caso(self, datos: NuevoCaso, fotos: Dict[str, bytes]) -> str:
         """
         Crea un caso a partir de fotos reales: visión (YOLOX + RTMPose) → puntos → REBA → hallazgos →
-        recomendaciones propuestas. Las fotos se guardan con máscaras sólidas de privacidad.
+        recomendaciones propuestas. Sólo se muestran fotos con evidencia de difuminado facial.
         """
         _exigir_rol(datos, "ergonomia", "crear casos")
         if "lateral" not in fotos:
@@ -1461,16 +1535,19 @@ class ServicioCasos:
                 # Se re-codifica: elimina metadatos EXIF y conserva solo la versión anonimizada.
                 self._guardar_foto_protegida(id_caso, archivo, r.imagen_bgr, r.regiones_privacidad)
                 h, w = r.imagen_bgr.shape[:2]
-                imagenes.append(Imagen(vista=vista, url=archivo, ancho=w, alto=h, puntos=[
-                    Punto(id=p.id, x=round(p.x, 1), y=round(p.y, 1), confianza=p.confianza) for p in r.puntos]))
+                imagenes.append(Imagen(vista=vista, url=archivo, ancho=w, alto=h,
+                                       personas=self._personas_foto(r)))
+                hallazgos.append(Hallazgo(
+                    id=f"V-puntos-{vista}", origen="vision", severidad="advertencia", vista=vista,
+                    mensaje="Selecciona manualmente la persona en esta imagen. Los puntos ausentes, inciertos u ocluidos requieren revisión; no se completan ni reconstruyen en 3D."))
                 hallazgos.append(Hallazgo(
                     id=f"V-privacidad-{vista}", origen="vision", severidad="advertencia", vista=vista,
                     mensaje=AVISO_PRIVACIDAD))
                 if r.personas > 1:
                     hallazgos.append(Hallazgo(
                         id=f"V-personas-{vista}", origen="vision", severidad="info", vista=vista,
-                        mensaje=(f"Se detectaron {r.personas} personas en la vista {vista}; se evalúa la de mayor "
-                                 f"tamaño. Si no es el operador auditado, corrige los puntos."),
+                        mensaje=(f"Se detectaron {r.personas} personas en la vista {vista}. Selecciona el objetivo "
+                                 "manualmente; no se asocia su identidad con otras vistas."),
                         caja=r.caja))
                 if r.por_respaldo:
                     hallazgos.append(Hallazgo(
@@ -1488,17 +1565,10 @@ class ServicioCasos:
                 contexto=datos.contexto.normalizar(), contexto_faltante=datos.contexto.desconocidos(),
                 evidence_version=1, evaluacion_previa=datos.evaluacion_previa, hallazgos_vision=hallazgos,
             )
-            medidos = self._medir(caso)
-            self._aplicar_vista_frontal(caso, medidos["brazo"].lado or "izq")
-            calculo = self._calcular_reba(caso)
-            propuestas = []
-            if calculo and caso.tipo_tarea != "sin_clasificar":
-                medidos, res = calculo
-                propuestas = generar(
-                    {s: m.grados for s, m in medidos.items()}, caso.contexto, caso.tipo_tarea, res.final,
-                    self.config.get_reba_tables(), self.config.get_jabil_standards(), self.rag)
-            caso.recomendaciones = [RecomendacionAlmacenada.model_validate({**r, "texto_ia": r["texto"]})
-                                    for r in propuestas]
+            # La vista frontal no se combina automáticamente con otra identidad/vista.
+            # Sus modificadores se confirman manualmente como datos operativos.
+            caso.recomendaciones = [RecomendacionAlmacenada.model_validate({**propuesta, "texto_ia": propuesta["texto"]})
+                                    for propuesta in self._proponer_recomendaciones(caso)]
             caso.metricas.creado_en = _ahora()
             caso.metricas.analisis_ms = round((time.perf_counter() - t0) * 1000, 1)
 
@@ -1509,7 +1579,7 @@ class ServicioCasos:
             self.ledger.registrar(
                 USUARIO_SISTEMA, "analisis_ejecutado", id_caso, id_caso,
                 despues=(f"REBA {detalle.reba.final}" if detalle.reba else "Evaluación incompleta")
-                + f" · {len(propuestas)} recomendación(es) · {detalle_vision}")
+                + f" · {len(caso.recomendaciones)} recomendación(es) · {detalle_vision}")
             self._sincronizar(caso, detalle, datos.usuario)
             log.info("Caso creado desde fotos: %s REBA=%s", id_caso, detalle.reba.final if detalle.reba else "incompleto")
             return id_caso

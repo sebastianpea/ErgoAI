@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Angulo, Segmento, Vista } from "../types/caso";
 import { ETIQUETA_SEGMENTO, VISTAS, semaforoSegmento } from "../lib/niveles";
 import { Semaforo } from "./Semaforo";
+import { PaginationControls, usePagination } from "./PaginationControls";
 
 const ESTADO: Record<Angulo["estado"], string> = { ok: "OK", revisar: "Revisar", sin_dato: "Sin dato" };
 
@@ -16,6 +17,8 @@ export function TablaAngulos({ angulos, editable = false, ocupado = false, onCon
   const [filtroVista, setFiltroVista] = useState<"todas" | Vista>("todas");
   const vistas = VISTAS.filter(v => angulos.some(a => a.vista === v));
   const filas = filtroVista === "todas" ? angulos : angulos.filter(a => a.vista === filtroVista);
+  const pagination = usePagination(filas.length);
+  const cambiarVista = (vista: "todas" | Vista) => { setFiltroVista(vista); pagination.changePage(1); };
 
   return (
     <div>
@@ -24,7 +27,7 @@ export function TablaAngulos({ angulos, editable = false, ocupado = false, onCon
           <button
             type="button"
             className={filtroVista === "todas" ? "activa" : ""}
-            onClick={() => setFiltroVista("todas")}
+            onClick={() => cambiarVista("todas")}
           >
             Todas ({vistas.length} fotos)
           </button>
@@ -33,13 +36,14 @@ export function TablaAngulos({ angulos, editable = false, ocupado = false, onCon
               key={v}
               type="button"
               className={filtroVista === v ? "activa" : ""}
-              onClick={() => setFiltroVista(v)}
+              onClick={() => cambiarVista(v)}
             >
               {v}
             </button>
           ))}
         </div>
       )}
+      <PaginationControls {...pagination} label="ángulos" />
       <div className="tabla-scroll">
         <table>
           <thead>
@@ -49,10 +53,10 @@ export function TablaAngulos({ angulos, editable = false, ocupado = false, onCon
             </tr>
           </thead>
           <tbody>
-            {filas.map(a => {
+            {angulos.map(a => {
               const discrepa = a.puntaje_previo != null && a.puntaje_previo !== a.puntaje_reba;
               return (
-                <tr key={`${a.vista}-${a.segmento}-${a.lado ?? ""}`}>
+                <tr key={`${a.vista}-${a.segmento}-${a.lado ?? ""}`} className={pagination.rowClass(filas.indexOf(a))}>
                   <td>{ETIQUETA_SEGMENTO[a.segmento]}{a.lado ? ` (${a.lado})` : ""}</td>
                   <td>{a.vista}</td>
                   <td>{a.angulo_grados === null ? "—" : `${a.angulo_grados.toFixed(1)}°`}</td>

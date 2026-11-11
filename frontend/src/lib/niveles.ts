@@ -47,11 +47,12 @@ export const ETIQUETA_SEGMENTO: Record<Segmento, string> = {
   muneca: "Muñeca",
 };
 
-export const ETIQUETA_TAREA: Record<TipoTarea, string> = {
+export const ETIQUETA_TAREA: Record<TipoTarea | "equipo", string> = {
   // Terminología de la rúbrica Jabil: levantamiento, transporte sin auxiliar y transporte con auxiliar.
   sin_clasificar: "Sin clasificar · requiere revisión",
   postura: "Postura (ensamble)",
   levantamiento: "Levantamiento",
+  equipo: "Levantamiento/descenso en equipo",
   transporte: "Transporte sin auxiliar (acarreo)",
   empuje_con_auxiliar: "Transporte con auxiliar (carro)",
   empuje_sin_auxiliar: "Empuje/arrastre sin auxiliar",

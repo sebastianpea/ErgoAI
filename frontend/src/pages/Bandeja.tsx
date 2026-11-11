@@ -77,7 +77,7 @@ export function Bandeja() {
               <div className={c.decisiones_pendientes ? "pendientes" : "sutil"}>
                 {c.decisiones_pendientes ? `${c.decisiones_pendientes} recomendación(es) por validar` : "Sin decisiones pendientes"}
               </div>
-              <span className="leer-mas">Abrir análisis <span aria-hidden>→</span></span>
+              <span className="leer-mas">Abrir análisis <span aria-hidden>›</span></span>
             </Link>
           );
         })}

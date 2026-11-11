@@ -2,7 +2,8 @@
 
 > **Componente:** `backend.app.session_store`  
 > **Versión:** 1.0.0  
-> **Estado:** Implementado, Verificado y Documentado  
+> **Estado:** Módulo implementado; resultados de prueba abajo son históricos, no validación del árbol actual.
+> **Decisiones vigentes y límites:** [estado actual](ESTADO_ACTUAL.md). Archivos ahora; SQLite solo como alternativa futura previa aclaración y autorización.
 > **Ámbito:** Persistencia Atómica, Trazabilidad Criptográfica y Catálogo Normativo (Cero Base de Datos)  
 > **Cumplimiento Normativo:** Rúbrica Track 4 X-RAIC 2026 (Restricción "Cero BD" + Criterio 6 Human-in-the-Loop)  
 
@@ -10,13 +11,13 @@
 
 ## 1. Propósito y Justificación de Dominio
 
-La rúbrica oficial de Jabil para el Reto X-RAIC 2026 (Track 4) prohíbe taxativamente la implementación de motores de bases de datos:
+La decisión operativa por archivos toma como referencia esta cita, sin concluir una prohibición definitiva de SQLite:
 > *"El equipo no genera una base de datos: solo implementa el método para evaluar la postura."*
 
 El módulo **`File-System Session & Audit Store`** resuelve esta exigencia reemplazando los sistemas DBMS tradicionales (PostgreSQL, SQLite, MongoDB, Redis) por una arquitectura basada en:
-1. **Estado en Memoria:** Objetos Pydantic v2 fuertemente tipados para latencia cero.
-2. **Persistencia Local Inmutable:** Archivos JSON estructurados por caso en `/casos_jabil_workspace/`.
-3. **Encadenamiento Criptográfico (SHA-256 Hash Chaining):** Trazabilidad inmutable de intervenciones humanas (*Human-in-the-Loop*) para satisfacer al 100% el **Criterio 6 (6 pts)**.
+1. **Estado en Memoria:** Objetos Pydantic v2 fuertemente tipados.
+2. **Persistencia Local por Archivos:** Archivos JSON estructurados por caso en `/casos_jabil_workspace/`.
+3. **Encadenamiento Criptográfico (SHA-256 Hash Chaining):** Integridad verificable de intervenciones humanas (*Human-in-the-Loop*), sin certificación de puntos ni firma digital.
 4. **Catálogo Normativo Estático (SSOT):** Archivos JSON de solo lectura en `/config_normativo/` para umbrales REBA, NOM-036 y estándares Jabil `16-PE30-6500-00023`.
 
 ---
@@ -51,21 +52,21 @@ ErgoAI/
 
 ## 3. Patrones de Diseño Implementados
 
-### 3.1 Patrón Write-Replace Atómico (A prueba de caídas)
-Para impedir que caídas de energía o fallos de proceso dejen archivos JSON corruptos a medio escribir:
+### 3.1 Patrón Write-Replace Atómico por Archivo
+Reduce escrituras parciales; no garantiza recuperación ante cualquier corte de energía ni transacciones entre caso, snapshot y bitácoras:
 1. Los datos se serializan en un archivo temporal (`.tmp_xxxx`) en el mismo directorio de destino.
 2. Se fuerza la sincronización física del buffer al disco mediante `os.fsync(fileno)`.
 3. Se invoca `os.replace(temp_path, target_path)`, garantizada como una operación atómica por el kernel del sistema operativo.
 
-### 3.2 Libro Inmutable con Hash Chaining (Cadena de Custodia)
+### 3.2 Registro Verificable con Hash Chaining
 Cada evento de auditoría generado por la revisión del especialista humano contiene:
 * `previous_event_hash`: Hash SHA-256 del evento cronológicamente anterior (o 64 ceros para el bloque génesis).
 * `event_hash`: SHA-256 canónico calculado sobre el payload ordenado determinísticamente (`sort_keys=True`).
 
-**Garantía:** Si alguien altera manualmente cualquier campo del archivo `audit_trail.json` (por ejemplo, modifica un puntaje de riesgo o el texto de una recomendación), el método `verify_integrity()` detecta la discrepancia inmediatamente y aborta la operación con `AuditIntegrityError`.
+**Límite:** `verify_integrity()` recorre los eventos y detecta inconsistencias con `AuditIntegrityError`; no es tiempo constante. No impide reescribir y recalcular toda la cadena, ni aporta firma digital o no-repudio.
 
-### 3.3 Concurrencia Segura en Proceso (`RLock` por Caso)
-El gestor `AuditFileManager` utiliza bloqueos reentrantes (`threading.RLock`) asignados por cada `case_id`, previniendo colisiones de concurrencia cuando múltiples llamadas al API intentan registrar eventos sobre el mismo caso simultáneamente.
+### 3.3 Concurrencia en Proceso (`RLock` por Caso)
+Los locks no coordinan múltiples procesos o servidores. El gestor `AuditFileManager` utiliza bloqueos reentrantes (`threading.RLock`) asignados por cada `case_id`, previniendo colisiones de concurrencia cuando múltiples llamadas al API intentan registrar eventos sobre el mismo caso simultáneamente.
 
 ---
 
@@ -164,4 +165,4 @@ Ran 7 tests in 0.007s - OK
 * **Dependencia de DB:** 0 módulos de base de datos cargados (`sqlite3`, `sqlalchemy`, `psycopg2`, etc. están completamente ausentes).
 * **Latencia de Persistencia:** Menor a **2.5 milisegundos** por evento en escritura atómica con fsync.
 * **Tiempo Total de Suite:** 7 pruebas en **7 milisegundos**.
-* **Detección de Manipulación:** 100% efectiva ante cualquier alteración de caracteres en el archivo físico.
+* **Detección de inconsistencias:** evidencia histórica acotada a los casos probados; no demuestra resistencia frente a reescritura completa de hashes.

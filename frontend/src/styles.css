@@ -5,28 +5,34 @@
    ========================================================================= */
 
 :root {
-  /* Marca */
-  --jabil-navy: #163E6A;        /* primario: títulos, botones, bandas */
-  --jabil-profundo: #0D2A4A;    /* bandas oscuras y pie */
-  --jabil-cyan: #3CB4E5;        /* acento: líneas, íconos, hover (sobre fondos oscuros) */
-  --cyan-texto: #0F78A8;        /* cian accesible para texto sobre blanco (AA) */
-  --gris-carbon: #60605B;
-  --gris-plata: #BCBEC0;
+  /* Marca Jabil Oficial (jabil_brand_identity_manual.md) */
+  --jabil-navy: #002B49;        /* Jabil Navy Blue: primario, títulos, botones, barras */
+  --jabil-profundo: #001A2C;    /* Hover oscuro, bandas y pie */
+  --jabil-cyan: #3CB4E5;        /* Jabil Tech Blue: acento interactivo, líneas, iconos */
+  --cyan-texto: #0F78A8;        /* Cian accesible para texto sobre blanco (AA) */
+  --gris-carbon: #1A1A1A;       /* Slate Dark Grey: texto de cuerpo web de alto contraste */
+  --gris-medio: #6C757D;        /* Medium Grey: subtítulos, fechas, metadatos */
+  --gris-plata: #CBD5E1;        /* Bordes de inputs y divisores */
 
   /* Superficies y texto */
-  --fondo: #F4F6F8;
-  --tarjeta: #FFFFFF;
-  --texto: #1F2937;
-  --sutil: #60605B;
-  --borde: #E1E5EA;
+  --fondo: #F4F6F8;             /* Light Grey Background */
+  --tarjeta: #FFFFFF;           /* Pure White */
+  --texto: #1A1A1A;             /* Slate Dark Grey */
+  --sutil: #6C757D;             /* Medium Grey */
+  --borde: #E2E8F0;             /* Borde estándar */
+  --accent-green: #008A5E;      /* Accent Green Sostenibilidad / Aprobado */
+  --jabil-verde-cta: #57822B;   /* Verde CTA 'Aprende más' oficial Jabil */
+  --jabil-verde-cta-hover: #466B22; /* Verde CTA hover */
 
-  --radio: 2px;
+  --radio: 4px;                 /* Border radius botones y campos (Manual sec. 5.2) */
+  --radio-tarjeta: 8px;         /* Border radius tarjetas (Manual sec. 5.3: 6px a 8px) */
   --angulo: 12deg;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --t: 0.35s;
-  --sombra: 0 10px 24px -12px rgba(13, 42, 74, 0.35);
+  --sombra: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  --sombra-hover: 0px 8px 24px rgba(0, 0, 0, 0.12);
 
-  font-family: "Roboto", "Segoe UI", Arial, sans-serif;
+  font-family: "Roboto", Arial, Helvetica, sans-serif;
   font-weight: 400;
   line-height: 1.6;
   color: var(--texto);
@@ -38,10 +44,10 @@ html { scroll-behavior: smooth; }
 body { margin: 0; overflow-x: clip; }
 img { max-width: 100%; }
 
-h1, h2, h3 { color: var(--jabil-navy); line-height: 1.2; }
-h1 { font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem); font-weight: 700; margin: 0; letter-spacing: 0.02em; }
+h1, h2, h3 { color: var(--jabil-navy); line-height: 1.2; font-family: "Roboto", Arial, Helvetica, sans-serif; }
+h1 { font-size: clamp(2rem, 1.5rem + 1.8vw, 2.5rem); font-weight: 700; margin: 0; letter-spacing: 0.01em; }
 h2 {
-  font-size: 0.95rem; font-weight: 700; margin: 0 0 1rem; text-transform: uppercase; letter-spacing: 0.08em;
+  font-size: 1.15rem; font-weight: 600; margin: 0 0 1rem; text-transform: uppercase; letter-spacing: 0.06em;
   display: flex; align-items: center; gap: 0.6rem;
 }
 h2::before { content: ""; width: 1.25rem; height: 2px; background: var(--jabil-cyan); flex: none; }
@@ -80,8 +86,7 @@ a { color: var(--cyan-texto); }
 .barra.compacta .barra-interior { height: 56px; }
 
 .marca { display: flex; align-items: center; gap: 0.9rem; text-decoration: none; }
-/* El archivo del logo es cuadrado con margen: se recorta a la franja del logotipo. */
-.logo-jabil { width: 112px; height: 28px; object-fit: cover; object-position: 50% 50%; display: block; }
+.logo-jabil { width: 130px; height: 26px; object-fit: contain; display: block; }
 .separador { width: 1px; height: 26px; background: var(--gris-plata); }
 .producto { color: var(--jabil-navy); font-size: 1.25rem; font-weight: 300; letter-spacing: 0.04em; }
 .producto b { font-weight: 700; color: var(--cyan-texto); }
@@ -171,24 +176,56 @@ main > :not(section), main > section > :not(.banda) {
 .banda-franja.f2 { right: 4%; width: 60px; background: rgba(255, 255, 255, 0.08); animation-delay: 0.12s; }
 
 /* =========================================================================
-   Botones (guía: rectangulares, mayúsculas)
+   Botones (guía oficial: bordes 4px, Navy Blue, hover Tech Blue)
    ========================================================================= */
 button, .boton {
-  font: inherit; font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em;
+  font: inherit; font-size: 0.825rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
-  padding: 0.6rem 1.1rem; min-height: 40px; border-radius: var(--radio); cursor: pointer; text-decoration: none;
+  padding: 0.65rem 1.25rem; min-height: 42px; border-radius: var(--radio); cursor: pointer; text-decoration: none;
   border: 2px solid var(--jabil-navy); background: transparent; color: var(--jabil-navy);
-  transition: background var(--t) var(--ease), color var(--t) var(--ease), border-color var(--t) var(--ease);
+  transition: background var(--t) var(--ease), color var(--t) var(--ease), border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
 }
 button:hover:not(:disabled), .boton:hover { background: var(--jabil-navy); color: white; }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.primario { background: var(--jabil-navy); color: white; border-color: var(--jabil-navy); }
+.primario { background: var(--jabil-navy); color: white; border-color: var(--jabil-navy); font-weight: 600; }
 .primario:hover:not(:disabled), .boton.primario:hover {
   background: var(--jabil-cyan); border-color: var(--jabil-cyan); color: var(--jabil-profundo);
 }
 .peligro { color: #B42323; border-color: #B42323; }
 .peligro:hover:not(:disabled) { background: #B42323; color: white; }
+
+/* Botón estilo 'Aprende más' / CTA verde Jabil (#57822B)
+   Reposo: fondo transparente, borde 2px verde, texto verde.
+   Hover: fondo verde sólido, texto blanco subrayado, chevron desplazado. */
+.boton.verde, .boton.cta, button.verde, .leer-mas {
+  background: transparent;
+  border: 2px solid var(--jabil-verde-cta);
+  color: var(--jabil-verde-cta) !important;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+.boton.verde span, .boton.cta span, button.verde span, .leer-mas span {
+  display: inline-block;
+  font-weight: 900;
+  color: var(--jabil-verde-cta);
+  transition: transform var(--t) var(--ease), color var(--t) var(--ease);
+}
+.boton.verde:hover:not(:disabled), .boton.cta:hover:not(:disabled), button.verde:hover:not(:disabled),
+.leer-mas:hover, .caso:hover .leer-mas {
+  background: var(--jabil-verde-cta) !important;
+  border-color: var(--jabil-verde-cta) !important;
+  color: #FFFFFF !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.boton.verde:hover:not(:disabled) span, .boton.cta:hover:not(:disabled) span, button.verde:hover:not(:disabled) span,
+.leer-mas:hover span, .caso:hover .leer-mas span {
+  color: #FFFFFF !important;
+  transform: translateX(4px);
+}
 
 /* Sobre las bandas oscuras */
 .banda .primario { background: var(--jabil-cyan); border-color: var(--jabil-cyan); color: var(--jabil-profundo); }
@@ -199,18 +236,21 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .acciones { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
 
 .leer-mas {
-  margin-top: auto; padding-top: 0.5rem; color: var(--cyan-texto); font-size: 0.8rem; font-weight: 500;
-  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-top: auto; align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 0.5rem 1rem; border-radius: var(--radio);
 }
-.leer-mas span { display: inline-block; transition: transform var(--t) var(--ease); }
 
 /* =========================================================================
-   Tarjetas
+   Tarjetas (Manual sec. 5.3: fondo blanco, radio 8px, sombra suave)
    ========================================================================= */
 .tarjeta {
-  position: relative; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: var(--radio);
-  padding: 1.25rem; margin-bottom: 1.25rem;
+  position: relative; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: var(--radio-tarjeta);
+  padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: var(--sombra);
+  transition: box-shadow var(--t) var(--ease);
 }
+.tarjeta:hover { box-shadow: var(--sombra-hover); }
 /* Corte diagonal en la esquina superior derecha */
 .corte { border-top: 3px solid var(--jabil-cyan); }
 .corte::after {
@@ -375,10 +415,10 @@ tbody tr:hover { background: #F9FAFB; }
 .rec-estado-aprobada, .rec-estado-editada_aprobada { border-left: 4px solid #2E9E5B; }
 .rec-estado-rechazada { opacity: 0.6; border-left: 4px solid #D93A3A; }
 .rec textarea, .campos input {
-  width: 100%; font: inherit; font-size: 0.95rem; padding: 0.5rem 0.6rem; border: 1px solid var(--gris-plata);
-  border-radius: var(--radio); background: white; transition: border-color var(--t) var(--ease);
+  width: 100%; font: inherit; font-size: 0.95rem; padding: 0.6rem 0.8rem; border: 1px solid var(--borde);
+  border-radius: var(--radio); background: white; color: var(--texto); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
 }
-.rec textarea:focus, .campos input:focus { border-color: var(--jabil-cyan); outline: none; box-shadow: 0 0 0 3px rgba(60, 180, 229, 0.3); }
+.rec textarea:focus, .campos input:focus { border-color: var(--jabil-cyan); outline: none; box-shadow: 0 0 0 3px rgba(60, 180, 229, 0.25); }
 .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0 1rem; }
 .campos label {
   font-size: 0.72rem; color: var(--sutil); display: flex; flex-direction: column; gap: 0.3rem;
@@ -388,19 +428,22 @@ tbody tr:hover { background: #F9FAFB; }
 
 /* ---- Selects y campos comunes ---- */
 select, .campos select {
-  font: inherit; font-size: 0.95rem; padding: 0.45rem 0.6rem; border: 1px solid var(--gris-plata);
+  font: inherit; font-size: 0.95rem; padding: 0.55rem 0.8rem; border: 1px solid var(--borde);
   border-radius: var(--radio); background: white; color: var(--texto);
 }
 .campos select { width: 100%; }
 .campos input[readonly] { background: var(--fondo); color: var(--sutil); }
 .campos-3 { grid-template-columns: repeat(3, 1fr); }
 .campo-bloque {
-  display: flex; flex-direction: column; gap: 0.3rem; margin: 0.5rem 0 0.75rem; font-size: 0.72rem; color: var(--sutil);
-  text-transform: uppercase; letter-spacing: 0.08em;
+  display: flex; flex-direction: column; gap: 0.35rem; margin: 0.5rem 0 0.75rem; font-size: 0.75rem; color: var(--sutil);
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500;
 }
 .campo-bloque input, .campo-bloque textarea {
-  font: inherit; font-size: 0.95rem; text-transform: none; letter-spacing: 0; padding: 0.5rem 0.6rem;
-  border: 1px solid var(--gris-plata); border-radius: var(--radio); width: 100%;
+  font: inherit; font-size: 0.95rem; text-transform: none; letter-spacing: 0; padding: 0.6rem 0.8rem;
+  border: 1px solid var(--borde); border-radius: var(--radio); width: 100%; color: var(--texto);
+}
+.campo-bloque input:focus, .campo-bloque textarea:focus {
+  border-color: var(--jabil-cyan); outline: none; box-shadow: 0 0 0 3px rgba(60, 180, 229, 0.25);
 }
 .campo-numero { display: inline-flex; align-items: center; gap: 0.3rem; }
 .campo-numero input { width: 6.5rem; font: inherit; padding: 0.35rem 0.5rem; border: 1px solid var(--gris-plata); border-radius: var(--radio); }

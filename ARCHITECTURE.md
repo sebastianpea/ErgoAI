@@ -5,6 +5,8 @@
 > **Ámbito:** Antigravity / Ecosistema de Manufactura Jabil / Reto X-RAIC 2026 (Track 4)  
 > **Estado:** Aprobado para Diseño e Implementación  
 
+> **Lectura vigente:** [decisiones, implementación y límites](docs/ESTADO_ACTUAL.md). Este marco rige los invariantes; el índice distingue hechos actuales de propuestas y validaciones pendientes.
+
 ---
 
 ## 1. Visión, Misión y Límites del Sistema
@@ -30,7 +32,7 @@ Para evitar desvíos de alcance (*scope creep*) y garantizar el cumplimiento est
 ├──────────────────────────────────────────────┤  ├──────────────────────────────────────────────┤
 │ • Copiloto de auditoría para el ergónomo.    │  │ • NO es un monitor de signos vitales.        │
 │ • Validador de consistencia angular y REBA.  │  │ • NO es un detector de caídas o epilepsia.   │
-│ • Analizador de fotografías estáticas (3D).  │  │ • NO procesa streams continuos de CCTV.      │
+│ • Analizador de fotografías estáticas (2D).  │  │ • NO procesa streams continuos de CCTV.      │
 │ • Generador de planes de acción NOM-036.     │  │ • NO es un sistema de vigilancia punitiva.   │
 │ • Canal exclusivo para Supervisión / IE / EHS│  │ • NO emite alertas directas al trabajador.   │
 │ • Persistencia ligera y reproducible.        │  │ • NO despliega clusters de bases de datos.   │
@@ -47,7 +49,7 @@ Cualquier propuesta, modificación o extensión del sistema debe respetar de for
 Ninguna reclasificación de riesgo, cambio de layout o modificación de estación podrá ejecutarse de forma autónoma.
 - El sistema actúa como un generador estructurado de propuestas de ingeniería.
 - La aprobación, edición o rechazo humano por parte del especialista ergonómico o supervisor es un **paso bloqueante obligatorio**.
-- El sistema debe mantener un registro de auditoría inmutable de quién validó cada acción y qué modificaciones introdujo (Trazabilidad estricta).
+- El sistema debe mantener un registro de quién validó cada acción y qué modificaciones introdujo, con integridad verificable; los hashes no impiden reescribir toda la cadena.
 
 ### Invariante 2: Destinatario Único de Alertas (Supervisión e Ingeniería)
 Queda estrictamente prohibida cualquier retroalimentación en tiempo real o interfaz orientada al operador de línea (pantallas en estación, dispositivos hápticos o pulseras vibratorias).
@@ -67,7 +69,7 @@ Cuando exista discrepancia entre la normativa federal (NOM-036) y los estándare
 ### Invariante 5: Cumplimiento de la Restricción "Cero Base de Datos Externa"
 Para alinearse con las especificaciones técnicas del concurso y garantizar un despliegue instantáneo en la fase de demostración (1 minuto de preparación):
 * No se desplegarán servicios ni contenedores de motores DBMS externos (PostgreSQL, TimescaleDB, MySQL, MongoDB, Redis).
-* La persistencia de configuraciones, conocimiento normativo y trazabilidad de evaluaciones se resolverá mediante almacenamiento local estructurado desacoplado (archivos JSON/YAML inmutables, SQLite embebido serverless y sincronización con hojas de cálculo oficiales de Jabil).
+* La persistencia actual utiliza archivos JSON locales y exportación a hojas de cálculo. SQLite no está implementado: queda como adaptador futuro, condicionado a aclarar su admisibilidad y autorizar una migración; no se deduce permiso ni prohibición definitiva de la cita de la rúbrica.
 
 ---
 
@@ -93,7 +95,7 @@ El sistema adoptará los principios de **Arquitectura Limpia (Clean Architecture
                               ▼                              ▼
     ┌───────────────────────────────────┐  ┌───────────────────────────────────┐
     │       DOMINIO Y ENTIDADES         │  │     PUERTOS / ADAPTADORES OUT     │
-    │  • Modelos Tipados (Pydantic)     │  │  • Motor Visión (Pose 3D)         │
+    │  • Modelos Tipados (Pydantic)     │  │  • Motor Visión (Pose 2D)         │
     │  • Reglas REBA / RULA / NOM-036   │  │  • Base de Conocimiento Local     │
     │  • Invariantes Cinemáticos Jabil │  │  • Exportador Excel (.xlsm)       │
     └───────────────────────────────────┘  └───────────────────────────────────┘
@@ -107,8 +109,8 @@ El sistema adoptará los principios de **Arquitectura Limpia (Clean Architecture
 2. **Capa de Casos de Uso (Application Services):**
    - Orquesta los flujos de auditoría: toma la evaluación registrada, invoca la extracción de ángulos sobre las fotos, compara valores, detecta desviaciones, aplica la jerarquía de controles de la NOM-036 y calcula el riesgo residual.
 3. **Capa de Adaptadores (Adapters & Infrastructure):**
-   - **Adaptadores de Visión:** Implementan la extracción de puntos articulares tridimensionales a partir de imágenes locales.
-   - **Adaptadores de Datos y Persistencia:** Lectores y escritores de archivos Excel (`openpyxl` sobre `16-PE80-6500-00014-H.xlsm`), serializadores JSON y repositorios SQLite locales.
+   - **Adaptadores de Visión:** Implementan la extracción de puntos articulares y ángulos proyectados 2D a partir de imágenes locales; varias vistas no equivalen a reconstrucción 3D calibrada.
+   - **Adaptadores de Datos y Persistencia:** Lectores y escritores de archivos Excel (`openpyxl` sobre `16-PE80-6500-00014-H.xlsm`), serializadores JSON locales. Un adaptador SQLite requeriría autorización futura.
    - **Adaptadores de Presentación:** Paneles de supervisión e interfaces de visualización para el especialista.
 
 ---
@@ -149,5 +151,5 @@ Cuando surja una disyuntiva técnica o propuesta de cambio durante el ciclo de v
 
 ---
 
-*Este marco arquitectónico constituye la referencia técnica inmutable para el diseño de componentes, algoritmos y contratos de datos del proyecto ErgoAI.*
+*Este marco arquitectónico constituye la referencia de invariantes para el diseño de componentes, algoritmos y contratos de datos del proyecto ErgoAI.*
 

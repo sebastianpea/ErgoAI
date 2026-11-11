@@ -38,6 +38,30 @@ test('no-person response shows warning and retry, not a diagnosis or broken imag
   assert.match(html, /Tomar otra fotografía/);
   assert.doesNotMatch(html, /Dictamen REBA|<img/);
 });
+test('person selector exposes all/one and an accessible visibility switch', () => {
+  const { PersonaSelector } = load('components/PersonaSelector.tsx', { 'react/jsx-runtime': runtime });
+  let selected = 'unset', visible = false;
+  const tree = PersonaSelector({ imagen: { personas: [{ id: 'persona-1' }, { id: 'persona-2' }], persona_seleccionada: null },
+    mostrar: false, onMostrar: value => visible = value, onSeleccionar: value => selected = value });
+  function nodes(node, type) {
+    if (!node || typeof node !== 'object') return [];
+    if (Array.isArray(node)) return node.flatMap(n => nodes(n, type));
+    return [...(node.type === type ? [node] : []), ...nodes(node.props?.children, type)];
+  }
+  const toggle = nodes(tree, 'input')[0];
+  assert.equal(toggle.props.role, 'switch');
+  assert.equal(toggle.props.checked, false);
+  toggle.props.onChange({ target: { checked: true } });
+  assert.equal(visible, true);
+  const select = nodes(tree, 'select')[0];
+  assert.equal(select.props.value, '');
+  assert.equal(nodes(tree, 'option').length, 3);
+  select.props.onChange({ target: { value: 'persona-2' } });
+  assert.equal(selected, 'persona-2');
+  select.props.onChange({ target: { value: '' } });
+  assert.equal(selected, null);
+});
+
 function client(mock) {
   return load('api.ts', { './lib/config': { API_URL: '/api', USE_MOCK: mock }, './lib/sesion': { actorActual: () => ({ usuario: 'test', rol: 'ergonomia' }) }, './mocks/data': { casosMock: [], alertasMock: [] } }).api;
 }
@@ -55,5 +79,18 @@ test('mock uses the same public response fields; multipart quick-analysis and ca
     assert.deepEqual([...calls[0][1].body.keys()], ['foto']);
     assert.deepEqual([...calls[1][1].body.keys()], ['datos', 'lateral']);
     for (const [, init] of calls) { assert.equal(init.method, 'POST'); assert.equal(init.headers, undefined); }
+  } finally { globalThis.fetch = original; }
+});
+
+test('person selection and corrections carry explicit per-image identity', async () => {
+  const original = globalThis.fetch, calls = [];
+  globalThis.fetch = async (url, init) => { calls.push([url, JSON.parse(init.body)]); return { ok: true, json: async () => ({}) }; };
+  try {
+    const api = client(false);
+    await api.seleccionarPersona('C-1', 'frontal', 'persona-2');
+    await api.corregirPuntos('C-1', 'frontal', [], 'persona-2');
+    await api.seleccionarPersona('C-1', 'frontal', null);
+    assert.deepEqual(calls.map(c => c[0]), ['/api/casos/C-1/persona/frontal', '/api/casos/C-1/puntos/frontal', '/api/casos/C-1/persona/frontal']);
+    assert.deepEqual(calls.map(c => c[1].persona_id), ['persona-2', 'persona-2', null]);
   } finally { globalThis.fetch = original; }
 });

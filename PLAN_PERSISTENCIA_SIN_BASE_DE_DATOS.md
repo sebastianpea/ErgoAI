@@ -1,4 +1,6 @@
 # Plan Técnico: Módulo de Persistencia Ligera y Trazabilidad sin Base de Datos
+> **Diseño histórico/propuesto, no contrato vigente ni evidencia de pruebas.** Ver [estado actual](docs/ESTADO_ACTUAL.md) y [módulo de persistencia](docs/MODULO_PERSISTENCIA_SIN_BASE_DE_DATOS.md). Ejemplos de esquemas y objetivos de latencia requieren comprobarse contra código y entorno.
+
 ## Denominación Formal del Componente: `File-System Session & Audit Store`
 
 > **Documento de Diseño e Implementación Enfocado**  
@@ -12,10 +14,10 @@
 La rúbrica oficial de Jabil para el Track 4 establece de forma explícita:  
 > *"El equipo no genera una base de datos: solo implementa el método para evaluar la postura."*
 
-Este mandato descalifica el uso de motores cliente-servidor (PostgreSQL, MySQL, SQL Server, MongoDB, Redis) e incluso descarta el acoplamiento a bases de datos relacionales embebidas (SQLite) para garantizar:
+Se eligieron archivos para evitar servicios DBMS y simplificar la demostración; no es un dictamen regulatorio que descarte SQLite. Su admisibilidad y autorización siguen pendientes. Objetivos de este diseño:
 1. **Despliegue instantáneo (< 60 segundos)** sin scripts de inicialización de esquemas, migraciones o dependencias de drivers nativos del sistema operativo.
 2. **Portabilidad absoluta** en cualquier entorno de evaluación o máquina portátil del jurado.
-3. **Cumplimiento estricto del Criterio 6 (Trazabilidad y Human-in-the-Loop)**: Proveer un registro de auditoría inmutable, verificable y con sellado criptográfico que demuestre quién validó, editó o aprobó cada recomendación ergonómica.
+3. **Cumplimiento estricto del Criterio 6 (Trazabilidad y Human-in-the-Loop)**: Proveer un registro de auditoría con integridad verificable mediante hashes, sin firma digital que demuestre quién validó, editó o aprobó cada recomendación ergonómica.
 
 ---
 
@@ -54,7 +56,7 @@ El almacenamiento se resuelve mediante tres mecanismos coordinados y desacoplado
 ## 3. Especificación Técnica de Archivos y Contratos de Datos
 
 ### 3.1 Catálogo Normativo Estático (Configuración Read-Only)
-* **Ubicación:** `backend/config_normativo/`
+* **Ubicación:** `config_normativo/`
 * **Naturaleza:** Archivos JSON inmutables cargados en memoria una única vez durante el ciclo de vida del backend (`lifespan` de FastAPI).
 * **Propósito:** Actuar como Fuente Única de Verdad (SSOT) de las matrices REBA, rangos de flexión y límites de planta Jabil (ej. límite 14 kg, zonas 1-5).
 * **Archivos:**
@@ -62,7 +64,7 @@ El almacenamiento se resuelve mediante tres mecanismos coordinados y desacoplado
   2. `nom036_mac_rapp_tables.json`: Ponderación de factores y bandas de color de las hojas de la NOM-036.
   3. `jabil_standards_00023.json`: Parámetros físicos oficiales de planta Chihuahua (alturas, distancias, Ley Silla).
 
-### 3.2 Registro de Auditoría Inmutable (`audit_trail.json`)
+### 3.2 Registro de Auditoría Verificable (`audit_trail.json`)
 * **Ubicación:** `casos_jabil_workspace/caso_{id}/audit_trail.json`
 * **Patrón de Persistencia:** *Append-Only Event Log* con encadenamiento de integridad (hash chaining).
 * **Estructura del Registro:**
@@ -107,7 +109,7 @@ El almacenamiento se resuelve mediante tres mecanismos coordinados y desacoplado
 
 ## 4. Garantías de Fiabilidad: Escritura Atómica sin DBMS
 
-Para evitar la corrupción de archivos JSON ante interrupciones de proceso, caídas de energía o escrituras concurrentes:
+Para reducir escrituras parciales por archivo, sin garantizar recuperación ante todo fallo de energía ni transacciones entre archivos o coordinación multiproceso:
 
 1. **Patrón de Escritura Atómica (`Write-Replace via Temporary File`):**
    * El sistema nunca escribe directamente sobre el archivo final.
@@ -116,7 +118,7 @@ Para evitar la corrupción de archivos JSON ante interrupciones de proceso, caí
    * Se realiza una operación atómica de renombre (`os.replace`), garantizada por el kernel del sistema operativo.
 2. **Sellado Criptográfico (SHA-256 Hash Chaining):**
    * Cada evento calcula un hash SHA-256 canónico de sus campos más el hash del evento anterior.
-   * Cualquier alteración manual del archivo `.json` invalida la cadena, garantizando inviolabilidad de la auditoría.
+   * Una alteración sin recalcular hashes genera inconsistencias detectables. Quien pueda reescribir toda la cadena puede recalcularla; no hay inviolabilidad ni no-repudio.
 
 ---
 
@@ -166,6 +168,6 @@ El desarrollo de este subsistema se estructura en 4 fases secuenciales estrictam
 ## 6. Criterio de Éxito y Verificación
 
 El componente se considerará completado cuando:
-1. Ningún módulo del proyecto importe ni requiera `sqlite3`, `sqlalchemy`, `psycopg2`, `pymongo` ni ningún otro driver de base de datos.
+1. Mantener la operación actual sin drivers DBMS; no convierte la exclusión de SQLite en una prohibición normativa futura.
 2. La ejecución de pruebas unitarias cree, actualice y valide la trazabilidad de los 6 casos en `/casos_jabil_workspace/` mediante puros archivos `.json`.
 3. El tiempo de lectura/escritura de un evento de auditoría sea inferior a **5 milisegundos**.

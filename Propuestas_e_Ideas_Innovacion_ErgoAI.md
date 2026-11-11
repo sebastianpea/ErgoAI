@@ -1,4 +1,6 @@
-en# Propuestas de Innovación y Diferenciación para ErgoAI (Track 4 - Jabil)
+# Propuestas de Innovación y Diferenciación para ErgoAI (Track 4 - Jabil)
+
+> **Propuestas, no funcionalidades certificadas ni tareas autorizadas.** Porcentajes, tiempos y puntos son aspiraciones o ejemplos que exigen evidencia. Ver [estado actual](docs/ESTADO_ACTUAL.md); las vistas y ajustes humanos no garantizan precisión anatómica.
 
 Este documento reúne propuestas de alto impacto técnico y operativo diseñadas específicamente para maximizar el puntaje en los bloques de **Diseño e Innovación (Criterios 4 y 5 - 15 pts)**, **Viabilidad y Valor (Criterios 6, 7 y 8 - 15 pts)** y **Desempeño Técnico (Criterios 1, 2 y 3 - 50 pts)** de la rúbrica oficial de Jabil en X-RAIC 2026.
 
@@ -13,14 +15,14 @@ Este documento reúne propuestas de alto impacto técnico y operativo diseñadas
         *   **Vista Lateral (Costado)**: Extrae flexión/extensión de tronco (`0°-20°`, `20°-60°`, `>60°`), flexión de cuello (`0°-20°`, `>20°`), flexión de hombro/brazo, ángulo de codo (`60°-100°`) y flexión de rodillas (`30°-60°`, `>60°`).
         *   **Vista Frontal**: Extrae inclinación lateral (*side-bending*) de cuello y tronco (+1 pto REBA), elevación/abducción de hombros (+1 pto REBA) y asimetría de carga en piernas.
         *   **Vista Aérea (Superior)**: Extrae torsión/rotación transversal de tronco y cuello (+1 pto REBA) y proyecta mediante **Homografía 2D** el arco de alcance sobre la mesa (`Posiciones 1 a 5` de la sección `7.2.2.2` de Jabil: `150 mm` a `1500 mm`).
-*   **Impacto en Rúbrica**: Asegura `>= 90%` de coincidencia en la estimación de ángulos (Criterio 2: 15 pts) y 6 de 6 casos exactos en REBA (Criterio 1: 20 pts, primer criterio de desempate).
+*   **Impacto en Rúbrica**: Busca `>= 90%` de coincidencia, sujeto a validación, en la estimación de ángulos (Criterio 2: 15 pts) y 6 de 6 casos exactos en REBA (Criterio 1: 20 pts, primer criterio de desempate).
 
 ### Propuesta 1.2: "Interactive Skeleton Fine-Tuner" (Ajuste Asistido de Keypoints en 2 Segundos)
 *   **Problema que resuelve**: Durante la evaluación en vivo de los 6 casos, si una fotografía tiene baja iluminación o un equipo bloquea la articulación de la muñeca, un detector 100% caja negra podría equivocarse por unos grados y cambiar el rango REBA.
 *   **Cómo implementarla**:
     *   En el visor web del Frontend, mostrar los vectores articulares como nodos arrastrables (*drag-and-drop*).
     *   Si el especialista nota que la muñeca está rotada o que el punto del tobillo quedó tapado por la mesa, puede ajustar el nodo con el mouse en 1 segundo o marcar casillas de micro-ajustes difíciles de ver en foto estática (*"¿Giro de muñeca?"*, *"¿Agarre deficiente?"*, *"¿Cambio brusco de postura?"*), actualizando el cálculo REBA al instante.
-*   **Impacto en Rúbrica**: Garantiza el **100% de exactitud** en los 6 casos en vivo y refuerza el principio de *"El agente propone y el especialista decide"*.
+*   **Impacto en Rúbrica**: Busca mejorar la exactitud, sin garantizar un porcentaje, en los 6 casos en vivo y refuerza el principio de *"El agente propone y el especialista decide"*.
 
 ---
 
@@ -32,7 +34,7 @@ Este documento reúne propuestas de alto impacto técnico y operativo diseñadas
     *   *Slider 2: Reubicación de Materiales y Herramental* (mover contenedores de `Zona 4/5 [>650 mm]` a `Zona 1/2 [150-400 mm]`).
     *   *Switch 3: Integración de Asistencia Mecánica / Lifter* (obligatorio si `Peso > 14 kg`) o cambio a postura **Sentado / Combinado con Silla ESD** (si `Peso < 3 kg`).
 *   **Visualización**: Mostrar lado a lado el **"Esqueleto Actual (Rojo - REBA 11)"** vs. el **"Esqueleto Proyectado Post-Ingeniería (Verde - REBA 2)"**.
-*   **Impacto en Rúbrica**: Otorga el puntaje máximo en **Originalidad y Diferenciación (Criterio 5)** y en **Riesgo Residual (Criterio 7)** porque recalcula matemáticamente el riesgo con las modificaciones propuestas y lo compara visualmente con el inicial.
+*   **Impacto en Rúbrica**: Aspira al puntaje máximo en **Originalidad y Diferenciación (Criterio 5)** y en **Riesgo Residual (Criterio 7)** porque recalcula matemáticamente el riesgo con las modificaciones propuestas y lo compara visualmente con el inicial.
 
 ### Propuesta 2.2: Puente Directo "ErgoAI-to-Jabil XLSM & AutoCAD Layer Advisor"
 *   **Qué aporta**: La mayoría de los equipos solo entregarán un PDF genérico. Ustedes conocen a fondo el archivo real de Jabil **`16-PE80-6500-00014-H.xlsm`** y el manual de layouts **`16-PE30-6500-00023.pdf`**.
@@ -48,7 +50,7 @@ Este documento reúne propuestas de alto impacto técnico y operativo diseñadas
 ## 3. Propuestas para Viabilidad, Valor y Medición de Impacto (Bloque 3)
 
 ### Propuesta 3.1: Flujo "Dual-Sign Audit Trail" con Diff Visual (Human-in-the-Loop sin Base de Datos)
-*   **Qué aporta**: Cumple al 100% el Criterio 6 (*Validación del especialista y trazabilidad*) sin usar base de datos.
+*   **Qué aporta**: Busca cubrir el Criterio 6 (*Validación del especialista y trazabilidad*) sin usar base de datos.
 *   **Cómo implementarla**:
     *   Cada recomendación generada por el Agente IA nace en estado `PENDING_SPECIALIST_REVIEW`.
     *   Cuando el especialista edita una recomendación (por ejemplo, cambia *"Instalar mesa hidráulica"* por *"Ajustar perfil Bosch de la estación a 105 cm y colocar feeder en Zona 1"*), el sistema guarda un **Diff tipo Git** (`Texto Original IA` vs `Texto Validado por Especialista`), el motivo del cambio y la marca de tiempo UTC en un archivo JSON auditable.
@@ -61,7 +63,7 @@ Este documento reúne propuestas de alto impacto técnico y operativo diseñadas
         1. `T_vision`: Tiempo de inferencia de pose y cálculo de ángulos (ej. `1.2 seg`).
         2. `T_calculo_y_agente`: Tiempo de evaluación REBA + NOM-036 + redacción de recomendaciones y riesgo residual (ej. `4.5 seg`).
         3. `T_validacion_humana`: Tiempo que tarda el especialista en revisar, editar y aprobar en pantalla (ej. `25 seg`).
-    *   Comparar automáticamente en una tabla dentro del informe el **Tiempo Total ErgoAI (~30 segundos por caso)** contra el **Baseline Manual en Planta (~35 a 45 minutos por estación** entre medición con goniómetro, llenado manual de Excel y redacción de reporte), demostrando con datos empíricos de los 6 casos una **reducción de tiempo superior al 97%**.
+    *   Comparar automáticamente en una tabla dentro del informe el **Tiempo Total ErgoAI (~30 segundos por caso)** contra el **Baseline Manual en Planta (~35 a 45 minutos por estación** entre medición con goniómetro, llenado manual de Excel y redacción de reporte), para medir una posible reducción; **el 97% es una meta ilustrativa, no un resultado observado**.
 
 ---
 

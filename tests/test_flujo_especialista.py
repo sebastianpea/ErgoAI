@@ -215,6 +215,55 @@ class TestFlujoEspecialista(unittest.TestCase):
         self.assertEqual(self.c.put(url, json={**cuerpo, **IE}).status_code, 403)
         self.assertTrue(any(e["accion"] == "nom036_capturada" for e in self.c.get("/bitacora?id_caso=C-003").json()))
 
+    def test_capturar_nom036_equipo_completo_y_rechazar_incompleto(self):
+        codigos = [
+            "peso_equipo_operadores", "distancia_manos_espalda", "region_vertical",
+            "torsion_flexion_lateral", "restricciones_posturales", "acoplamiento_mano_carga",
+            "superficie_trabajo", "factores_ambientales", "comunicacion_coordinacion_control",
+        ]
+        factores = [{"codigo": codigo, "etiqueta": codigo, "color": "verde", "valor": 0}
+                    for codigo in codigos]
+        cuerpo = {**ERGO, "motivo": "Equipo observado y hoja revisada en piso",
+                  "nom036": {"metodo": "equipo", "factores": factores}}
+        url = "/casos/C-003/nom036"
+        r = self.c.put(url, json=cuerpo)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["nom036"], {"metodo": "equipo", "total": 0, "nivel": "verde",
+                                               "factores": factores})
+        self.assertEqual(self.caso("C-003")["nom036"], r.json()["nom036"])
+        catalogo = self.c.get("/catalogo/nom036").json()
+        self.assertEqual(catalogo["equipo"]["hoja"], "Equipo (3)")
+        self.assertTrue(catalogo["equipo"]["captura_libre"])
+        self.assertEqual([f["codigo"] for f in catalogo["equipo"]["factores"]], codigos)
+        # Cada omisión, incluso en otra página del formulario, deja intacto el caso y la auditoría.
+        antes = self.caso("C-003")
+        bitacora = self.c.get("/bitacora?id_caso=C-003").json()
+        for codigo in codigos:
+            with self.subTest(falta=codigo):
+                incompletos = [f for f in factores if f["codigo"] != codigo]
+                rechazo = self.c.put(url, json={**cuerpo, "nom036": {"metodo": "equipo", "factores": incompletos}})
+                self.assertEqual(rechazo.status_code, 422, rechazo.text)
+                self.assertEqual(rechazo.json(), {"detail": f"Factores NOM-036 incompletos: faltan {codigo}"})
+                self.assertEqual(self.caso("C-003"), antes)
+                self.assertEqual(self.c.get("/bitacora?id_caso=C-003").json(), bitacora)
+
+    def test_nom036_preserva_los_cuatro_metodos_existentes(self):
+        catalogo = self.c.get("/catalogo/nom036").json()
+        for metodo, cantidad in [("levantamiento", 8), ("transporte", 9),
+                                 ("empuje_sin_auxiliar", 9), ("empuje_con_auxiliar", 9)]:
+            with self.subTest(metodo=metodo):
+                hoja = catalogo[metodo]
+                factores = [{"codigo": f["codigo"], "etiqueta": f["etiqueta"], "color": "rojo",
+                             "valor": 7 if hoja.get("captura_libre") else f["opciones"]["rojo"]}
+                            for f in hoja["factores"]]
+                self.assertEqual(len(factores), cantidad)
+                r = self.c.put("/casos/C-003/nom036", json={**ERGO, "motivo": "Hoja existente revisada",
+                                  "nom036": {"metodo": metodo, "factores": factores}})
+                self.assertEqual(r.status_code, 200, r.text)
+                self.assertEqual(r.json()["nom036"]["metodo"], metodo)
+                self.assertEqual(r.json()["nom036"]["factores"], factores)
+                self.assertEqual(r.json()["nom036"]["total"], sum(f["valor"] for f in factores))
+
     def test_descartar_y_restaurar_hallazgo(self):
         url = "/casos/C-001/hallazgos/V1/revision"
         r = self.c.post(url, json={**ERGO, "accion": "descartar", "motivo": "Es el termo del supervisor, no está en la estación"})
